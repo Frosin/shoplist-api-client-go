@@ -3,3 +3,5 @@
 *.sql
 store/db
 api_service
+main
+.shoplist.yaml

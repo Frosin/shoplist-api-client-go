@@ -2,8 +2,6 @@ package store
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/joho/godotenv"
-	"os"
 )
 
 //DB basic database type
@@ -12,16 +10,8 @@ type DB struct {
 }
 
 // Open mysqlite connection
-func (db *DB) Open(test bool) *DB {
-	err := godotenv.Load()
-	if err != nil {
-		panic(err)
-	}
-	dbName := os.Getenv("DB_FILE_NAME")
-	if test {
-		dbName = os.Getenv("TEST_DB_FILE_NAME")
-	}
-	gdb, err := gorm.Open("sqlite3", "store/db/"+dbName)
+func (db *DB) Open(dbFileName string, test bool) *DB {
+	gdb, err := gorm.Open("sqlite3", "store/db/"+dbFileName)
 	db.GormDB = gdb
 	if err != nil {
 		panic(err)

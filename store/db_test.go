@@ -1,3 +1,5 @@
 package store
 
-func Test
+func Test() {
+	return
+}

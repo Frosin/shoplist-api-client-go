@@ -15,7 +15,8 @@ var rootCmd = &cobra.Command{
 	Short: "shoplist service",
 	Long:  "shoplist service, just use it!",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		test, err := cmd.Flags().GetString("testFlag")
+		fmt.Println("root cmd called!", test, err)
 	},
 }
 
@@ -32,7 +33,6 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.shoplist.yaml)")
-
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 

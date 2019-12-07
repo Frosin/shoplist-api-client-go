@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"log"
+	"shoplist/api"
 	"shoplist/store"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -26,13 +27,20 @@ var serveCmd = &cobra.Command{
 		defer router.DB.GormDB.Close()
 		router.DB.GormDB = router.DB.GormDB.Debug().Set("gorm:auto_preload", true)
 
-		route := gin.Default()
-		route.GET("/getGoods/:shoppingID", router.GetGoods())
-		route.GET("/getComingShoppings/:date", router.GetComingShoppings())
-		route.GET("/lastShopping", router.LastShopping())
-		route.POST("/addItem", router.AddItem())
-		route.POST("/addShopping", router.AddShopping())
-		route.Run(":" + port)
+		e := echo.New()
+
+		//e.Use(middleware.Logger())
+		var myServer store.Server
+
+		api.RegisterHandlers(e, &myServer)
+
+		//
+		// echo.GET("/getGoods/:shoppingID", router.GetGoods())
+		// echo.GET("/getComingShoppings/:date", router.GetComingShoppings())
+		// echo.GET("/lastShopping", router.LastShopping())
+		// echo.POST("/addItem", router.AddItem())
+		// echo.POST("/addShopping", router.AddShopping())
+		e.Logger.Debug(e.Start(":" + port))
 	},
 }
 

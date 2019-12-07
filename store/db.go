@@ -1,9 +1,6 @@
 package store
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/jinzhu/gorm"
 )
 
@@ -71,10 +68,6 @@ shopping = db.getLastShopping()
 */
 func (db *DB) GetLastShopping() (shopping Shopping) {
 	db.GormDB.Exec("SELECT * FROM 'shopping' ORDER BY rowid DESC LIMIT 1").Find(&shopping)
-	//
-	log.Println("**** TEST shopping ****", shopping)
-	fmt.Println("**** TEST shopping ****", shopping)
-	//
 	return
 }
 

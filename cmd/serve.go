@@ -5,14 +5,20 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"shoplist/api"
-	"shoplist/store"
+	"github.com/Frosin/shoplist-api-client-go/api"
+	"github.com/Frosin/shoplist-api-client-go/store"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+)
+
+const (
+	version = "0.1"
 )
 
 // serveCmd represents the serve command
@@ -52,7 +58,8 @@ var serveCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
-	serveCmd.Flags().StringP("port", "p", "80", "service port")
+	//serveCmd.Flags().StringP("port", "p", "80", "service port")
+	serveCmd.PersistentFlags().StringP("port", "p", "80", "service port")
 
 	sentry.Init(sentry.ClientOptions{
 		Dsn: "https://70d91cb8123d4b149c225c315849f53c@sentry.io/1840045",
@@ -72,6 +79,41 @@ func errorHandler(err error, ctx echo.Context) {
 		}},
 	}
 	_ = sentry.CaptureEvent(&event)
+
+	code := http.StatusInternalServerError
+
+	//
+	spew.Dump(ctx)
+	//
+
+	if requestError, ok := err.(*openapi3filter.RequestError); ok {
+		code = requestError.HTTPStatus()
+
+		// Get original error
+		err = requestError.Err
+	}
+
+	switch code {
+	case http.StatusBadRequest:
+		ctx.JSON(code, api.Error400{
+			Message: err.Error(),
+		})
+	case http.StatusNotFound:
+		ctx.JSON(code, api.Error404{
+			Message: err.Error(),
+		})
+	case http.StatusMethodNotAllowed:
+		errStr := err.Error()
+		ctx.JSON(code, api.Error405{
+			Message: &errStr,
+		})
+	case http.StatusInternalServerError:
+		ctx.JSON(code, api.Error500{
+			Message: err.Error(),
+		})
+	}
+	return
+
 }
 
 func sentryRequestFromHTTP(r *http.Request) sentry.Request {

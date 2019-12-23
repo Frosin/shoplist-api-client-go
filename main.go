@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"shoplist/cmd"
+	"github.com/Frosin/shoplist-api-client-go/cmd"
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )

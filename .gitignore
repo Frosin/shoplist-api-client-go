@@ -4,5 +4,6 @@
 store/db
 api_service
 shoplist
+shoplist-api-client-go
 main
 .shoplist.yaml

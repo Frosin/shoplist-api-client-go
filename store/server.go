@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"shoplist/api"
+	"github.com/Frosin/shoplist-api-client-go/api"
 
 	"github.com/labstack/echo/v4"
 )

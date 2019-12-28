@@ -221,6 +221,7 @@ components:
                 description: Идентификатор товара
                 example: 55
           - $ref: "#/components/schemas/Shopping_item_params"
+          - type: object
             required:
               - ID
               - ProductName
@@ -350,7 +351,11 @@ components:
               allOf:
                 - $ref: "#/components/schemas/Success"
                 - type: object
-                  $ref: "#/components/schemas/Shopping_item"
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_item"
       Item_200:
         description: Добавленный товар
         content:
@@ -358,8 +363,7 @@ components:
             schema:
               allOf:
                 - $ref: "#/components/schemas/Success"
-                - type: object
-                  $ref: "#/components/schemas/Shopping_item_params_with_id"
+                - $ref: "#/components/schemas/Shopping_item_params_with_id"
       Item_400:
         description: Validation error
         content:

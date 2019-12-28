@@ -5,20 +5,18 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"github.com/Frosin/shoplist-api-client-go/api"
-	"github.com/Frosin/shoplist-api-client-go/store"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/Frosin/shoplist-api-client-go/api"
+	"github.com/Frosin/shoplist-api-client-go/store"
+	"github.com/Frosin/shoplist-api-client-go/store/sqlc"
+	"github.com/jmoiron/sqlx"
+
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-)
-
-const (
-	version = "0.1"
 )
 
 // serveCmd represents the serve command
@@ -27,42 +25,37 @@ var serveCmd = &cobra.Command{
 	Short: "start and serve service",
 	Long:  "it start service",
 	Run: func(cmd *cobra.Command, args []string) {
+		version := viper.GetString("SHOPLIST_API_VERSION")
 		port, err := cmd.Flags().GetString("port")
 		log.Println("Serve launched on port = ", port)
 		if err != nil {
 			log.Println("Error = ", err)
 		}
-
 		var myServer store.Server
-
-		myServer.DB.Open(viper.GetString("DB_FILE_NAME"), false)
+		myServer.DB.Open(viper.GetString("SHOPLIST_DB_FILE_NAME"), false)
 		defer myServer.DB.GormDB.Close()
 		myServer.DB.GormDB = myServer.DB.GormDB.Debug().Set("gorm:auto_preload", true)
-
+		db, err := sqlx.Open("sqlite3", "store/db/shoplist.db")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		myServer.Queries = sqlc.New(db)
+		myServer.Version = version
 		e := echo.New()
 		e.HTTPErrorHandler = errorHandler
 		//e.Use(middleware.Logger())
-
 		api.RegisterHandlers(e, &myServer)
-
-		//
-		// echo.GET("/getGoods/:shoppingID", router.GetGoods())
-		// echo.GET("/getComingShoppings/:date", router.GetComingShoppings())
-		// echo.GET("/lastShopping", router.LastShopping())
-		// echo.POST("/addItem", router.AddItem())
-		// echo.POST("/addShopping", router.AddShopping())
-
 		e.Logger.Debug(e.Start(":" + port))
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
-	//serveCmd.Flags().StringP("port", "p", "80", "service port")
 	serveCmd.PersistentFlags().StringP("port", "p", "80", "service port")
 
+	dsn := viper.GetString("SHOPLIST_SENTRY_DSN")
 	sentry.Init(sentry.ClientOptions{
-		Dsn: "https://70d91cb8123d4b149c225c315849f53c@sentry.io/1840045",
+		Dsn: dsn,
 	})
 }
 
@@ -81,10 +74,6 @@ func errorHandler(err error, ctx echo.Context) {
 	_ = sentry.CaptureEvent(&event)
 
 	code := http.StatusInternalServerError
-
-	//
-	spew.Dump(ctx)
-	//
 
 	if requestError, ok := err.(*openapi3filter.RequestError); ok {
 		code = requestError.HTTPStatus()

@@ -2,7 +2,7 @@
     "version": "1",
     "packages": [
       {
-        "name": "shoplist",
+        "name": "sqlc",
         "emit_json_tags": true,
         "emit_prepared_queries": true,
         "path": "store/sqlc",

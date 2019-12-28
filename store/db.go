@@ -79,3 +79,8 @@ func (db *DB) GetComingShoppings(date string) (shoppings []Shopping) {
 	db.GormDB.Where("date >= ?", date).Limit(5).Find(&shoppings)
 	return
 }
+
+func (db *DB) ChangeShoppingData(shoppingID uint64, newDate string) {
+	var shopping Shopping
+	db.GormDB.Model(&shopping).Where("id = ?", shoppingID).Update("date", newDate)
+}

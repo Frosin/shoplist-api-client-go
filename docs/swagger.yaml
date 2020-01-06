@@ -16,6 +16,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Goods_200"
+        "400":
+          $ref: "#/components/responses/Goods_400"
         "404":
           $ref: "#/components/responses/Base_404"
         "405":
@@ -33,6 +35,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/ComingShoppings_200"
+        "400":
+          $ref: "#/components/responses/ComingShoppings_400"
         "404":
           $ref: "#/components/responses/Base_404"
         "405":
@@ -65,8 +69,10 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Item_200"
-        "404":
+        "400":
           $ref: "#/components/responses/Item_400"
+        "404":
+          $ref: "#/components/responses/Base_404"  
         "405":
           $ref: "#/components/responses/Base_405"
         "500":
@@ -82,7 +88,7 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Shopping_200"
-        "404":
+        "400":
           $ref: "#/components/responses/Shopping_400"
         "405":
           $ref: "#/components/responses/Base_405"
@@ -96,7 +102,7 @@ components:
         properties:
           version:
             type: string
-            description: Вкрсия ответа сервиса
+            description: Вeрсия ответа сервиса
             example: 1.0.0
       Success:
         description: Ответ успешно получен
@@ -117,7 +123,7 @@ components:
               - message
               - errors
       Error:
-        description: Ошибка !!11
+        description: Ошибка
         allOf:
           - $ref: "#/components/schemas/Base"
           - type: object
@@ -204,71 +210,76 @@ components:
             type: integer
             description: Идентификатор категории товара
             example: 5
-          complete:  
+          complete:
             type: boolean
-            description: Флаг выполнения покупки
-            example: true  
+            description: Признак выполнения
+            example: true
           listID:
             type: integer
             description: Идентификатор списка покупок
             example: 5
+        required:
+          - productName
+          - quantity
+          - categoryID
+          - complete
+          - listID
       Shopping_item_params_with_id:
         allOf:
           - type: object
             properties:
-              ID:
+              id:
                 type: integer
                 description: Идентификатор товара
                 example: 55
           - $ref: "#/components/schemas/Shopping_item_params"
           - type: object
             required:
-              - ID
-              - ProductName
-              - Quantity
-              - CategoryID
-              - Complete
-              - ListID
+              - id
+              - productName
+              - quantity
+              - categoryID
+              - complete
+              - listID
       Shopping_item:
         allOf:
           - title: Товар в списке покупок
             type: object
           - $ref: "#/components/schemas/Shopping_item_params_with_id"  
         required:
-          - ProductName
-          - Quantity
-          - CategoryID
-          - Complete
-          - ListID
+          - productName
+          - quantity
+          - categoryID
+          - complete
+          - listID
       Shopping:
         allOf:
           - title: Покупка
             type: object
           - $ref: "#/components/schemas/Shopping_params"
-          - $ref: "#/components/schemas/Shop"
         required:
-          - Date    
-          - Shop
+          - date
+          - name
+          - time
+          - ownerID
       Shopping_with_id:
         allOf:
           - title: Покупка
           - type: object
             properties:
-              ID:
+              id:
                 type: integer
                 description: Идентификатор покупки
                 example: 55
           - $ref: "#/components/schemas/Shopping_params"
-          - $ref: "#/components/schemas/Shop"
         required:
-          - ID      
-          - Date    
-          - Sum     
-          - ShopID  
-          - Complete
-          - Time    
-          - OwnerID 
-          - Shop
+          - id      
+          - date    
+          - sum     
+          - shopID  
+          - complete
+          - time    
+          - ownerID 
       Shopping_params:
         title: Параметры покупки
         properties:
@@ -276,18 +287,10 @@ components:
             type: string
             description: Дата покупки
             example: "20.11.2019"
-          sum:
-            type: integer
-            description: Сумма покупки
-            example: 5500
-          shopID:
-            type: integer
-            description: Идентификатор магазина
-            example: 55 
-          complete:
-            type: boolean
-            description: Флаг завершения
-            example: true
+          name:
+            type: string
+            description: Наименование магазина
+            example: Ашан
           time:
             type: string
             description: Время совершения покупки
@@ -296,17 +299,53 @@ components:
             type: integer
             description: Владелец покупки
             example: 55
-      Shop:
-        title: Магазин
+        required:
+          - date
+          - name
+          - time
+          - ownerID
+      ComingShoppingsProperty:
+        description: "Свойства ошибки валидации"
+        type: object
         properties:
-          ID: 
-            type: integer
-            description: Идентификатор магазина
-            example: 55 
-          name:
+          validation:
+            $ref: "#/components/schemas/ComingShoppingsValidation"
+      ComingShoppingsValidation:
+        type: object
+        properties:
+          date:
             type: string
-            description: Наименование магазина
-            example: Ашан
+            example: "format"
+            enum:
+              - format
+      ShoppingProperty:
+        type: object
+        properties:
+          validation:
+            $ref: "#/components/schemas/ShoppingValidation"
+      ShoppingValidation:
+        type: object
+        properties:
+          date:
+            type: string
+            example: "format"
+            enum:
+              - format 
+          name:
+            type: integer
+            example: "min"
+            enum:
+              - min
+          time:
+            type: string
+            example: "format"
+            enum:
+              - format 
+          ownerID:
+            type: integer
+            example: "format"
+            enum:
+              - format        
   requestBodies:
     Item_request:
       content:
@@ -356,6 +395,26 @@ components:
                       type: array
                       items:
                         $ref: "#/components/schemas/Shopping_item"
+      Goods_400:
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_400"
+                - type: object
+                  properties:
+                    errors: 
+                      type: object
+                      properties:
+                        validation:
+                          type: object
+                          properties:
+                            shoppingID:
+                              type: string
+                              example: format
+                              enum:
+                                - format
       Item_200:
         description: Добавленный товар
         content:
@@ -363,7 +422,12 @@ components:
             schema:
               allOf:
                 - $ref: "#/components/schemas/Success"
-                - $ref: "#/components/schemas/Shopping_item_params_with_id"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_item_params_with_id"
       Item_400:
         description: Validation error
         content:
@@ -381,33 +445,26 @@ components:
                           properties:
                             productName:
                               type: string
-                              example: Хлеб
+                              example: "min"
                               enum:
-                                - string
-                                - format
+                                - min
                             quantity:
                               type: integer
                               description: Количество товара
+                              example: "format"
                               enum:
-                                - string
                                 - format
                             categoryID:
                               type: integer
                               description: Идентификатор категории товара
+                              example: "format"
                               enum:
-                                - string
-                                - format
-                            complete:  
-                              type: boolean
-                              description: Флаг выполнения покупки
-                              enum:
-                                - string
                                 - format
                             listID:
                               type: integer
                               description: Идентификатор списка покупок
+                              example: "format"
                               enum:
-                                - string
                                 - format 
       ComingShoppings_200:
         description: Ближайшие 5 покупок
@@ -422,6 +479,17 @@ components:
                       type: array
                       items:
                         $ref: "#/components/schemas/Shopping_with_id"
+      ComingShoppings_400:
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_400"
+                - type: object
+                  properties:
+                    errors: 
+                      $ref: "#/components/schemas/ComingShoppingsProperty"
       LastShopping_200:
         description: Ближайшая покупка
         content:
@@ -429,7 +497,12 @@ components:
             schema:
               allOf:
                 - $ref: "#/components/schemas/Success"
-                - $ref: "#/components/schemas/Shopping_with_id"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_with_id"
       Shopping_200:
         description: Добавленная покупка
         content:
@@ -438,7 +511,11 @@ components:
               allOf:
                 - $ref: "#/components/schemas/Success"
                 - type: object
-                - $ref: "#/components/schemas/Shopping"
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_with_id"
       Shopping_400:
         description: Validation error
         content:
@@ -449,47 +526,7 @@ components:
                 - type: object
                   properties:
                     errors: 
-                      type: object
-                      properties:
-                        validation:
-                          type: object
-                          properties:
-                            date:
-                              type: string
-                              example: "20.11.2019"
-                              enum:
-                                - string
-                                - format 
-                            sum:
-                              type: integer
-                              example: 5500
-                              enum:
-                                - string
-                                - format 
-                            shopID:
-                              type: integer
-                              example: 55
-                              enum:
-                                - string
-                                - format 
-                            complete:
-                              type: boolean
-                              example: true
-                              enum:
-                                - string
-                                - format 
-                            time:
-                              type: string
-                              example: "12:00"
-                              enum:
-                                - string
-                                - format 
-                            ownerID:
-                              type: integer
-                              example: 55
-                              enum:
-                                - string
-                                - format 
+                      $ref: "#/components/schemas/ShoppingProperty"
   parameters:
     shoppingID:
       name: shoppingID

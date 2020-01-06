@@ -100,15 +100,49 @@ func (q *Queries) GetLastShopping(ctx context.Context) (Shopping, error) {
 	return i, err
 }
 
-const getShoppingByName = `-- name: GetShoppingByName :one
+const getShopByID = `-- name: GetShopByID :one
+SELECT id, name FROM shop
+WHERE id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetShopByID(ctx context.Context, id int32) (Shop, error) {
+	row := q.queryRow(ctx, q.getShopByIDStmt, getShopByID, id)
+	var i Shop
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getShopByName = `-- name: GetShopByName :one
 SELECT id, name FROM shop
 WHERE name = $1
 LIMIT 1
 `
 
-func (q *Queries) GetShoppingByName(ctx context.Context, name sql.NullString) (Shop, error) {
-	row := q.queryRow(ctx, q.getShoppingByNameStmt, getShoppingByName, name)
+func (q *Queries) GetShopByName(ctx context.Context, name sql.NullString) (Shop, error) {
+	row := q.queryRow(ctx, q.getShopByNameStmt, getShopByName, name)
 	var i Shop
 	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getShoppingByID = `-- name: GetShoppingByID :one
+SELECT id, date, sum, shop_id, complete, time, owner_id FROM shopping
+WHERE id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetShoppingByID(ctx context.Context, id int32) (Shopping, error) {
+	row := q.queryRow(ctx, q.getShoppingByIDStmt, getShoppingByID, id)
+	var i Shopping
+	err := row.Scan(
+		&i.ID,
+		&i.Date,
+		&i.Sum,
+		&i.ShopID,
+		&i.Complete,
+		&i.Time,
+		&i.OwnerID,
+	)
 	return i, err
 }

@@ -31,8 +31,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getLastShoppingStmt, err = db.PrepareContext(ctx, getLastShopping); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLastShopping: %w", err)
 	}
-	if q.getShoppingByNameStmt, err = db.PrepareContext(ctx, getShoppingByName); err != nil {
-		return nil, fmt.Errorf("error preparing query GetShoppingByName: %w", err)
+	if q.getShopByIDStmt, err = db.PrepareContext(ctx, getShopByID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetShopByID: %w", err)
+	}
+	if q.getShopByNameStmt, err = db.PrepareContext(ctx, getShopByName); err != nil {
+		return nil, fmt.Errorf("error preparing query GetShopByName: %w", err)
+	}
+	if q.getShoppingByIDStmt, err = db.PrepareContext(ctx, getShoppingByID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetShoppingByID: %w", err)
 	}
 	return &q, nil
 }
@@ -54,9 +60,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getLastShoppingStmt: %w", cerr)
 		}
 	}
-	if q.getShoppingByNameStmt != nil {
-		if cerr := q.getShoppingByNameStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getShoppingByNameStmt: %w", cerr)
+	if q.getShopByIDStmt != nil {
+		if cerr := q.getShopByIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getShopByIDStmt: %w", cerr)
+		}
+	}
+	if q.getShopByNameStmt != nil {
+		if cerr := q.getShopByNameStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getShopByNameStmt: %w", cerr)
+		}
+	}
+	if q.getShoppingByIDStmt != nil {
+		if cerr := q.getShoppingByIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getShoppingByIDStmt: %w", cerr)
 		}
 	}
 	return err
@@ -101,7 +117,9 @@ type Queries struct {
 	getComingShoppingsStmt   *sql.Stmt
 	getGoodsByShoppingIDStmt *sql.Stmt
 	getLastShoppingStmt      *sql.Stmt
-	getShoppingByNameStmt    *sql.Stmt
+	getShopByIDStmt          *sql.Stmt
+	getShopByNameStmt        *sql.Stmt
+	getShoppingByIDStmt      *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -111,6 +129,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getComingShoppingsStmt:   q.getComingShoppingsStmt,
 		getGoodsByShoppingIDStmt: q.getGoodsByShoppingIDStmt,
 		getLastShoppingStmt:      q.getLastShoppingStmt,
-		getShoppingByNameStmt:    q.getShoppingByNameStmt,
+		getShopByIDStmt:          q.getShopByIDStmt,
+		getShopByNameStmt:        q.getShopByNameStmt,
+		getShoppingByIDStmt:      q.getShoppingByIDStmt,
 	}
 }

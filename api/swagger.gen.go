@@ -20,6 +20,16 @@ type Base struct {
 	Version *string `json:"version,omitempty"`
 }
 
+// ComingShoppingsProperty defines model for ComingShoppingsProperty.
+type ComingShoppingsProperty struct {
+	Validation *ComingShoppingsValidation `json:"validation,omitempty"`
+}
+
+// ComingShoppingsValidation defines model for ComingShoppingsValidation.
+type ComingShoppingsValidation struct {
+	Date *string `json:"date,omitempty"`
+}
+
 // Error defines model for Error.
 type Error struct {
 	// Embedded struct due to allOf(#/components/schemas/Base)
@@ -64,19 +74,24 @@ type Error500 struct {
 	Message string      `json:"message"`
 }
 
-// Shop defines model for Shop.
-type Shop struct {
-	ID   *int    `json:"ID,omitempty"`
-	Name *string `json:"name,omitempty"`
-}
-
 // Shopping defines model for Shopping.
 type Shopping struct {
 	// Embedded fields due to inline allOf schema
 	// Embedded struct due to allOf(#/components/schemas/Shopping_params)
 	ShoppingParams
-	// Embedded struct due to allOf(#/components/schemas/Shop)
-	Shop
+}
+
+// ShoppingProperty defines model for ShoppingProperty.
+type ShoppingProperty struct {
+	Validation *ShoppingValidation `json:"validation,omitempty"`
+}
+
+// ShoppingValidation defines model for ShoppingValidation.
+type ShoppingValidation struct {
+	Date    *string `json:"date,omitempty"`
+	Name    *int    `json:"name,omitempty"`
+	OwnerID *int    `json:"ownerID,omitempty"`
+	Time    *string `json:"time,omitempty"`
 }
 
 // ShoppingItem defines model for Shopping_item.
@@ -88,17 +103,17 @@ type ShoppingItem struct {
 
 // ShoppingItemParams defines model for Shopping_item_params.
 type ShoppingItemParams struct {
-	CategoryID  *int    `json:"categoryID,omitempty"`
-	Complete    *bool   `json:"complete,omitempty"`
-	ListID      *int    `json:"listID,omitempty"`
-	ProductName *string `json:"productName,omitempty"`
-	Quantity    *int    `json:"quantity,omitempty"`
+	CategoryID  int    `json:"categoryID"`
+	Complete    bool   `json:"complete"`
+	ListID      int    `json:"listID"`
+	ProductName string `json:"productName"`
+	Quantity    int    `json:"quantity"`
 }
 
 // ShoppingItemParamsWithId defines model for Shopping_item_params_with_id.
 type ShoppingItemParamsWithId struct {
 	// Embedded fields due to inline allOf schema
-	ID *int `json:"ID,omitempty"`
+	Id *int `json:"id,omitempty"`
 	// Embedded struct due to allOf(#/components/schemas/Shopping_item_params)
 	ShoppingItemParams
 	// Embedded fields due to inline allOf schema
@@ -106,23 +121,19 @@ type ShoppingItemParamsWithId struct {
 
 // ShoppingParams defines model for Shopping_params.
 type ShoppingParams struct {
-	Complete *bool   `json:"complete,omitempty"`
-	Date     *string `json:"date,omitempty"`
-	OwnerID  *int    `json:"ownerID,omitempty"`
-	ShopID   *int    `json:"shopID,omitempty"`
-	Sum      *int    `json:"sum,omitempty"`
-	Time     *string `json:"time,omitempty"`
+	Date    string `json:"date"`
+	Name    string `json:"name"`
+	OwnerID int    `json:"ownerID"`
+	Time    string `json:"time"`
 }
 
 // ShoppingWithId defines model for Shopping_with_id.
 type ShoppingWithId struct {
 	// Embedded fields due to inline allOf schema
 	// Embedded fields due to inline allOf schema
-	ID *int `json:"ID,omitempty"`
+	Id *int `json:"id,omitempty"`
 	// Embedded struct due to allOf(#/components/schemas/Shopping_params)
 	ShoppingParams
-	// Embedded struct due to allOf(#/components/schemas/Shop)
-	Shop
 }
 
 // Success defines model for Success.
@@ -166,6 +177,14 @@ type ComingShoppings200 struct {
 	Data *[]ShoppingWithId `json:"data,omitempty"`
 }
 
+// ComingShoppings400 defines model for ComingShoppings_400.
+type ComingShoppings400 struct {
+	// Embedded struct due to allOf(#/components/schemas/Error_400)
+	Error400
+	// Embedded fields due to inline allOf schema
+	Errors *ComingShoppingsProperty `json:"errors,omitempty"`
+}
+
 // Goods200 defines model for Goods_200.
 type Goods200 struct {
 	// Embedded struct due to allOf(#/components/schemas/Success)
@@ -174,12 +193,24 @@ type Goods200 struct {
 	Data *[]ShoppingItem `json:"data,omitempty"`
 }
 
+// Goods400 defines model for Goods_400.
+type Goods400 struct {
+	// Embedded struct due to allOf(#/components/schemas/Error_400)
+	Error400
+	// Embedded fields due to inline allOf schema
+	Errors *struct {
+		Validation *struct {
+			ShoppingID *string `json:"shoppingID,omitempty"`
+		} `json:"validation,omitempty"`
+	} `json:"errors,omitempty"`
+}
+
 // Item200 defines model for Item_200.
 type Item200 struct {
 	// Embedded struct due to allOf(#/components/schemas/Success)
 	Success
-	// Embedded struct due to allOf(#/components/schemas/Shopping_item_params_with_id)
-	ShoppingItemParamsWithId
+	// Embedded fields due to inline allOf schema
+	Data *[]ShoppingItemParamsWithId `json:"data,omitempty"`
 }
 
 // Item400 defines model for Item_400.
@@ -190,7 +221,6 @@ type Item400 struct {
 	Errors *struct {
 		Validation *struct {
 			CategoryID  *int    `json:"categoryID,omitempty"`
-			Complete    *bool   `json:"complete,omitempty"`
 			ListID      *int    `json:"listID,omitempty"`
 			ProductName *string `json:"productName,omitempty"`
 			Quantity    *int    `json:"quantity,omitempty"`
@@ -202,8 +232,8 @@ type Item400 struct {
 type LastShopping200 struct {
 	// Embedded struct due to allOf(#/components/schemas/Success)
 	Success
-	// Embedded struct due to allOf(#/components/schemas/Shopping_with_id)
-	ShoppingWithId
+	// Embedded fields due to inline allOf schema
+	Data *[]ShoppingWithId `json:"data,omitempty"`
 }
 
 // Shopping200 defines model for Shopping_200.
@@ -211,8 +241,7 @@ type Shopping200 struct {
 	// Embedded struct due to allOf(#/components/schemas/Success)
 	Success
 	// Embedded fields due to inline allOf schema
-	// Embedded struct due to allOf(#/components/schemas/Shopping)
-	Shopping
+	Data *[]ShoppingWithId `json:"data,omitempty"`
 }
 
 // Shopping400 defines model for Shopping_400.
@@ -220,16 +249,7 @@ type Shopping400 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error_400)
 	Error400
 	// Embedded fields due to inline allOf schema
-	Errors *struct {
-		Validation *struct {
-			Complete *bool   `json:"complete,omitempty"`
-			Date     *string `json:"date,omitempty"`
-			OwnerID  *int    `json:"ownerID,omitempty"`
-			ShopID   *int    `json:"shopID,omitempty"`
-			Sum      *int    `json:"sum,omitempty"`
-			Time     *string `json:"time,omitempty"`
-		} `json:"validation,omitempty"`
-	} `json:"errors,omitempty"`
+	Errors *ShoppingProperty `json:"errors,omitempty"`
 }
 
 // ItemRequest defines model for Item_request.
@@ -356,38 +376,38 @@ func RegisterHandlers(router interface {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"/7Q7SqyLKAAA",
+	"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",
 }
 
 // GetSwagger returns the Swagger specification corresponding to the generated code

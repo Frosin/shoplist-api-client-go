@@ -32,10 +32,7 @@ var serveCmd = &cobra.Command{
 			log.Println("Error = ", err)
 		}
 		var myServer store.Server
-		myServer.DB.Open(viper.GetString("SHOPLIST_DB_FILE_NAME"), false)
-		defer myServer.DB.GormDB.Close()
-		myServer.DB.GormDB = myServer.DB.GormDB.Debug().Set("gorm:auto_preload", true)
-		db, err := sqlx.Open("sqlite3", "store/db/shoplist.db")
+		db, err := sqlx.Open("sqlite3", "store/db/"+viper.GetString("SHOPLIST_DB_FILE_NAME"))
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -45,6 +42,7 @@ var serveCmd = &cobra.Command{
 		e.HTTPErrorHandler = errorHandler
 		//e.Use(middleware.Logger())
 		api.RegisterHandlers(e, &myServer)
+
 		e.Logger.Debug(e.Start(":" + port))
 	},
 }
@@ -60,8 +58,8 @@ func init() {
 }
 
 func errorHandler(err error, ctx echo.Context) {
+	version := viper.GetString("SHOPLIST_API_VERSION")
 	stacktrace := sentry.NewStacktrace()
-
 	event := sentry.Event{
 		User:    sentry.User{},
 		Request: sentryRequestFromHTTP(ctx.Request()),
@@ -77,32 +75,34 @@ func errorHandler(err error, ctx echo.Context) {
 
 	if requestError, ok := err.(*openapi3filter.RequestError); ok {
 		code = requestError.HTTPStatus()
-
 		// Get original error
 		err = requestError.Err
 	}
 
 	switch code {
 	case http.StatusBadRequest:
-		ctx.JSON(code, api.Error400{
-			Message: err.Error(),
-		})
+		var response api.Error400
+		response.Version = &version
+		response.Message = err.Error()
+		ctx.JSON(code, response)
 	case http.StatusNotFound:
-		ctx.JSON(code, api.Error404{
-			Message: err.Error(),
-		})
+		var response api.Error404
+		response.Version = &version
+		response.Message = err.Error()
+		ctx.JSON(code, response)
 	case http.StatusMethodNotAllowed:
+		var response api.Error405
+		response.Version = &version
 		errStr := err.Error()
-		ctx.JSON(code, api.Error405{
-			Message: &errStr,
-		})
+		response.Message = &errStr
+		ctx.JSON(code, response)
 	case http.StatusInternalServerError:
-		ctx.JSON(code, api.Error500{
-			Message: err.Error(),
-		})
+		var response api.Error500
+		response.Version = &version
+		response.Message = err.Error()
+		ctx.JSON(code, response)
 	}
 	return
-
 }
 
 func sentryRequestFromHTTP(r *http.Request) sentry.Request {

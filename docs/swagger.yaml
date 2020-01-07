@@ -114,7 +114,7 @@ components:
               message:
                 type: string
                 description: Сообщение ответа
-                example: Success
+                example: success
               errors:
                 type: array
                 items: {}
@@ -286,7 +286,7 @@ components:
           date:
             type: string
             description: Дата покупки
-            example: "20.11.2019"
+            example: "2019-11-20"
           name:
             type: string
             description: Наименование магазина
@@ -294,7 +294,7 @@ components:
           time:
             type: string
             description: Время совершения покупки
-            example: "12:00"
+            example: "12:00:00"
           ownerID:
             type: integer
             description: Владелец покупки

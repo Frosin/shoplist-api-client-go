@@ -58,6 +58,7 @@ func init() {
 }
 
 func errorHandler(err error, ctx echo.Context) {
+	log.Println("ERROR=", err)
 	version := viper.GetString("SHOPLIST_API_VERSION")
 	stacktrace := sentry.NewStacktrace()
 	event := sentry.Event{

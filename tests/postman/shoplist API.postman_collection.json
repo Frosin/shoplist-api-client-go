@@ -1,0 +1,964 @@
+{
+	"info": {
+		"_postman_id": "ccb86896-9dd6-4870-9cad-6c29d9955ee3",
+		"name": "shoplist API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Создание покупки 200",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "bc55f95b-71b6-4c4c-9820-81ea2faf6f40",
+						"exec": [
+							"let date = new Date().toISOString().substring(0, 10)",
+							"pm.environment.set(\"date\", date);",
+							"pm.environment.set(\"name\", \"Ашан\");",
+							"pm.environment.set(\"time\", \"12:15:00\");",
+							"pm.environment.set(\"ownerID\", 55);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "1885b978-f36a-4827-a7f4-fa48e748819a",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Success response is correct\", function () {",
+							"    pm.expect(pm.response).to.have.property('code', 200);",
+							"    pm.expect(pm.response).to.have.property('status', 'OK');",
+							"    pm.expect(pm.response).to.have.header('Content-type', 'application/json; charset=UTF-8');",
+							"});",
+							"",
+							"pm.test('Base schema is valid', function() {",
+							"  pm.expect(tv4.validate(jsonData, glFn.getEnvSchema(\"baseSchema\"))).to.be.true;",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    pm.test('Entity schema is valid', function() {",
+							"      pm.expect(tv4.validate(jsonData.data[0], glFn.getEnvSchema(\"shoppingSchema\"))).to.be.true;",
+							"    });",
+							"    ",
+							"    pm.test('Message data is valid', function() {",
+							"      pm.expect(jsonData).to.have.property(\"message\", \"success\");",
+							"    });",
+							"    ",
+							"    pm.test(\"Entity data is correct\", function () {",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"date\", pm.environment.get(\"date\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"name\", pm.environment.get(\"name\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"time\", pm.environment.get(\"time\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"ownerID\", pm.environment.get(\"ownerID\"));",
+							"    });",
+							"    ",
+							"    pm.environment.set(\"listID\", jsonData.data[0].id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"date\": \"{{date}}\",\n    \"name\": \"{{name}}\",\n    \"time\": \"{{time}}\",\n    \"ownerID\": {{ownerID}}\n}"
+				},
+				"url": {
+					"raw": "{{shoplistHost}}/addShopping",
+					"host": [
+						"{{shoplistHost}}"
+					],
+					"path": [
+						"addShopping"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Validation error",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"email\": \"<email>\",\n    \"mobile\": \"<string>\",\n    \"password\": \"<string>\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ]\n}"
+				},
+				{
+					"name": "Invalid Method",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"email\": \"<email>\",\n    \"mobile\": \"<string>\",\n    \"password\": \"<string>\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Method Not Allowed",
+					"code": 405,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ]\n}"
+				},
+				{
+					"name": "Коллекция перс. данных пользователя",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"email\": \"<email>\",\n    \"mobile\": \"<string>\",\n    \"password\": \"<string>\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ],\n \"data\": [\n  {\n   \"ID\": \"<string>\",\n   \"firstName\": \"<string>\",\n   \"lastName\": \"<string>\",\n   \"middleName\": \"<string>\",\n   \"email\": \"<email>\",\n   \"mobile\": \"<string>\"\n  },\n  {\n   \"ID\": \"<string>\",\n   \"firstName\": \"<string>\",\n   \"lastName\": \"<string>\",\n   \"middleName\": \"<string>\",\n   \"email\": \"<email>\",\n   \"mobile\": \"<string>\"\n  }\n ]\n}"
+				},
+				{
+					"name": "Internal server error",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"email\": \"<email>\",\n    \"mobile\": \"<string>\",\n    \"password\": \"<string>\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Internal Server Error",
+					"code": 500,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": \"schema type not provided\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Добавление товара 200",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "bc55f95b-71b6-4c4c-9820-81ea2faf6f40",
+						"exec": [
+							"pm.environment.set(\"productName\", \"Хлеб\");",
+							"pm.environment.set(\"quantity\", 1);",
+							"pm.environment.set(\"categoryID\", 5);",
+							"pm.environment.set(\"complete\", false);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "1885b978-f36a-4827-a7f4-fa48e748819a",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Success response is correct\", function () {",
+							"    pm.expect(pm.response).to.have.property('code', 200);",
+							"    pm.expect(pm.response).to.have.property('status', 'OK');",
+							"    pm.expect(pm.response).to.have.header('Content-type', 'application/json; charset=UTF-8');",
+							"});",
+							"",
+							"pm.test('Base schema is valid', function() {",
+							"  pm.expect(tv4.validate(jsonData, glFn.getEnvSchema(\"baseSchema\"))).to.be.true;",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    pm.test('Entity schema is valid', function() {",
+							"      pm.expect(tv4.validate(jsonData.data[0], glFn.getEnvSchema(\"itemSchema\"))).to.be.true;",
+							"    });",
+							"    ",
+							"    pm.test('Message data is valid', function() {",
+							"      pm.expect(jsonData).to.have.property(\"message\", \"success\");",
+							"    });",
+							"    ",
+							"    pm.test(\"Entity data is correct\", function () {",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"productName\", pm.environment.get(\"productName\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"quantity\", pm.environment.get(\"quantity\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"categoryID\", pm.environment.get(\"categoryID\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"complete\", pm.environment.get(\"complete\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"listID\", pm.environment.get(\"listID\"));",
+							"    });",
+							"    ",
+							"    ",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"productName\": \"{{productName}}\",\n    \"quantity\": {{quantity}},\n    \"categoryID\": {{categoryID}},\n    \"complete\": {{complete}},\n    \"listID\": {{listID}}\n}"
+				},
+				"url": {
+					"raw": "{{shoplistHost}}/addItem",
+					"host": [
+						"{{shoplistHost}}"
+					],
+					"path": [
+						"addItem"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Invalid Method",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"email\": \"<email>\",\n    \"mobile\": \"<string>\",\n    \"password\": \"<string>\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Method Not Allowed",
+					"code": 405,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ]\n}"
+				},
+				{
+					"name": "Internal server error",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"email\": \"<email>\",\n    \"mobile\": \"<string>\",\n    \"password\": \"<string>\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Internal Server Error",
+					"code": 500,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": \"schema type not provided\"\n}"
+				},
+				{
+					"name": "Validation error",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"email\": \"<email>\",\n    \"mobile\": \"<string>\",\n    \"password\": \"<string>\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ]\n}"
+				},
+				{
+					"name": "Коллекция перс. данных пользователя",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"email\": \"<email>\",\n    \"mobile\": \"<string>\",\n    \"password\": \"<string>\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ],\n \"data\": [\n  {\n   \"ID\": \"<string>\",\n   \"firstName\": \"<string>\",\n   \"lastName\": \"<string>\",\n   \"middleName\": \"<string>\",\n   \"email\": \"<email>\",\n   \"mobile\": \"<string>\"\n  },\n  {\n   \"ID\": \"<string>\",\n   \"firstName\": \"<string>\",\n   \"lastName\": \"<string>\",\n   \"middleName\": \"<string>\",\n   \"email\": \"<email>\",\n   \"mobile\": \"<string>\"\n  }\n ]\n}"
+				}
+			]
+		},
+		{
+			"name": "Получение товаров покупки 200",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "1b31fbb0-1385-4523-8704-c1ef0ca65c93",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody)",
+							"",
+							"pm.test(\"Success response is correct\", function () {",
+							"    pm.expect(pm.response).to.have.property('code', 200);",
+							"    pm.expect(pm.response).to.have.property('status', 'OK');",
+							"    pm.expect(pm.response).to.have.header('Content-type', 'application/json; charset=UTF-8');",
+							"});",
+							"",
+							"pm.test('Base schema is valid', function() {",
+							"  pm.expect(tv4.validate(jsonData, glFn.getEnvSchema(\"baseSchema\"))).to.be.true;",
+							"});",
+							"",
+							"if (jsonData.data !== null && jsonData.data.length > 0) {",
+							"",
+							"    pm.test('Entity schema is valid', function() {",
+							"      pm.expect(tv4.validate(jsonData.data[0], glFn.getEnvSchema(\"itemSchema\"))).to.be.true;",
+							"    });",
+							"    ",
+							"    pm.test('Message data is valid', function() {",
+							"      pm.expect(jsonData).to.have.property(\"message\", \"success\");",
+							"    });",
+							"    ",
+							"    pm.test(\"Entity data is correct\", function () {",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"productName\", pm.environment.get(\"productName\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"quantity\", pm.environment.get(\"quantity\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"categoryID\", pm.environment.get(\"categoryID\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"complete\", pm.environment.get(\"complete\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"listID\", pm.environment.get(\"listID\"));",
+							"    });",
+							"",
+							"}",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{shoplistHost}}/getGoods/{{listID}}",
+					"host": [
+						"{{shoplistHost}}"
+					],
+					"path": [
+						"getGoods",
+						"{{listID}}"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Invalid Method",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Method Not Allowed",
+					"code": 405,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ]\n}"
+				},
+				{
+					"name": "Internal server error",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Internal Server Error",
+					"code": 500,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": \"schema type not provided\"\n}"
+				},
+				{
+					"name": "Коллекция перс. данных пользователя",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ],\n \"data\": [\n  {\n   \"ID\": \"<string>\",\n   \"firstName\": \"<string>\",\n   \"lastName\": \"<string>\",\n   \"middleName\": \"<string>\",\n   \"email\": \"<email>\",\n   \"mobile\": \"<string>\"\n  },\n  {\n   \"ID\": \"<string>\",\n   \"firstName\": \"<string>\",\n   \"lastName\": \"<string>\",\n   \"middleName\": \"<string>\",\n   \"email\": \"<email>\",\n   \"mobile\": \"<string>\"\n  }\n ]\n}"
+				}
+			]
+		},
+		{
+			"name": "Получение последней покупки 200",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "1b31fbb0-1385-4523-8704-c1ef0ca65c93",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody)",
+							"",
+							"pm.test(\"Success response is correct\", function () {",
+							"    pm.expect(pm.response).to.have.property('code', 200);",
+							"    pm.expect(pm.response).to.have.property('status', 'OK');",
+							"    pm.expect(pm.response).to.have.header('Content-type', 'application/json; charset=UTF-8');",
+							"});",
+							"",
+							"pm.test('Base schema is valid', function() {",
+							"  pm.expect(tv4.validate(jsonData, glFn.getEnvSchema(\"baseSchema\"))).to.be.true;",
+							"});",
+							"",
+							"if (jsonData.data !== null && jsonData.data.length > 0) {",
+							"",
+							"    pm.test('Entity schema is valid', function() {",
+							"      pm.expect(tv4.validate(jsonData.data[0], glFn.getEnvSchema(\"shoppingSchema\"))).to.be.true;",
+							"    });",
+							"    ",
+							"    pm.test('Message data is valid', function() {",
+							"      pm.expect(jsonData).to.have.property(\"message\", \"success\");",
+							"    });",
+							"    ",
+							"    pm.test(\"Entity data is correct\", function () {",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"id\", pm.environment.get(\"listID\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"date\", pm.environment.get(\"date\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"name\", pm.environment.get(\"name\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"time\", pm.environment.get(\"time\"));",
+							"        pm.expect(jsonData.data[0]).to.have.property(\"ownerID\", pm.environment.get(\"ownerID\"));",
+							"    });",
+							"}",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{shoplistHost}}/lastShopping",
+					"host": [
+						"{{shoplistHost}}"
+					],
+					"path": [
+						"lastShopping"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Invalid Method",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Method Not Allowed",
+					"code": 405,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ]\n}"
+				},
+				{
+					"name": "Коллекция перс. данных пользователя",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ],\n \"data\": [\n  {\n   \"ID\": \"<string>\",\n   \"firstName\": \"<string>\",\n   \"lastName\": \"<string>\",\n   \"middleName\": \"<string>\",\n   \"email\": \"<email>\",\n   \"mobile\": \"<string>\"\n  },\n  {\n   \"ID\": \"<string>\",\n   \"firstName\": \"<string>\",\n   \"lastName\": \"<string>\",\n   \"middleName\": \"<string>\",\n   \"email\": \"<email>\",\n   \"mobile\": \"<string>\"\n  }\n ]\n}"
+				},
+				{
+					"name": "Internal server error",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Internal Server Error",
+					"code": 500,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": \"schema type not provided\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Получение ближайших 5 покупок 200",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "1b31fbb0-1385-4523-8704-c1ef0ca65c93",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody)",
+							"",
+							"pm.test(\"Success response is correct\", function () {",
+							"    pm.expect(pm.response).to.have.property('code', 200);",
+							"    pm.expect(pm.response).to.have.property('status', 'OK');",
+							"    pm.expect(pm.response).to.have.header('Content-type', 'application/json; charset=UTF-8');",
+							"});",
+							"",
+							"pm.test('Base schema is valid', function() {",
+							"  pm.expect(tv4.validate(jsonData, glFn.getEnvSchema(\"baseSchema\"))).to.be.true;",
+							"});",
+							"",
+							"if (jsonData.data !== null && jsonData.data.length > 0) {",
+							"",
+							"    pm.test('Entity schema is valid', function() {",
+							"      pm.expect(tv4.validate(jsonData.data[0], glFn.getEnvSchema(\"shoppingSchema\"))).to.be.true;",
+							"    });",
+							"    ",
+							"    pm.test('Message data is valid', function() {",
+							"      pm.expect(jsonData).to.have.property(\"message\", \"success\");",
+							"    });",
+							"}",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{shoplistHost}}/getComingShoppings/{{date}}",
+					"host": [
+						"{{shoplistHost}}"
+					],
+					"path": [
+						"getComingShoppings",
+						"{{date}}"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Internal server error",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Internal Server Error",
+					"code": 500,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": \"schema type not provided\"\n}"
+				},
+				{
+					"name": "Invalid Method",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "Method Not Allowed",
+					"code": 405,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"data\": \"schema type not provided\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ]\n}"
+				},
+				{
+					"name": "Коллекция перс. данных пользователя",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"version\": \"<string>\",\n \"message\": \"<string>\",\n \"errors\": [\n  \"schema type not provided\",\n  \"schema type not provided\"\n ],\n \"data\": [\n  {\n   \"ID\": \"<string>\",\n   \"firstName\": \"<string>\",\n   \"lastName\": \"<string>\",\n   \"middleName\": \"<string>\",\n   \"email\": \"<email>\",\n   \"mobile\": \"<string>\"\n  },\n  {\n   \"ID\": \"<string>\",\n   \"firstName\": \"<string>\",\n   \"lastName\": \"<string>\",\n   \"middleName\": \"<string>\",\n   \"email\": \"<email>\",\n   \"mobile\": \"<string>\"\n  }\n ]\n}"
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "a64415f0-bc40-4999-9c53-0fa2de1c1016",
+				"type": "text/javascript",
+				"exec": [
+					"glFn = {",
+					"    getEnvSchema: function(name) {",
+					"        return JSON.parse(pm.variables.get(name));",
+					"}",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "e371f440-cedd-4f36-8059-7353e37bae68",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "679c00c0-4a41-46e9-b4f9-16c2a6bc3e5f",
+			"key": "baseSchema",
+			"value": "{\"type\":\"object\",\"properties\":{\"version\":{\"type\":\"string\"},\"errors\":{\"type\":[\"object\",\"array\",\"null\"]},\"data\":{\"type\":[\"array\",\"null\"]}},\"required\":[\"version\",\"errors\",\"data\"]}",
+			"type": "string"
+		},
+		{
+			"id": "abc98d94-71da-4346-a151-c1453e1be5ea",
+			"key": "shoppingSchema",
+			"value": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": {\n      \"type\": \"integer\"\n    },\n    \"date\": {\n      \"type\": \"string\"\n    },\n    \"name\": {\n      \"type\": \"string\"\n    },\n    \"time\": {\n      \"type\": \"string\",\n    },\n    \"ownerID\": {\n      \"type\": \"integer\",\n    }\n  },\n  \"required\": [\n    \"id\",\n    \"date\",\n    \"name\",\n    \"time\",\n    \"ownerID\"\n  ]\n}",
+			"type": "string"
+		},
+		{
+			"id": "6485c800-d7bc-44b5-8f73-5b3801f423ef",
+			"key": "itemSchema",
+			"value": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": {\n      \"type\": \"integer\"\n    },\n    \"productName\": {\n      \"type\": \"string\"\n    },\n    \"quantity\": {\n      \"type\": \"integer\"\n    },\n    \"categoryID\": {\n      \"type\": \"integer\"\n    },\n    \"complete\": {\n      \"type\": \"boolean\"\n    },\n    \"listID\": {\n      \"type\": \"integer\"\n    }\n  },\n  \"required\": [\n    \"id\",\n    \"productName\",\n    \"quantity\",\n    \"categoryID\",\n    \"complete\",\n    \"listID\"\n  ]\n}",
+			"type": "string"
+		}
+	],
+	"protocolProfileBehavior": {}
+}

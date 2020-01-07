@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/Frosin/shoplist-api-client-go/api"
@@ -46,9 +45,6 @@ func (s *Server) GetGoods(ctx echo.Context, shoppingID api.ShoppingID) error {
 		response.Data = items
 		return ctx.JSON(http.StatusOK, response)
 	}
-	response400 := func(err error, validation *[]interface{}) error {
-		return s.error(ctx, http.StatusBadRequest, err, validation)
-	}
 	response404 := func() error {
 		return s.error(ctx, http.StatusNotFound, nil, nil)
 	}
@@ -56,18 +52,7 @@ func (s *Server) GetGoods(ctx echo.Context, shoppingID api.ShoppingID) error {
 	response500 := func(err error) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
-	sID, err := strconv.Atoi(string(shoppingID))
-	if err != nil {
-		validationError := map[string]map[string]string{
-			"validation": map[string]string{
-				"shoppingID": "format",
-			},
-		}
-		validation := []interface{}{validationError}
-		return response400(err, &validation)
-	}
-
-	goods, err := s.Queries.GetGoodsByShoppingID(context.Background(), int32ToNullInt32(int32(sID)))
+	goods, err := s.Queries.GetGoodsByShoppingID(context.Background(), int32ToNullInt32(int32(shoppingID)))
 	if err != nil {
 		return response500(err)
 	}
@@ -179,21 +164,21 @@ func (s *Server) AddShopping(ctx echo.Context) error {
 	}
 	var shParams api.ShoppingParams
 	if err := ctx.Bind(&shParams); err != nil {
-		return response400(ErrValidation, nil)
+		return response400(err, nil)
 	}
 	_, err := time.Parse(dateLayout, shParams.Date)
 	if err != nil {
 		validation := api.ShoppingValidation{
 			Date: strPtr("format"),
 		}
-		return response400(ErrValidation, &validation)
+		return response400(err, &validation)
 	}
 	_, err = time.Parse(timeLayout, shParams.Time)
 	if err != nil {
 		validation := api.ShoppingValidation{
 			Time: strPtr("format"),
 		}
-		return response400(ErrValidation, &validation)
+		return response400(err, &validation)
 	}
 	shopID, err := s.getShopID(shParams.Name)
 	if err != nil {

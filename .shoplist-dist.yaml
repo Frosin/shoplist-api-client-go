@@ -1,0 +1,3 @@
+SHOPLIST_API_VERSION: "0.0.1"
+SHOPLIST_DB_FILE_NAME: "shoplist.db"
+SHOPLIST_SENTRY_DSN: "https://<id>@sentry.io/<id>"

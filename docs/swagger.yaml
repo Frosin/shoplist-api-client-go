@@ -1,0 +1,544 @@
+openapi: '3.0.0'
+info:
+  title: Shoplist api service
+  version: '1.0'
+servers:
+  - url: https://api.server.test/v1
+paths:
+  "/getGoods/{shoppingID}":
+    parameters:
+    - $ref: "#/components/parameters/shoppingID"
+    get:
+      operationId: getGoods
+      tags:
+        - Shopping
+      summary: Список покупок
+      responses:
+        "200":
+          $ref: "#/components/responses/Goods_200"
+        "400":
+          $ref: "#/components/responses/Goods_400"
+        "404":
+          $ref: "#/components/responses/Base_404"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
+  "/getComingShoppings/{date}":
+    parameters:
+    - $ref: "#/components/parameters/date"
+    get:
+      operationId: GetComingShoppings
+      tags:
+        - Shopping
+      summary: Ближайшие 5 покупок
+      responses:
+        "200":
+          $ref: "#/components/responses/ComingShoppings_200"
+        "400":
+          $ref: "#/components/responses/ComingShoppings_400"
+        "404":
+          $ref: "#/components/responses/Base_404"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
+  "/lastShopping":
+    get:
+      operationId: lastShopping
+      tags:
+        - Shopping
+      summary: Последняя покупка
+      responses:
+        "200":
+          $ref: "#/components/responses/LastShopping_200"
+        "404":
+          $ref: "#/components/responses/Base_404"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
+  "/addItem": 
+    post:
+      operationId: addItem
+      requestBody:
+        $ref: "#/components/requestBodies/Item_request"
+      tags:
+        - Shopping items
+      summary: Добавление товара в покупку
+      responses:
+        "200":
+          $ref: "#/components/responses/Item_200"
+        "400":
+          $ref: "#/components/responses/Item_400"
+        "404":
+          $ref: "#/components/responses/Base_404"  
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
+  "/addShopping":
+    post:
+      operationId: "addShopping"
+      requestBody:
+        $ref: "#/components/requestBodies/Shopping_request"
+      tags:
+        - Shopping
+      summary: Добавление покупки
+      responses:
+        "200":
+          $ref: "#/components/responses/Shopping_200"
+        "400":
+          $ref: "#/components/responses/Shopping_400"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
+components:
+  schemas:
+      Base:
+        description: Возвращает статус ответа
+        type: object
+        properties:
+          version:
+            type: string
+            description: Вeрсия ответа сервиса
+            example: 1.0.0
+      Success:
+        description: Ответ успешно получен
+        allOf:
+          - $ref: "#/components/schemas/Base"
+          - type: object
+            title: Success
+            properties:
+              message:
+                type: string
+                description: Сообщение ответа
+                example: success
+              errors:
+                type: array
+                items: {}
+                description: Ошибки ответа
+            required:
+              - message
+              - errors
+      Error:
+        description: Ошибка
+        allOf:
+          - $ref: "#/components/schemas/Base"
+          - type: object
+            title: Error
+            properties:
+              data:
+                example: null
+            required:
+              - data
+      Error_400:
+        allOf:
+          - $ref: "#/components/schemas/Error"
+          - type: object
+            title: Error_400
+            properties:
+              message:
+                type: string
+                example: Validation error
+              errors:
+                type: array
+                items: {}
+            required:
+              - message
+              - errors
+      Error_404:
+        allOf:
+          - $ref: "#/components/schemas/Error"
+          - type: object
+            title: Error_404
+            properties:
+              message:
+                type: string
+                description: сообщение об ошибке
+                example: Entity not found
+              errors:
+                type: array
+                items: {}
+                example: null
+            required: 
+              - message
+              - errors
+      Error_405:
+        allOf:
+          - $ref: "#/components/schemas/Error"
+          - type: object
+            title: Error_405
+            properties:
+              message:
+                type: string
+                description: сообщение ответа
+                example: Method ${method} not allowed
+              errors:
+                type: array
+                items: {}
+                example: null
+      Error_500:
+        allOf:
+          - $ref: "#/components/schemas/Error"
+          - type: object
+            title: Error_500
+            properties:
+              message:
+                type: string
+                description: сообщение ответа
+                example: Internal server error
+              errors:
+                example: null
+            required:
+              - message
+              - errors
+      Shopping_item_params:
+        title: Параметры товара в покупке
+        properties:
+          productName:
+            type: string
+            description: Наименование товара
+            example: Хлеб
+            minLength: 1
+          quantity:
+            type: integer
+            description: Количество товара
+            example: 1
+          categoryID:
+            type: integer
+            description: Идентификатор категории товара
+            example: 5
+          complete:
+            type: boolean
+            description: Признак выполнения
+            example: true
+          listID:
+            type: integer
+            description: Идентификатор списка покупок
+            example: 5
+        required:
+          - productName
+          - quantity
+          - categoryID
+          - complete
+          - listID
+      Shopping_item_params_with_id:
+        allOf:
+          - type: object
+            properties:
+              id:
+                type: integer
+                description: Идентификатор товара
+                example: 55
+          - $ref: "#/components/schemas/Shopping_item_params"
+          - type: object
+            required:
+              - id
+              - productName
+              - quantity
+              - categoryID
+              - complete
+              - listID
+      Shopping_item:
+        allOf:
+          - title: Товар в списке покупок
+            type: object
+          - $ref: "#/components/schemas/Shopping_item_params_with_id"  
+        required:
+          - productName
+          - quantity
+          - categoryID
+          - complete
+          - listID
+      Shopping:
+        allOf:
+          - title: Покупка
+            type: object
+          - $ref: "#/components/schemas/Shopping_params"
+        required:
+          - date
+          - name
+          - time
+          - ownerID
+      Shopping_with_id:
+        allOf:
+          - title: Покупка
+          - type: object
+            properties:
+              id:
+                type: integer
+                description: Идентификатор покупки
+                example: 55
+          - $ref: "#/components/schemas/Shopping_params"
+        required:
+          - id      
+          - date    
+          - sum     
+          - shopID  
+          - complete
+          - time    
+          - ownerID 
+      Shopping_params:
+        title: Параметры покупки
+        properties:
+          date:
+            type: string
+            description: Дата покупки
+            example: "2019-11-20"
+          name:
+            type: string
+            description: Наименование магазина
+            example: Ашан
+          time:
+            type: string
+            description: Время совершения покупки
+            example: "12:00:00"
+          ownerID:
+            type: integer
+            description: Владелец покупки
+            example: 55
+        required:
+          - date
+          - name
+          - time
+          - ownerID
+      ComingShoppingsProperty:
+        description: "Свойства ошибки валидации"
+        type: object
+        properties:
+          validation:
+            $ref: "#/components/schemas/ComingShoppingsValidation"
+      ComingShoppingsValidation:
+        type: object
+        properties:
+          date:
+            type: string
+            example: "format"
+            enum:
+              - format
+      ShoppingProperty:
+        type: object
+        properties:
+          validation:
+            $ref: "#/components/schemas/ShoppingValidation"
+      ShoppingValidation:
+        type: object
+        properties:
+          date:
+            type: string
+            example: "format"
+            enum:
+              - format 
+          name:
+            type: integer
+            example: "min"
+            enum:
+              - min
+          time:
+            type: string
+            example: "format"
+            enum:
+              - format 
+          ownerID:
+            type: integer
+            example: "format"
+            enum:
+              - format        
+  requestBodies:
+    Item_request:
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Shopping_item_params"
+      required: true
+    Shopping_request:
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Shopping"
+  responses:
+      Base_404:
+        description: Not found
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_404"
+      Base_405:
+        description: Invalid method
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_405"
+      Base_500:
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_500"
+      Goods_200:
+        description: Список товаров покупки
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Success"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_item"
+      Goods_400:
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_400"
+                - type: object
+                  properties:
+                    errors: 
+                      type: object
+                      properties:
+                        validation:
+                          type: object
+                          properties:
+                            shoppingID:
+                              type: string
+                              example: format
+                              enum:
+                                - format
+      Item_200:
+        description: Добавленный товар
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Success"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_item_params_with_id"
+      Item_400:
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_400"
+                - type: object
+                  properties:
+                    errors: 
+                      type: object
+                      properties:
+                        validation:
+                          type: object
+                          properties:
+                            productName:
+                              type: string
+                              example: "min"
+                              enum:
+                                - min
+                            quantity:
+                              type: integer
+                              description: Количество товара
+                              example: "format"
+                              enum:
+                                - format
+                            categoryID:
+                              type: integer
+                              description: Идентификатор категории товара
+                              example: "format"
+                              enum:
+                                - format
+                            listID:
+                              type: integer
+                              description: Идентификатор списка покупок
+                              example: "format"
+                              enum:
+                                - format 
+      ComingShoppings_200:
+        description: Ближайшие 5 покупок
+        content: 
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Success"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_with_id"
+      ComingShoppings_400:
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_400"
+                - type: object
+                  properties:
+                    errors: 
+                      $ref: "#/components/schemas/ComingShoppingsProperty"
+      LastShopping_200:
+        description: Ближайшая покупка
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Success"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_with_id"
+      Shopping_200:
+        description: Добавленная покупка
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Success"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_with_id"
+      Shopping_400:
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_400"
+                - type: object
+                  properties:
+                    errors: 
+                      $ref: "#/components/schemas/ShoppingProperty"
+  parameters:
+    shoppingID:
+      name: shoppingID
+      in: path
+      required: true
+      description: Идентификатор покупки
+      schema:
+        type: integer
+    date:
+      name: date
+      in: path
+      required: true
+      description: Дата отсчета 5 ближайших покупок
+      schema: 
+        type: string

@@ -1,6 +1,5 @@
 *.txt
 *.db
-*.sql
 store/db
 api_service
 shoplist

@@ -47,6 +47,15 @@ type Error400 struct {
 	Message string        `json:"message"`
 }
 
+// Error401 defines model for Error_401.
+type Error401 struct {
+	// Embedded struct due to allOf(#/components/schemas/Error)
+	Error
+	// Embedded fields due to inline allOf schema
+	Errors  []interface{} `json:"errors"`
+	Message string        `json:"message"`
+}
+
 // Error404 defines model for Error_404.
 type Error404 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error)
@@ -97,26 +106,8 @@ type ShoppingValidation struct {
 // ShoppingItem defines model for Shopping_item.
 type ShoppingItem struct {
 	// Embedded fields due to inline allOf schema
-	// Embedded struct due to allOf(#/components/schemas/Shopping_item_params_with_id)
+	// Embedded struct due to allOf(#/components/schemas/shoppingItemParamsWithId)
 	ShoppingItemParamsWithId
-}
-
-// ShoppingItemParams defines model for Shopping_item_params.
-type ShoppingItemParams struct {
-	CategoryID  int    `json:"categoryID"`
-	Complete    bool   `json:"complete"`
-	ListID      int    `json:"listID"`
-	ProductName string `json:"productName"`
-	Quantity    int    `json:"quantity"`
-}
-
-// ShoppingItemParamsWithId defines model for Shopping_item_params_with_id.
-type ShoppingItemParamsWithId struct {
-	// Embedded fields due to inline allOf schema
-	Id *int `json:"id,omitempty"`
-	// Embedded struct due to allOf(#/components/schemas/Shopping_item_params)
-	ShoppingItemParams
-	// Embedded fields due to inline allOf schema
 }
 
 // ShoppingParams defines model for Shopping_params.
@@ -145,11 +136,55 @@ type Success struct {
 	Message string        `json:"message"`
 }
 
+// ShoppingDaysErrors defines model for shoppingDaysErrors.
+type ShoppingDaysErrors struct {
+	Validation *ShoppingDaysValidation `json:"validation,omitempty"`
+}
+
+// ShoppingDaysValidation defines model for shoppingDaysValidation.
+type ShoppingDaysValidation struct {
+	Month *string `json:"month,omitempty"`
+	Year  *string `json:"year,omitempty"`
+}
+
+// ShoppingItemParams defines model for shoppingItemParams.
+type ShoppingItemParams struct {
+	CategoryID  int    `json:"categoryID"`
+	Complete    bool   `json:"complete"`
+	ListID      int    `json:"listID"`
+	ProductName string `json:"productName"`
+	Quantity    int    `json:"quantity"`
+}
+
+// ShoppingItemParamsWithId defines model for shoppingItemParamsWithId.
+type ShoppingItemParamsWithId struct {
+	// Embedded fields due to inline allOf schema
+	Id *int `json:"id,omitempty"`
+	// Embedded struct due to allOf(#/components/schemas/shoppingItemParams)
+	ShoppingItemParams
+	// Embedded fields due to inline allOf schema
+}
+
 // Date defines model for date.
 type Date string
 
+// Month defines model for month.
+type Month int
+
 // ShoppingID defines model for shoppingID.
 type ShoppingID int
+
+// Token defines model for token.
+type Token string
+
+// Year defines model for year.
+type Year int
+
+// Base401 defines model for Base_401.
+type Base401 struct {
+	// Embedded struct due to allOf(#/components/schemas/Error_401)
+	Error401
+}
 
 // Base404 defines model for Base_404.
 type Base404 struct {
@@ -236,6 +271,22 @@ type LastShopping200 struct {
 	Data *[]ShoppingWithId `json:"data,omitempty"`
 }
 
+// ShoppingDays200 defines model for ShoppingDays_200.
+type ShoppingDays200 struct {
+	// Embedded struct due to allOf(#/components/schemas/Success)
+	Success
+	// Embedded fields due to inline allOf schema
+	Data *[]int `json:"data,omitempty"`
+}
+
+// ShoppingDays400 defines model for ShoppingDays_400.
+type ShoppingDays400 struct {
+	// Embedded struct due to allOf(#/components/schemas/Error_400)
+	Error400
+	// Embedded fields due to inline allOf schema
+	Errors *ShoppingDaysErrors `json:"errors,omitempty"`
+}
+
 // Shopping200 defines model for Shopping_200.
 type Shopping200 struct {
 	// Embedded struct due to allOf(#/components/schemas/Success)
@@ -254,7 +305,7 @@ type Shopping400 struct {
 
 // ItemRequest defines model for Item_request.
 type ItemRequest struct {
-	// Embedded struct due to allOf(#/components/schemas/Shopping_item_params)
+	// Embedded struct due to allOf(#/components/schemas/shoppingItemParams)
 	ShoppingItemParams
 }
 
@@ -262,6 +313,48 @@ type ItemRequest struct {
 type ShoppingRequest struct {
 	// Embedded struct due to allOf(#/components/schemas/Shopping)
 	Shopping
+}
+
+// AddItemParams defines parameters for AddItem.
+type AddItemParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// AddShoppingParams defines parameters for AddShopping.
+type AddShoppingParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// GetComingShoppingsParams defines parameters for GetComingShoppings.
+type GetComingShoppingsParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// GetGoodsParams defines parameters for GetGoods.
+type GetGoodsParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// GetShoppingDaysParams defines parameters for GetShoppingDays.
+type GetShoppingDaysParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// LastShoppingParams defines parameters for LastShopping.
+type LastShoppingParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
 }
 
 // AddItemRequestBody defines body for AddItem for application/json ContentType.
@@ -273,15 +366,17 @@ type AddShoppingJSONRequestBody ShoppingRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Добавление товара в покупку// (POST /addItem)
-	AddItem(ctx echo.Context) error
+	AddItem(ctx echo.Context, params AddItemParams) error
 	// Добавление покупки// (POST /addShopping)
-	AddShopping(ctx echo.Context) error
+	AddShopping(ctx echo.Context, params AddShoppingParams) error
 	// Ближайшие 5 покупок// (GET /getComingShoppings/{date})
-	GetComingShoppings(ctx echo.Context, date Date) error
+	GetComingShoppings(ctx echo.Context, date Date, params GetComingShoppingsParams) error
 	// Список покупок// (GET /getGoods/{shoppingID})
-	GetGoods(ctx echo.Context, shoppingID ShoppingID) error
+	GetGoods(ctx echo.Context, shoppingID ShoppingID, params GetGoodsParams) error
+	// Получение списка дней с покупками по месяцу и году// (GET /getShoppingDays/{year}/{month})
+	GetShoppingDays(ctx echo.Context, year Year, month Month, params GetShoppingDaysParams) error
 	// Последняя покупка// (GET /lastShopping)
-	LastShopping(ctx echo.Context) error
+	LastShopping(ctx echo.Context, params LastShoppingParams) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -293,8 +388,22 @@ type ServerInterfaceWrapper struct {
 func (w *ServerInterfaceWrapper) AddItem(ctx echo.Context) error {
 	var err error
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AddItemParams
+	// ------------- Required query parameter "token" -------------
+	if paramValue := ctx.QueryParam("token"); paramValue != "" {
+
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Query argument token is required, but not found"))
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", ctx.QueryParams(), &params.Token)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter token: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.AddItem(ctx)
+	err = w.Handler.AddItem(ctx, params)
 	return err
 }
 
@@ -302,8 +411,22 @@ func (w *ServerInterfaceWrapper) AddItem(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) AddShopping(ctx echo.Context) error {
 	var err error
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AddShoppingParams
+	// ------------- Required query parameter "token" -------------
+	if paramValue := ctx.QueryParam("token"); paramValue != "" {
+
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Query argument token is required, but not found"))
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", ctx.QueryParams(), &params.Token)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter token: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.AddShopping(ctx)
+	err = w.Handler.AddShopping(ctx, params)
 	return err
 }
 
@@ -318,8 +441,22 @@ func (w *ServerInterfaceWrapper) GetComingShoppings(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter date: %s", err))
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetComingShoppingsParams
+	// ------------- Required query parameter "token" -------------
+	if paramValue := ctx.QueryParam("token"); paramValue != "" {
+
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Query argument token is required, but not found"))
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", ctx.QueryParams(), &params.Token)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter token: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetComingShoppings(ctx, date)
+	err = w.Handler.GetComingShoppings(ctx, date, params)
 	return err
 }
 
@@ -334,8 +471,60 @@ func (w *ServerInterfaceWrapper) GetGoods(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter shoppingID: %s", err))
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetGoodsParams
+	// ------------- Required query parameter "token" -------------
+	if paramValue := ctx.QueryParam("token"); paramValue != "" {
+
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Query argument token is required, but not found"))
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", ctx.QueryParams(), &params.Token)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter token: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetGoods(ctx, shoppingID)
+	err = w.Handler.GetGoods(ctx, shoppingID, params)
+	return err
+}
+
+// GetShoppingDays converts echo context to params.
+func (w *ServerInterfaceWrapper) GetShoppingDays(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "year" -------------
+	var year Year
+
+	err = runtime.BindStyledParameter("simple", false, "year", ctx.Param("year"), &year)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter year: %s", err))
+	}
+
+	// ------------- Path parameter "month" -------------
+	var month Month
+
+	err = runtime.BindStyledParameter("simple", false, "month", ctx.Param("month"), &month)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter month: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetShoppingDaysParams
+	// ------------- Required query parameter "token" -------------
+	if paramValue := ctx.QueryParam("token"); paramValue != "" {
+
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Query argument token is required, but not found"))
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", ctx.QueryParams(), &params.Token)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter token: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetShoppingDays(ctx, year, month, params)
 	return err
 }
 
@@ -343,8 +532,22 @@ func (w *ServerInterfaceWrapper) GetGoods(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) LastShopping(ctx echo.Context) error {
 	var err error
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params LastShoppingParams
+	// ------------- Required query parameter "token" -------------
+	if paramValue := ctx.QueryParam("token"); paramValue != "" {
+
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Query argument token is required, but not found"))
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", ctx.QueryParams(), &params.Token)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter token: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.LastShopping(ctx)
+	err = w.Handler.LastShopping(ctx, params)
 	return err
 }
 
@@ -369,6 +572,7 @@ func RegisterHandlers(router interface {
 	router.POST("/addShopping", wrapper.AddShopping)
 	router.GET("/getComingShoppings/:date", wrapper.GetComingShoppings)
 	router.GET("/getGoods/:shoppingID", wrapper.GetGoods)
+	router.GET("/getShoppingDays/:year/:month", wrapper.GetShoppingDays)
 	router.GET("/lastShopping", wrapper.LastShopping)
 
 }
@@ -376,38 +580,43 @@ func RegisterHandlers(router interface {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the Swagger specification corresponding to the generated code

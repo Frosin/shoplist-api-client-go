@@ -40,6 +40,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getShoppingByIDStmt, err = db.PrepareContext(ctx, getShoppingByID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetShoppingByID: %w", err)
 	}
+	if q.getShoppingDaysStmt, err = db.PrepareContext(ctx, getShoppingDays); err != nil {
+		return nil, fmt.Errorf("error preparing query GetShoppingDays: %w", err)
+	}
 	return &q, nil
 }
 
@@ -73,6 +76,11 @@ func (q *Queries) Close() error {
 	if q.getShoppingByIDStmt != nil {
 		if cerr := q.getShoppingByIDStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getShoppingByIDStmt: %w", cerr)
+		}
+	}
+	if q.getShoppingDaysStmt != nil {
+		if cerr := q.getShoppingDaysStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getShoppingDaysStmt: %w", cerr)
 		}
 	}
 	return err
@@ -120,6 +128,7 @@ type Queries struct {
 	getShopByIDStmt          *sql.Stmt
 	getShopByNameStmt        *sql.Stmt
 	getShoppingByIDStmt      *sql.Stmt
+	getShoppingDaysStmt      *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -132,5 +141,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getShopByIDStmt:          q.getShopByIDStmt,
 		getShopByNameStmt:        q.getShopByNameStmt,
 		getShoppingByIDStmt:      q.getShoppingByIDStmt,
+		getShoppingDaysStmt:      q.getShoppingDaysStmt,
 	}
 }

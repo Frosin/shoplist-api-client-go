@@ -146,3 +146,31 @@ func (q *Queries) GetShoppingByID(ctx context.Context, id int32) (Shopping, erro
 	)
 	return i, err
 }
+
+const getShoppingDays = `-- name: GetShoppingDays :many
+SELECT date FROM shopping 
+WHERE date LIKE $1
+`
+
+func (q *Queries) GetShoppingDays(ctx context.Context, date sql.NullString) ([]sql.NullString, error) {
+	rows, err := q.query(ctx, q.getShoppingDaysStmt, getShoppingDays, date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []sql.NullString
+	for rows.Next() {
+		var date sql.NullString
+		if err := rows.Scan(&date); err != nil {
+			return nil, err
+		}
+		items = append(items, date)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

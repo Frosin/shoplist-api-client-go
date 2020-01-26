@@ -4,8 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
+	"math"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/Frosin/shoplist-api-client-go/api"
@@ -37,7 +40,7 @@ type Server struct {
 }
 
 // GetGoods returns all products by shoppingId
-func (s *Server) GetGoods(ctx echo.Context, shoppingID api.ShoppingID) error {
+func (s *Server) GetGoods(ctx echo.Context, shoppingID api.ShoppingID, params api.GetGoodsParams) error {
 	response200 := func(items *[]api.ShoppingItem) error {
 		var response api.Goods200
 		response.Version = &s.Version
@@ -88,7 +91,7 @@ func sqlcToShoppingItems(goods []sqlc.ShopList) (shoppingItems []api.ShoppingIte
 }
 
 // LastShopping returns LastShopping information
-func (s *Server) LastShopping(ctx echo.Context) error {
+func (s *Server) LastShopping(ctx echo.Context, params api.LastShoppingParams) error {
 	response200 := func(shopping api.ShoppingWithId) error {
 		var response api.LastShopping200
 		var data []api.ShoppingWithId
@@ -137,7 +140,7 @@ func (s *Server) sqlcToShopping(shopping sqlc.Shopping) (api.ShoppingWithId, err
 }
 
 // AddShopping inserts new shopping
-func (s *Server) AddShopping(ctx echo.Context) error {
+func (s *Server) AddShopping(ctx echo.Context, params api.AddShoppingParams) error {
 	response200 := func(shopping api.ShoppingWithId) error {
 		var response api.LastShopping200
 		var data []api.ShoppingWithId
@@ -226,7 +229,7 @@ func shoppingToSqlc(shopping api.ShoppingParams, shopID int32) (params sqlc.AddS
 }
 
 // AddItem inserts new product to shopping cart
-func (s *Server) AddItem(ctx echo.Context) error {
+func (s *Server) AddItem(ctx echo.Context, params api.AddItemParams) error {
 	response200 := func(item api.ShoppingItemParamsWithId) error {
 		var response api.Item200
 		var data []api.ShoppingItemParamsWithId
@@ -296,7 +299,7 @@ func itemToItemWithID(item api.ShoppingItemParams, id int64) api.ShoppingItemPar
 }
 
 // GetComingShoppings returns coming shoppings
-func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date) error {
+func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date, params api.GetComingShoppingsParams) error {
 	response200 := func(shoppings []api.ShoppingWithId) error {
 		var response api.ComingShoppings200
 		response.Version = &s.Version
@@ -340,6 +343,72 @@ func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date) error {
 			return response500(err)
 		}
 		result = append(result, data)
+	}
+	return response200(result)
+}
+
+// GetShoppingDays returns days with shopping by month and year
+func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Month, params api.GetShoppingDaysParams) error {
+	response200 := func(days []int) error {
+		var response api.ShoppingDays200
+		response.Version = &s.Version
+		response.Message = SuccessMessage
+		response.Data = &days
+		return ctx.JSON(http.StatusOK, response)
+	}
+	response400 := func(validation *api.ShoppingDaysValidation) error {
+		var response api.ShoppingDays400
+		response.Version = &s.Version
+		response.Message = ErrValidation.Error()
+		response.Errors = &api.ShoppingDaysErrors{
+			Validation: validation,
+		}
+		return ctx.JSON(http.StatusBadRequest, response)
+	}
+	response404 := func() error {
+		return s.error(ctx, http.StatusNotFound, nil, nil)
+	}
+	response500 := func(err error) error {
+		return s.error(ctx, http.StatusInternalServerError, err, nil)
+	}
+
+	curYear := time.Now().Year()
+	var validation api.ShoppingDaysValidation
+	if math.Abs(float64(curYear-int(year))) > 1 {
+		validation.Year = strPtr("format")
+	}
+	if month < 1 || month > 12 {
+		validation.Month = strPtr("format")
+	}
+	if validation.Month != nil || validation.Year != nil {
+		return response400(&validation)
+	}
+
+	strMonth := strconv.Itoa(int(month))
+	if month < 10 {
+		strMonth = "0" + strMonth
+	}
+	queryParam := fmt.Sprintf("%v-%s", year, strMonth)
+	queryParam = queryParam + "%"
+
+	days, err := s.Queries.GetShoppingDays(ctx.Request().Context(), sql.NullString{
+		String: queryParam,
+		Valid:  true,
+	})
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return response404()
+		}
+		return response500(err)
+	}
+	var result []int
+	for _, v := range days {
+		fDate, err := time.Parse(dateLayout, v.String)
+		if err != nil {
+			return response500(err)
+		}
+		result = append(result, fDate.Day())
 	}
 	return response200(result)
 }

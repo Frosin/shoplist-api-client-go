@@ -5,14 +5,17 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/labstack/gommon/log"
 
 	"github.com/Frosin/shoplist-api-client-go/api"
 	"github.com/Frosin/shoplist-api-client-go/store/sqlc"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/labstack/echo/v4"
 )
@@ -37,6 +40,7 @@ var (
 type Server struct {
 	Version string
 	Queries *sqlc.Queries
+	DB      *sqlx.DB
 }
 
 // GetGoods returns all products by shoppingId
@@ -374,13 +378,16 @@ func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Mont
 
 	curYear := time.Now().Year()
 	var validation api.ShoppingDaysValidation
+	var valCount = 0
 	if math.Abs(float64(curYear-int(year))) > 1 {
 		validation.Year = strPtr("format")
+		valCount++
 	}
 	if month < 1 || month > 12 {
 		validation.Month = strPtr("format")
+		valCount++
 	}
-	if validation.Month != nil || validation.Year != nil {
+	if valCount != 0 {
 		return response400(&validation)
 	}
 
@@ -413,9 +420,118 @@ func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Mont
 	return response200(result)
 }
 
+func (s *Server) sqlcToShoppingWithId(sh []sqlc.Shopping) (*[]api.ShoppingWithId, error) {
+	result := []api.ShoppingWithId{}
+	shopIDs := []interface{}{}
+	paramLabels := []string{}
+	for i, v := range sh {
+		shopIDs = append(shopIDs, v.ShopID.Int32)
+		paramLabels = append(paramLabels, "$"+strconv.Itoa(i))
+	}
+	params := strings.Join(paramLabels, ",")
+	query := strings.Replace(sqlc.GetShopNamesQuery, "$", params, 1)
+	rows, err := s.DB.Query(query, shopIDs...)
+
+	if err != nil {
+		return nil, err
+	}
+	shopNames := []string{}
+	for rows.Next() {
+		name := ""
+		err = rows.Scan(&name)
+		if err != nil {
+			return nil, err
+		}
+		shopNames = append(shopNames, name)
+	}
+	for i, v := range sh {
+		var shopping api.ShoppingWithId
+		shopping.Id = intPtr(int(v.ID))
+		shopping.Date = v.Date.String
+		shopping.Name = shopNames[i]
+		shopping.OwnerID = int(v.OwnerID.Int32)
+		shopping.Time = v.Time.String
+		result = append(result, shopping)
+	}
+	return &result, nil
+}
+
+//GetShoppingsByDay returns shoppings by day
+func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Month, day api.Day, params api.GetShoppingsByDayParams) error {
+	response200 := func(data *[]api.ShoppingWithId) error {
+		var response api.Shoppings200
+		response.Version = &s.Version
+		response.Message = SuccessMessage
+		response.Data = data
+		return ctx.JSON(http.StatusOK, response)
+	}
+	response400 := func(validation *api.ShoppingsByDayValidation) error {
+		var response api.Shoppings400
+		response.Version = &s.Version
+		response.Message = ErrValidation.Error()
+		response.Errors = &api.ShoppingsByDayErrors{
+			Validation: validation,
+		}
+		return ctx.JSON(http.StatusBadRequest, response)
+	}
+	response404 := func() error {
+		return s.error(ctx, http.StatusNotFound, nil, nil)
+	}
+	response500 := func(err error) error {
+		return s.error(ctx, http.StatusInternalServerError, err, nil)
+	}
+
+	curYear := time.Now().Year()
+	var validation api.ShoppingsByDayValidation
+	var valCount = 0
+	if math.Abs(float64(curYear-int(year))) > 1 {
+		validation.Year = strPtr("format")
+		valCount++
+	}
+	if month < 1 || month > 12 {
+		validation.Month = strPtr("format")
+		valCount++
+	}
+	if day < 1 || day > 31 {
+		validation.Day = strPtr("format")
+		valCount++
+	}
+	if valCount != 0 {
+		return response400(&validation)
+	}
+
+	strMonth := strconv.Itoa(int(month))
+	if month < 10 {
+		strMonth = "0" + strMonth
+	}
+
+	strDay := strconv.Itoa(int(day))
+	if day < 10 {
+		strDay = "0" + strDay
+	}
+
+	queryParam := fmt.Sprintf("%v-%s-%s", year, strMonth, strDay)
+
+	result, err := s.Queries.GetShoppingsByDay(ctx.Request().Context(), sql.NullString{
+		String: queryParam,
+		Valid:  true,
+	})
+
+	shoppings, err := s.sqlcToShoppingWithId(result)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return response404()
+		}
+		return response500(err)
+	}
+
+	return response200(shoppings)
+}
+
 func (s *Server) error(ctx echo.Context, httpCode int, err error, validation *[]interface{}) error {
 	if err != nil {
-		log.Println(err.Error())
+		log.Info(err.Error())
 	}
 
 	switch httpCode {
@@ -475,4 +591,8 @@ func stringToNullString(s string) sql.NullString {
 
 func strPtr(s string) *string {
 	return &s
+}
+
+func intPtr(i int) *int {
+	return &i
 }

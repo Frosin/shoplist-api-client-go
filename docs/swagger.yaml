@@ -133,6 +133,28 @@ paths:
           $ref: "#/components/responses/Base_405"
         "500":
           $ref: "#/components/responses/Base_500"
+  "/getShoppingsByDay/{year}/{month}/{day}":
+    get:
+      operationId: "getShoppingsByDay"
+      parameters:
+        - $ref: "#/components/parameters/token"
+        - $ref: "#/components/parameters/year"
+        - $ref: "#/components/parameters/month"
+        - $ref: "#/components/parameters/day"
+      tags:
+        - Shopping
+      summary: Получение списка покупок по конекретному дню
+      responses:
+        "200":
+          $ref: "#/components/responses/Shoppings_200"
+        "400":
+          $ref: "#/components/responses/Shoppings_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
 components:
   schemas:
       Base:
@@ -418,6 +440,29 @@ components:
             example: "format"
             enum:
               - format
+      shoppingsByDayErrors:
+        type: object
+        properties:
+          validation:
+              $ref: "#/components/schemas/shoppingsByDayValidation"
+      shoppingsByDayValidation:
+        type: object
+        properties:
+          year:
+            type: string
+            example: "format"
+            enum:
+              - format 
+          month:
+            type: string
+            example: "format"
+            enum:
+              - format
+          day:
+            type: string
+            example: "format"
+            enum:
+              - format
   requestBodies:
     Item_request:
       content:
@@ -632,6 +677,30 @@ components:
                   properties:
                     errors: 
                       $ref: "#/components/schemas/shoppingDaysErrors"
+      Shoppings_200:
+        description: Покупки
+        content: 
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Success"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_with_id"      
+      Shoppings_400:
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_400"
+                - type: object
+                  properties:
+                    errors: 
+                      $ref: "#/components/schemas/shoppingsByDayErrors"
   parameters:
     shoppingID:
       name: shoppingID
@@ -667,4 +736,11 @@ components:
       required: true
       description: Месяц
       schema:
-        type: integer    
+        type: integer
+    day:    
+      name: day
+      in: path
+      required: true
+      description: День
+      schema:
+        type: integer   

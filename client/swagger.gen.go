@@ -167,8 +167,23 @@ type ShoppingItemParamsWithId struct {
 	// Embedded fields due to inline allOf schema
 }
 
+// ShoppingsByDayErrors defines model for shoppingsByDayErrors.
+type ShoppingsByDayErrors struct {
+	Validation *ShoppingsByDayValidation `json:"validation,omitempty"`
+}
+
+// ShoppingsByDayValidation defines model for shoppingsByDayValidation.
+type ShoppingsByDayValidation struct {
+	Day   *string `json:"day,omitempty"`
+	Month *string `json:"month,omitempty"`
+	Year  *string `json:"year,omitempty"`
+}
+
 // Date defines model for date.
 type Date string
+
+// Day defines model for day.
+type Day int
 
 // Month defines model for month.
 type Month int
@@ -305,6 +320,22 @@ type Shopping400 struct {
 	Errors *ShoppingProperty `json:"errors,omitempty"`
 }
 
+// Shoppings200 defines model for Shoppings_200.
+type Shoppings200 struct {
+	// Embedded struct due to allOf(#/components/schemas/Success)
+	Success
+	// Embedded fields due to inline allOf schema
+	Data *[]ShoppingWithId `json:"data,omitempty"`
+}
+
+// Shoppings400 defines model for Shoppings_400.
+type Shoppings400 struct {
+	// Embedded struct due to allOf(#/components/schemas/Error_400)
+	Error400
+	// Embedded fields due to inline allOf schema
+	Errors *ShoppingsByDayErrors `json:"errors,omitempty"`
+}
+
 // ItemRequest defines model for Item_request.
 type ItemRequest struct {
 	// Embedded struct due to allOf(#/components/schemas/shoppingItemParams)
@@ -347,6 +378,13 @@ type GetGoodsParams struct {
 
 // GetShoppingDaysParams defines parameters for GetShoppingDays.
 type GetShoppingDaysParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// GetShoppingsByDayParams defines parameters for GetShoppingsByDay.
+type GetShoppingsByDayParams struct {
 
 	// Токен доступа
 	Token Token `json:"token"`
@@ -451,6 +489,9 @@ type ClientInterface interface {
 	// GetShoppingDays request
 	GetShoppingDays(ctx context.Context, year Year, month Month, params *GetShoppingDaysParams) (*http.Response, error)
 
+	// GetShoppingsByDay request
+	GetShoppingsByDay(ctx context.Context, year Year, month Month, day Day, params *GetShoppingsByDayParams) (*http.Response, error)
+
 	// LastShopping request
 	LastShopping(ctx context.Context, params *LastShoppingParams) (*http.Response, error)
 }
@@ -547,6 +588,21 @@ func (c *Client) GetGoods(ctx context.Context, shoppingID ShoppingID, params *Ge
 
 func (c *Client) GetShoppingDays(ctx context.Context, year Year, month Month, params *GetShoppingDaysParams) (*http.Response, error) {
 	req, err := NewGetShoppingDaysRequest(c.Server, year, month, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetShoppingsByDay(ctx context.Context, year Year, month Month, day Day, params *GetShoppingsByDayParams) (*http.Response, error) {
+	req, err := NewGetShoppingsByDayRequest(c.Server, year, month, day, params)
 	if err != nil {
 		return nil, err
 	}
@@ -772,6 +828,61 @@ func NewGetShoppingDaysRequest(server string, year Year, month Month, params *Ge
 		return nil, err
 	}
 	queryUrl.Path = path.Join(queryUrl.Path, fmt.Sprintf("/getShoppingDays/%s/%s", pathParam0, pathParam1))
+
+	queryValues := queryUrl.Query()
+
+	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
+		return nil, err
+	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+		return nil, err
+	} else {
+		for k, v := range parsed {
+			for _, v2 := range v {
+				queryValues.Add(k, v2)
+			}
+		}
+	}
+
+	queryUrl.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryUrl.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetShoppingsByDayRequest generates requests for GetShoppingsByDay
+func NewGetShoppingsByDayRequest(server string, year Year, month Month, day Day, params *GetShoppingsByDayParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParam("simple", false, "year", year)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParam("simple", false, "month", month)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParam("simple", false, "day", day)
+	if err != nil {
+		return nil, err
+	}
+
+	queryUrl, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+	queryUrl.Path = path.Join(queryUrl.Path, fmt.Sprintf("/getShoppingsByDay/%s/%s/%s", pathParam0, pathParam1, pathParam2))
 
 	queryValues := queryUrl.Query()
 
@@ -1109,6 +1220,51 @@ func (r getShoppingDaysResponse) StatusCode() int {
 	return 0
 }
 
+type getShoppingsByDayResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Embedded struct due to allOf(#/components/schemas/Success)
+		Success
+		// Embedded fields due to inline allOf schema
+		Data *[]ShoppingWithId `json:"data,omitempty"`
+	}
+	JSON400 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_400)
+		Error400
+		// Embedded fields due to inline allOf schema
+		Errors *ShoppingsByDayErrors `json:"errors,omitempty"`
+	}
+	JSON401 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_401)
+		Error401
+	}
+	JSON405 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_405)
+		Error405
+	}
+	JSON500 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_500)
+		Error500
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r getShoppingsByDayResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r getShoppingsByDayResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type lastShoppingResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1211,6 +1367,15 @@ func (c *ClientWithResponses) GetShoppingDaysWithResponse(ctx context.Context, y
 		return nil, err
 	}
 	return ParsegetShoppingDaysResponse(rsp)
+}
+
+// GetShoppingsByDayWithResponse request returning *GetShoppingsByDayResponse
+func (c *ClientWithResponses) GetShoppingsByDayWithResponse(ctx context.Context, year Year, month Month, day Day, params *GetShoppingsByDayParams) (*getShoppingsByDayResponse, error) {
+	rsp, err := c.GetShoppingsByDay(ctx, year, month, day, params)
+	if err != nil {
+		return nil, err
+	}
+	return ParsegetShoppingsByDayResponse(rsp)
 }
 
 // LastShoppingWithResponse request returning *LastShoppingResponse
@@ -1563,6 +1728,74 @@ func ParsegetShoppingDaysResponse(rsp *http.Response) (*getShoppingDaysResponse,
 			Error400
 			// Embedded fields due to inline allOf schema
 			Errors *ShoppingDaysErrors `json:"errors,omitempty"`
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		response.JSON401 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_401)
+			Error401
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
+		response.JSON405 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_405)
+			Error405
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		response.JSON500 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_500)
+			Error500
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+			return nil, err
+		}
+
+	}
+
+	return response, nil
+}
+
+// ParsegetShoppingsByDayResponse parses an HTTP response from a GetShoppingsByDayWithResponse call
+func ParsegetShoppingsByDayResponse(rsp *http.Response) (*getShoppingsByDayResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &getShoppingsByDayResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		response.JSON200 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Success)
+			Success
+			// Embedded fields due to inline allOf schema
+			Data *[]ShoppingWithId `json:"data,omitempty"`
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		response.JSON400 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_400)
+			Error400
+			// Embedded fields due to inline allOf schema
+			Errors *ShoppingsByDayErrors `json:"errors,omitempty"`
 		}{}
 		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
 			return nil, err

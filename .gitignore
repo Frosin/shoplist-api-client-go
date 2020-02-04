@@ -1,8 +1,6 @@
 *.txt
 *.db
 store/db
-api_service
 shoplist
-shoplist-api-client-go
-main
+shoplist_arm
 .shoplist.yaml

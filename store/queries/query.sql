@@ -25,3 +25,11 @@ LIMIT 5;
 SELECT * FROM shopping
 WHERE id = $1
 LIMIT 1;
+
+-- name: GetShoppingDays :many
+SELECT date FROM shopping 
+WHERE date LIKE $1;
+
+-- name: GetShoppingsByDay :many
+SELECT * FROM shopping 
+WHERE date=$1;

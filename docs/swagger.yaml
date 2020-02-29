@@ -8,6 +8,7 @@ paths:
   "/getGoods/{shoppingID}":
     parameters:
     - $ref: "#/components/parameters/shoppingID"
+    - $ref: "#/components/parameters/token"
     get:
       operationId: getGoods
       tags:
@@ -18,6 +19,8 @@ paths:
           $ref: "#/components/responses/Goods_200"
         "400":
           $ref: "#/components/responses/Goods_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
         "404":
           $ref: "#/components/responses/Base_404"
         "405":
@@ -27,6 +30,7 @@ paths:
   "/getComingShoppings/{date}":
     parameters:
     - $ref: "#/components/parameters/date"
+    - $ref: "#/components/parameters/token"
     get:
       operationId: GetComingShoppings
       tags:
@@ -37,6 +41,8 @@ paths:
           $ref: "#/components/responses/ComingShoppings_200"
         "400":
           $ref: "#/components/responses/ComingShoppings_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
         "404":
           $ref: "#/components/responses/Base_404"
         "405":
@@ -46,12 +52,16 @@ paths:
   "/lastShopping":
     get:
       operationId: lastShopping
+      parameters:
+        - $ref: "#/components/parameters/token"
       tags:
         - Shopping
       summary: Последняя покупка
       responses:
         "200":
           $ref: "#/components/responses/LastShopping_200"
+        "401":
+          $ref: "#/components/responses/Base_401"
         "404":
           $ref: "#/components/responses/Base_404"
         "405":
@@ -61,6 +71,8 @@ paths:
   "/addItem": 
     post:
       operationId: addItem
+      parameters:
+        - $ref: "#/components/parameters/token"
       requestBody:
         $ref: "#/components/requestBodies/Item_request"
       tags:
@@ -71,6 +83,8 @@ paths:
           $ref: "#/components/responses/Item_200"
         "400":
           $ref: "#/components/responses/Item_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
         "404":
           $ref: "#/components/responses/Base_404"  
         "405":
@@ -80,6 +94,8 @@ paths:
   "/addShopping":
     post:
       operationId: "addShopping"
+      parameters:
+        - $ref: "#/components/parameters/token"
       requestBody:
         $ref: "#/components/requestBodies/Shopping_request"
       tags:
@@ -90,6 +106,51 @@ paths:
           $ref: "#/components/responses/Shopping_200"
         "400":
           $ref: "#/components/responses/Shopping_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
+  "/getShoppingDays/{year}/{month}":
+    get:
+      operationId: "getShoppingDays"
+      parameters:
+        - $ref: "#/components/parameters/token"
+        - $ref: "#/components/parameters/year"
+        - $ref: "#/components/parameters/month"
+      tags:
+        - Shopping
+      summary: Получение списка дней с покупками по месяцу и году
+      responses:
+        "200":
+          $ref: "#/components/responses/ShoppingDays_200"
+        "400":
+          $ref: "#/components/responses/ShoppingDays_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
+  "/getShoppingsByDay/{year}/{month}/{day}":
+    get:
+      operationId: "getShoppingsByDay"
+      parameters:
+        - $ref: "#/components/parameters/token"
+        - $ref: "#/components/parameters/year"
+        - $ref: "#/components/parameters/month"
+        - $ref: "#/components/parameters/day"
+      tags:
+        - Shopping
+      summary: Получение списка покупок по конекретному дню
+      responses:
+        "200":
+          $ref: "#/components/responses/Shoppings_200"
+        "400":
+          $ref: "#/components/responses/Shoppings_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
         "405":
           $ref: "#/components/responses/Base_405"
         "500":
@@ -148,6 +209,21 @@ components:
             required:
               - message
               - errors
+      Error_401:
+        allOf:
+          - $ref: "#/components/schemas/Error"
+          - type: object
+            title: Error_401
+            properties:
+              message:
+                type: string
+                example: Unauthorized
+              errors:
+                type: array
+                items: {}
+            required:
+              - message
+              - errors
       Error_404:
         allOf:
           - $ref: "#/components/schemas/Error"
@@ -194,7 +270,7 @@ components:
             required:
               - message
               - errors
-      Shopping_item_params:
+      shoppingItemParams:
         title: Параметры товара в покупке
         properties:
           productName:
@@ -224,7 +300,7 @@ components:
           - categoryID
           - complete
           - listID
-      Shopping_item_params_with_id:
+      shoppingItemParamsWithId:
         allOf:
           - type: object
             properties:
@@ -232,7 +308,7 @@ components:
                 type: integer
                 description: Идентификатор товара
                 example: 55
-          - $ref: "#/components/schemas/Shopping_item_params"
+          - $ref: "#/components/schemas/shoppingItemParams"
           - type: object
             required:
               - id
@@ -245,7 +321,7 @@ components:
         allOf:
           - title: Товар в списке покупок
             type: object
-          - $ref: "#/components/schemas/Shopping_item_params_with_id"  
+          - $ref: "#/components/schemas/shoppingItemParamsWithId"  
         required:
           - productName
           - quantity
@@ -345,14 +421,55 @@ components:
             type: integer
             example: "format"
             enum:
-              - format        
+              - format
+      shoppingDaysErrors:
+        type: object
+        properties:
+          validation:
+            $ref: "#/components/schemas/shoppingDaysValidation"
+      shoppingDaysValidation:
+        type: object
+        properties:
+          year:
+            type: string
+            example: "format"
+            enum:
+              - format 
+          month:
+            type: string
+            example: "format"
+            enum:
+              - format
+      shoppingsByDayErrors:
+        type: object
+        properties:
+          validation:
+              $ref: "#/components/schemas/shoppingsByDayValidation"
+      shoppingsByDayValidation:
+        type: object
+        properties:
+          year:
+            type: string
+            example: "format"
+            enum:
+              - format 
+          month:
+            type: string
+            example: "format"
+            enum:
+              - format
+          day:
+            type: string
+            example: "format"
+            enum:
+              - format
   requestBodies:
     Item_request:
       content:
         application/json:
           schema:
             allOf:
-              - $ref: "#/components/schemas/Shopping_item_params"
+              - $ref: "#/components/schemas/shoppingItemParams"
       required: true
     Shopping_request:
       content:
@@ -361,6 +478,13 @@ components:
             allOf:
               - $ref: "#/components/schemas/Shopping"
   responses:
+      Base_401:
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_401"
       Base_404:
         description: Not found
         content:
@@ -427,7 +551,7 @@ components:
                     data:
                       type: array
                       items:
-                        $ref: "#/components/schemas/Shopping_item_params_with_id"
+                        $ref: "#/components/schemas/shoppingItemParamsWithId"
       Item_400:
         description: Validation error
         content:
@@ -527,6 +651,56 @@ components:
                   properties:
                     errors: 
                       $ref: "#/components/schemas/ShoppingProperty"
+      ShoppingDays_200:
+        description: Дни покупок
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Success"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: integer
+                        description: "День покупки"     
+                        example: 15
+      ShoppingDays_400:
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_400"
+                - type: object
+                  properties:
+                    errors: 
+                      $ref: "#/components/schemas/shoppingDaysErrors"
+      Shoppings_200:
+        description: Покупки
+        content: 
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Success"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/Shopping_with_id"      
+      Shoppings_400:
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_400"
+                - type: object
+                  properties:
+                    errors: 
+                      $ref: "#/components/schemas/shoppingsByDayErrors"
   parameters:
     shoppingID:
       name: shoppingID
@@ -542,3 +716,31 @@ components:
       description: Дата отсчета 5 ближайших покупок
       schema: 
         type: string
+    token:
+      name: token
+      in: query
+      required: true
+      description: Токен доступа
+      schema:
+        type: string
+    year:
+      name: year
+      in: path
+      required: true
+      description: Год
+      schema:
+        type: integer
+    month:    
+      name: month
+      in: path
+      required: true
+      description: Месяц
+      schema:
+        type: integer
+    day:    
+      name: day
+      in: path
+      required: true
+      description: День
+      schema:
+        type: integer   

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,22 +27,22 @@ var serveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		version := viper.GetString("SHOPLIST_API_VERSION")
 		port, err := cmd.Flags().GetString("port")
-		log.Println("Serve launched on port = ", port)
+		log.Info("Serve command launched on port = ", port)
 		if err != nil {
-			log.Println("Error = ", err)
+			log.Info("Error = ", err)
 		}
 		var myServer store.Server
 		db, err := sqlx.Open("sqlite3", "store/db/"+viper.GetString("SHOPLIST_DB_FILE_NAME"))
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatal(err)
 		}
 		myServer.Queries = sqlc.New(db)
 		myServer.Version = version
+		myServer.DB = db
 		e := echo.New()
 		e.HTTPErrorHandler = errorHandler
-		//e.Use(middleware.Logger())
 		api.RegisterHandlers(e, &myServer)
-
+		e.Logger.SetLevel(log.INFO)
 		e.Logger.Debug(e.Start(":" + port))
 	},
 }
@@ -58,7 +58,7 @@ func init() {
 }
 
 func errorHandler(err error, ctx echo.Context) {
-	log.Println("ERROR=", err)
+	log.Info("REQUEST='", ctx.Path(), "', ERROR=", err)
 	version := viper.GetString("SHOPLIST_API_VERSION")
 	stacktrace := sentry.NewStacktrace()
 	event := sentry.Event{

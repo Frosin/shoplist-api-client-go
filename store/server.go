@@ -532,11 +532,9 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID, params api.GetShoppingParams) error {
 	response200 := func(shopping api.ShoppingWithId) error {
 		var response api.Shopping200
-		var data []api.ShoppingWithId
-		data = append(data, shopping)
 		response.Version = &s.Version
 		response.Message = SuccessMessage
-		response.Data = &data
+		response.Data = &shopping
 		return ctx.JSON(http.StatusOK, response)
 	}
 	response404 := func() error {

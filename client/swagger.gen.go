@@ -350,7 +350,7 @@ type Shopping200 struct {
 	// Embedded struct due to allOf(#/components/schemas/Success)
 	Success
 	// Embedded fields due to inline allOf schema
-	Data *[]ShoppingWithId `json:"data,omitempty"`
+	Data *ShoppingWithId `json:"data,omitempty"`
 }
 
 // Shopping400 defines model for Shopping_400.
@@ -1172,7 +1172,7 @@ type addShoppingResponse struct {
 		// Embedded struct due to allOf(#/components/schemas/Success)
 		Success
 		// Embedded fields due to inline allOf schema
-		Data *[]ShoppingWithId `json:"data,omitempty"`
+		Data *ShoppingWithId `json:"data,omitempty"`
 	}
 	JSON400 *struct {
 		// Embedded struct due to allOf(#/components/schemas/Error_400)
@@ -1321,7 +1321,7 @@ type getShoppingResponse struct {
 		// Embedded struct due to allOf(#/components/schemas/Success)
 		Success
 		// Embedded fields due to inline allOf schema
-		Data *[]ShoppingWithId `json:"data,omitempty"`
+		Data *ShoppingWithId `json:"data,omitempty"`
 	}
 	JSON401 *struct {
 		// Embedded struct due to allOf(#/components/schemas/Error_401)
@@ -1687,7 +1687,7 @@ func ParseAddShoppingResponse(rsp *http.Response) (*addShoppingResponse, error) 
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
-			Data *[]ShoppingWithId `json:"data,omitempty"`
+			Data *ShoppingWithId `json:"data,omitempty"`
 		}{}
 		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
 			return nil, err
@@ -1915,7 +1915,7 @@ func ParseGetShoppingResponse(rsp *http.Response) (*getShoppingResponse, error) 
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
-			Data *[]ShoppingWithId `json:"data,omitempty"`
+			Data *ShoppingWithId `json:"data,omitempty"`
 		}{}
 		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
 			return nil, err

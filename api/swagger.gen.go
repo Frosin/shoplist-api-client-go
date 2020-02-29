@@ -17,6 +17,8 @@ import (
 
 // Base defines model for Base.
 type Base struct {
+
+	// Вeрсия ответа сервиса
 	Version *string `json:"version,omitempty"`
 }
 
@@ -61,8 +63,10 @@ type Error404 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error)
 	Error
 	// Embedded fields due to inline allOf schema
-	Errors  []interface{} `json:"errors"`
-	Message string        `json:"message"`
+	Errors []interface{} `json:"errors"`
+
+	// сообщение об ошибке
+	Message string `json:"message"`
 }
 
 // Error405 defines model for Error_405.
@@ -70,8 +74,10 @@ type Error405 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error)
 	Error
 	// Embedded fields due to inline allOf schema
-	Errors  *[]interface{} `json:"errors,omitempty"`
-	Message *string        `json:"message,omitempty"`
+	Errors *[]interface{} `json:"errors,omitempty"`
+
+	// сообщение ответа
+	Message *string `json:"message,omitempty"`
 }
 
 // Error500 defines model for Error_500.
@@ -79,8 +85,10 @@ type Error500 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error)
 	Error
 	// Embedded fields due to inline allOf schema
-	Errors  interface{} `json:"errors"`
-	Message string      `json:"message"`
+	Errors interface{} `json:"errors"`
+
+	// сообщение ответа
+	Message string `json:"message"`
 }
 
 // Shopping defines model for Shopping.
@@ -112,16 +120,26 @@ type ShoppingItem struct {
 
 // ShoppingParams defines model for Shopping_params.
 type ShoppingParams struct {
-	Date    string `json:"date"`
-	Name    string `json:"name"`
-	OwnerID int    `json:"ownerID"`
-	Time    string `json:"time"`
+
+	// Дата покупки
+	Date string `json:"date"`
+
+	// Наименование магазина
+	Name string `json:"name"`
+
+	// Владелец покупки
+	OwnerID int `json:"ownerID"`
+
+	// Время совершения покупки
+	Time string `json:"time"`
 }
 
 // ShoppingWithId defines model for Shopping_with_id.
 type ShoppingWithId struct {
 	// Embedded fields due to inline allOf schema
 	// Embedded fields due to inline allOf schema
+
+	// Идентификатор покупки
 	Id *int `json:"id,omitempty"`
 	// Embedded struct due to allOf(#/components/schemas/Shopping_params)
 	ShoppingParams
@@ -132,8 +150,12 @@ type Success struct {
 	// Embedded struct due to allOf(#/components/schemas/Base)
 	Base
 	// Embedded fields due to inline allOf schema
-	Errors  []interface{} `json:"errors"`
-	Message string        `json:"message"`
+
+	// Ошибки ответа
+	Errors []interface{} `json:"errors"`
+
+	// Сообщение ответа
+	Message string `json:"message"`
 }
 
 // ShoppingDaysErrors defines model for shoppingDaysErrors.
@@ -149,16 +171,28 @@ type ShoppingDaysValidation struct {
 
 // ShoppingItemParams defines model for shoppingItemParams.
 type ShoppingItemParams struct {
-	CategoryID  int    `json:"categoryID"`
-	Complete    bool   `json:"complete"`
-	ListID      int    `json:"listID"`
+
+	// Идентификатор категории товара
+	CategoryID int `json:"categoryID"`
+
+	// Признак выполнения
+	Complete bool `json:"complete"`
+
+	// Идентификатор списка покупок
+	ListID int `json:"listID"`
+
+	// Наименование товара
 	ProductName string `json:"productName"`
-	Quantity    int    `json:"quantity"`
+
+	// Количество товара
+	Quantity int `json:"quantity"`
 }
 
 // ShoppingItemParamsWithId defines model for shoppingItemParamsWithId.
 type ShoppingItemParamsWithId struct {
 	// Embedded fields due to inline allOf schema
+
+	// Идентификатор товара
 	Id *int `json:"id,omitempty"`
 	// Embedded struct due to allOf(#/components/schemas/shoppingItemParams)
 	ShoppingItemParams
@@ -232,6 +266,8 @@ type ComingShoppings400 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error_400)
 	Error400
 	// Embedded fields due to inline allOf schema
+
+	// Свойства ошибки валидации
 	Errors *ComingShoppingsProperty `json:"errors,omitempty"`
 }
 
@@ -270,10 +306,16 @@ type Item400 struct {
 	// Embedded fields due to inline allOf schema
 	Errors *struct {
 		Validation *struct {
-			CategoryID  *int    `json:"categoryID,omitempty"`
+
+			// Идентификатор категории товара
+			CategoryID *int `json:"categoryID,omitempty"`
+
+			// Идентификатор списка покупок
 			ListID      *int    `json:"listID,omitempty"`
 			ProductName *string `json:"productName,omitempty"`
-			Quantity    *int    `json:"quantity,omitempty"`
+
+			// Количество товара
+			Quantity *int `json:"quantity,omitempty"`
 		} `json:"validation,omitempty"`
 	} `json:"errors,omitempty"`
 }
@@ -374,6 +416,13 @@ type GetGoodsParams struct {
 	Token Token `json:"token"`
 }
 
+// GetShoppingParams defines parameters for GetShopping.
+type GetShoppingParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
 // GetShoppingDaysParams defines parameters for GetShoppingDays.
 type GetShoppingDaysParams struct {
 
@@ -403,19 +452,29 @@ type AddShoppingJSONRequestBody ShoppingRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Добавление товара в покупку// (POST /addItem)
+	// Добавление товара в покупку
+	// (POST /addItem)
 	AddItem(ctx echo.Context, params AddItemParams) error
-	// Добавление покупки// (POST /addShopping)
+	// Добавление покупки
+	// (POST /addShopping)
 	AddShopping(ctx echo.Context, params AddShoppingParams) error
-	// Ближайшие 5 покупок// (GET /getComingShoppings/{date})
+	// Ближайшие 5 покупок
+	// (GET /getComingShoppings/{date})
 	GetComingShoppings(ctx echo.Context, date Date, params GetComingShoppingsParams) error
-	// Список покупок// (GET /getGoods/{shoppingID})
+	// Список покупок
+	// (GET /getGoods/{shoppingID})
 	GetGoods(ctx echo.Context, shoppingID ShoppingID, params GetGoodsParams) error
-	// Получение списка дней с покупками по месяцу и году// (GET /getShoppingDays/{year}/{month})
+	// Даные покупки
+	// (GET /getShopping/{shoppingID})
+	GetShopping(ctx echo.Context, shoppingID ShoppingID, params GetShoppingParams) error
+	// Получение списка дней с покупками по месяцу и году
+	// (GET /getShoppingDays/{year}/{month})
 	GetShoppingDays(ctx echo.Context, year Year, month Month, params GetShoppingDaysParams) error
-	// Получение списка покупок по конекретному дню// (GET /getShoppingsByDay/{year}/{month}/{day})
+	// Получение списка покупок по конекретному дню
+	// (GET /getShoppingsByDay/{year}/{month}/{day})
 	GetShoppingsByDay(ctx echo.Context, year Year, month Month, day Day, params GetShoppingsByDayParams) error
-	// Последняя покупка// (GET /lastShopping)
+	// Последняя покупка
+	// (GET /lastShopping)
 	LastShopping(ctx echo.Context, params LastShoppingParams) error
 }
 
@@ -527,6 +586,36 @@ func (w *ServerInterfaceWrapper) GetGoods(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.GetGoods(ctx, shoppingID, params)
+	return err
+}
+
+// GetShopping converts echo context to params.
+func (w *ServerInterfaceWrapper) GetShopping(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "shoppingID" -------------
+	var shoppingID ShoppingID
+
+	err = runtime.BindStyledParameter("simple", false, "shoppingID", ctx.Param("shoppingID"), &shoppingID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter shoppingID: %s", err))
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetShoppingParams
+	// ------------- Required query parameter "token" -------------
+	if paramValue := ctx.QueryParam("token"); paramValue != "" {
+
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Query argument token is required, but not found"))
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", ctx.QueryParams(), &params.Token)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter token: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetShopping(ctx, shoppingID, params)
 	return err
 }
 
@@ -658,6 +747,7 @@ func RegisterHandlers(router interface {
 	router.POST("/addShopping", wrapper.AddShopping)
 	router.GET("/getComingShoppings/:date", wrapper.GetComingShoppings)
 	router.GET("/getGoods/:shoppingID", wrapper.GetGoods)
+	router.GET("/getShopping/:shoppingID", wrapper.GetShopping)
 	router.GET("/getShoppingDays/:year/:month", wrapper.GetShoppingDays)
 	router.GET("/getShoppingsByDay/:year/:month/:day", wrapper.GetShoppingsByDay)
 	router.GET("/lastShopping", wrapper.LastShopping)
@@ -667,45 +757,45 @@ func RegisterHandlers(router interface {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"VLBn7cn/7lES0Moj8cu7HwMAAP//WLrw2QA8AAA=",
+	"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",
 }
 
 // GetSwagger returns the Swagger specification corresponding to the generated code

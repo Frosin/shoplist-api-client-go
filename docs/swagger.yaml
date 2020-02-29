@@ -91,6 +91,26 @@ paths:
           $ref: "#/components/responses/Base_405"
         "500":
           $ref: "#/components/responses/Base_500"
+  "/getShopping/{shoppingID}":
+    get:
+      operationId: getShopping
+      parameters:
+        - $ref: "#/components/parameters/token"
+        - $ref: "#/components/parameters/shoppingID"
+      tags:
+        - Shopping
+      summary: Даные покупки
+      responses:
+        "200":
+          $ref: "#/components/responses/Shopping_200"
+        "401":
+          $ref: "#/components/responses/Base_401"
+        "404":
+          $ref: "#/components/responses/Base_404"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"          
   "/addShopping":
     post:
       operationId: "addShopping"

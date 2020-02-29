@@ -529,6 +529,37 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 	return response200(shoppings)
 }
 
+func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID, params api.GetShoppingParams) error {
+	response200 := func(shopping api.ShoppingWithId) error {
+		var response api.Shopping200
+		var data []api.ShoppingWithId
+		data = append(data, shopping)
+		response.Version = &s.Version
+		response.Message = SuccessMessage
+		response.Data = &data
+		return ctx.JSON(http.StatusOK, response)
+	}
+	response404 := func() error {
+		return s.error(ctx, http.StatusNotFound, nil, nil)
+	}
+	response500 := func(err error) error {
+		return s.error(ctx, http.StatusInternalServerError, err, nil)
+	}
+
+	shopping, err := s.Queries.GetShoppingByID(context.Background(), int32(shoppingID))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return response404()
+		}
+		return response500(err)
+	}
+	data, err := s.sqlcToShopping(shopping)
+	if err != nil {
+		return response500(err)
+	}
+	return response200(data)
+}
+
 func (s *Server) error(ctx echo.Context, httpCode int, err error, validation *[]interface{}) error {
 	if err != nil {
 		log.Info(err.Error())

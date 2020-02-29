@@ -13,12 +13,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 )
 
 // Base defines model for Base.
 type Base struct {
+
+	// Вeрсия ответа сервиса
 	Version *string `json:"version,omitempty"`
 }
 
@@ -63,8 +64,10 @@ type Error404 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error)
 	Error
 	// Embedded fields due to inline allOf schema
-	Errors  []interface{} `json:"errors"`
-	Message string        `json:"message"`
+	Errors []interface{} `json:"errors"`
+
+	// сообщение об ошибке
+	Message string `json:"message"`
 }
 
 // Error405 defines model for Error_405.
@@ -72,8 +75,10 @@ type Error405 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error)
 	Error
 	// Embedded fields due to inline allOf schema
-	Errors  *[]interface{} `json:"errors,omitempty"`
-	Message *string        `json:"message,omitempty"`
+	Errors *[]interface{} `json:"errors,omitempty"`
+
+	// сообщение ответа
+	Message *string `json:"message,omitempty"`
 }
 
 // Error500 defines model for Error_500.
@@ -81,8 +86,10 @@ type Error500 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error)
 	Error
 	// Embedded fields due to inline allOf schema
-	Errors  interface{} `json:"errors"`
-	Message string      `json:"message"`
+	Errors interface{} `json:"errors"`
+
+	// сообщение ответа
+	Message string `json:"message"`
 }
 
 // Shopping defines model for Shopping.
@@ -114,16 +121,26 @@ type ShoppingItem struct {
 
 // ShoppingParams defines model for Shopping_params.
 type ShoppingParams struct {
-	Date    string `json:"date"`
-	Name    string `json:"name"`
-	OwnerID int    `json:"ownerID"`
-	Time    string `json:"time"`
+
+	// Дата покупки
+	Date string `json:"date"`
+
+	// Наименование магазина
+	Name string `json:"name"`
+
+	// Владелец покупки
+	OwnerID int `json:"ownerID"`
+
+	// Время совершения покупки
+	Time string `json:"time"`
 }
 
 // ShoppingWithId defines model for Shopping_with_id.
 type ShoppingWithId struct {
 	// Embedded fields due to inline allOf schema
 	// Embedded fields due to inline allOf schema
+
+	// Идентификатор покупки
 	Id *int `json:"id,omitempty"`
 	// Embedded struct due to allOf(#/components/schemas/Shopping_params)
 	ShoppingParams
@@ -134,8 +151,12 @@ type Success struct {
 	// Embedded struct due to allOf(#/components/schemas/Base)
 	Base
 	// Embedded fields due to inline allOf schema
-	Errors  []interface{} `json:"errors"`
-	Message string        `json:"message"`
+
+	// Ошибки ответа
+	Errors []interface{} `json:"errors"`
+
+	// Сообщение ответа
+	Message string `json:"message"`
 }
 
 // ShoppingDaysErrors defines model for shoppingDaysErrors.
@@ -151,16 +172,28 @@ type ShoppingDaysValidation struct {
 
 // ShoppingItemParams defines model for shoppingItemParams.
 type ShoppingItemParams struct {
-	CategoryID  int    `json:"categoryID"`
-	Complete    bool   `json:"complete"`
-	ListID      int    `json:"listID"`
+
+	// Идентификатор категории товара
+	CategoryID int `json:"categoryID"`
+
+	// Признак выполнения
+	Complete bool `json:"complete"`
+
+	// Идентификатор списка покупок
+	ListID int `json:"listID"`
+
+	// Наименование товара
 	ProductName string `json:"productName"`
-	Quantity    int    `json:"quantity"`
+
+	// Количество товара
+	Quantity int `json:"quantity"`
 }
 
 // ShoppingItemParamsWithId defines model for shoppingItemParamsWithId.
 type ShoppingItemParamsWithId struct {
 	// Embedded fields due to inline allOf schema
+
+	// Идентификатор товара
 	Id *int `json:"id,omitempty"`
 	// Embedded struct due to allOf(#/components/schemas/shoppingItemParams)
 	ShoppingItemParams
@@ -234,6 +267,8 @@ type ComingShoppings400 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error_400)
 	Error400
 	// Embedded fields due to inline allOf schema
+
+	// Свойства ошибки валидации
 	Errors *ComingShoppingsProperty `json:"errors,omitempty"`
 }
 
@@ -272,10 +307,16 @@ type Item400 struct {
 	// Embedded fields due to inline allOf schema
 	Errors *struct {
 		Validation *struct {
-			CategoryID  *int    `json:"categoryID,omitempty"`
+
+			// Идентификатор категории товара
+			CategoryID *int `json:"categoryID,omitempty"`
+
+			// Идентификатор списка покупок
 			ListID      *int    `json:"listID,omitempty"`
 			ProductName *string `json:"productName,omitempty"`
-			Quantity    *int    `json:"quantity,omitempty"`
+
+			// Количество товара
+			Quantity *int `json:"quantity,omitempty"`
 		} `json:"validation,omitempty"`
 	} `json:"errors,omitempty"`
 }
@@ -371,6 +412,13 @@ type GetComingShoppingsParams struct {
 
 // GetGoodsParams defines parameters for GetGoods.
 type GetGoodsParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// GetShoppingParams defines parameters for GetShopping.
+type GetShoppingParams struct {
 
 	// Токен доступа
 	Token Token `json:"token"`
@@ -486,6 +534,9 @@ type ClientInterface interface {
 	// GetGoods request
 	GetGoods(ctx context.Context, shoppingID ShoppingID, params *GetGoodsParams) (*http.Response, error)
 
+	// GetShopping request
+	GetShopping(ctx context.Context, shoppingID ShoppingID, params *GetShoppingParams) (*http.Response, error)
+
 	// GetShoppingDays request
 	GetShoppingDays(ctx context.Context, year Year, month Month, params *GetShoppingDaysParams) (*http.Response, error)
 
@@ -586,6 +637,21 @@ func (c *Client) GetGoods(ctx context.Context, shoppingID ShoppingID, params *Ge
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetShopping(ctx context.Context, shoppingID ShoppingID, params *GetShoppingParams) (*http.Response, error) {
+	req, err := NewGetShoppingRequest(c.Server, shoppingID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetShoppingDays(ctx context.Context, year Year, month Month, params *GetShoppingDaysParams) (*http.Response, error) {
 	req, err := NewGetShoppingDaysRequest(c.Server, year, month, params)
 	if err != nil {
@@ -650,7 +716,10 @@ func NewAddItemRequestWithBody(server string, params *AddItemParams, contentType
 	if err != nil {
 		return nil, err
 	}
-	queryUrl.Path = path.Join(queryUrl.Path, fmt.Sprintf("/addItem"))
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/addItem"))
+	if err != nil {
+		return nil, err
+	}
 
 	queryValues := queryUrl.Query()
 
@@ -696,7 +765,10 @@ func NewAddShoppingRequestWithBody(server string, params *AddShoppingParams, con
 	if err != nil {
 		return nil, err
 	}
-	queryUrl.Path = path.Join(queryUrl.Path, fmt.Sprintf("/addShopping"))
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/addShopping"))
+	if err != nil {
+		return nil, err
+	}
 
 	queryValues := queryUrl.Query()
 
@@ -738,7 +810,10 @@ func NewGetComingShoppingsRequest(server string, date Date, params *GetComingSho
 	if err != nil {
 		return nil, err
 	}
-	queryUrl.Path = path.Join(queryUrl.Path, fmt.Sprintf("/getComingShoppings/%s", pathParam0))
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/getComingShoppings/%s", pathParam0))
+	if err != nil {
+		return nil, err
+	}
 
 	queryValues := queryUrl.Query()
 
@@ -779,7 +854,54 @@ func NewGetGoodsRequest(server string, shoppingID ShoppingID, params *GetGoodsPa
 	if err != nil {
 		return nil, err
 	}
-	queryUrl.Path = path.Join(queryUrl.Path, fmt.Sprintf("/getGoods/%s", pathParam0))
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/getGoods/%s", pathParam0))
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryUrl.Query()
+
+	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
+		return nil, err
+	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+		return nil, err
+	} else {
+		for k, v := range parsed {
+			for _, v2 := range v {
+				queryValues.Add(k, v2)
+			}
+		}
+	}
+
+	queryUrl.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryUrl.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetShoppingRequest generates requests for GetShopping
+func NewGetShoppingRequest(server string, shoppingID ShoppingID, params *GetShoppingParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParam("simple", false, "shoppingID", shoppingID)
+	if err != nil {
+		return nil, err
+	}
+
+	queryUrl, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/getShopping/%s", pathParam0))
+	if err != nil {
+		return nil, err
+	}
 
 	queryValues := queryUrl.Query()
 
@@ -827,7 +949,10 @@ func NewGetShoppingDaysRequest(server string, year Year, month Month, params *Ge
 	if err != nil {
 		return nil, err
 	}
-	queryUrl.Path = path.Join(queryUrl.Path, fmt.Sprintf("/getShoppingDays/%s/%s", pathParam0, pathParam1))
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/getShoppingDays/%s/%s", pathParam0, pathParam1))
+	if err != nil {
+		return nil, err
+	}
 
 	queryValues := queryUrl.Query()
 
@@ -882,7 +1007,10 @@ func NewGetShoppingsByDayRequest(server string, year Year, month Month, day Day,
 	if err != nil {
 		return nil, err
 	}
-	queryUrl.Path = path.Join(queryUrl.Path, fmt.Sprintf("/getShoppingsByDay/%s/%s/%s", pathParam0, pathParam1, pathParam2))
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/getShoppingsByDay/%s/%s/%s", pathParam0, pathParam1, pathParam2))
+	if err != nil {
+		return nil, err
+	}
 
 	queryValues := queryUrl.Query()
 
@@ -916,7 +1044,10 @@ func NewLastShoppingRequest(server string, params *LastShoppingParams) (*http.Re
 	if err != nil {
 		return nil, err
 	}
-	queryUrl.Path = path.Join(queryUrl.Path, fmt.Sprintf("/lastShopping"))
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/lastShopping"))
+	if err != nil {
+		return nil, err
+	}
 
 	queryValues := queryUrl.Query()
 
@@ -987,10 +1118,16 @@ type addItemResponse struct {
 		// Embedded fields due to inline allOf schema
 		Errors *struct {
 			Validation *struct {
-				CategoryID  *int    `json:"categoryID,omitempty"`
+
+				// Идентификатор категории товара
+				CategoryID *int `json:"categoryID,omitempty"`
+
+				// Идентификатор списка покупок
 				ListID      *int    `json:"listID,omitempty"`
 				ProductName *string `json:"productName,omitempty"`
-				Quantity    *int    `json:"quantity,omitempty"`
+
+				// Количество товара
+				Quantity *int `json:"quantity,omitempty"`
 			} `json:"validation,omitempty"`
 		} `json:"errors,omitempty"`
 	}
@@ -1086,6 +1223,8 @@ type getComingShoppingsResponse struct {
 		// Embedded struct due to allOf(#/components/schemas/Error_400)
 		Error400
 		// Embedded fields due to inline allOf schema
+
+		// Свойства ошибки валидации
 		Errors *ComingShoppingsProperty `json:"errors,omitempty"`
 	}
 	JSON401 *struct {
@@ -1169,6 +1308,49 @@ func (r getGoodsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r getGoodsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type getShoppingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Embedded struct due to allOf(#/components/schemas/Success)
+		Success
+		// Embedded fields due to inline allOf schema
+		Data *[]ShoppingWithId `json:"data,omitempty"`
+	}
+	JSON401 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_401)
+		Error401
+	}
+	JSON404 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_404)
+		Error404
+	}
+	JSON405 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_405)
+		Error405
+	}
+	JSON500 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_500)
+		Error500
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r getShoppingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r getShoppingResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1314,7 +1496,7 @@ func (c *ClientWithResponses) AddItemWithBodyWithResponse(ctx context.Context, p
 	if err != nil {
 		return nil, err
 	}
-	return ParseaddItemResponse(rsp)
+	return ParseAddItemResponse(rsp)
 }
 
 func (c *ClientWithResponses) AddItemWithResponse(ctx context.Context, params *AddItemParams, body AddItemJSONRequestBody) (*addItemResponse, error) {
@@ -1322,7 +1504,7 @@ func (c *ClientWithResponses) AddItemWithResponse(ctx context.Context, params *A
 	if err != nil {
 		return nil, err
 	}
-	return ParseaddItemResponse(rsp)
+	return ParseAddItemResponse(rsp)
 }
 
 // AddShoppingWithBodyWithResponse request with arbitrary body returning *AddShoppingResponse
@@ -1331,7 +1513,7 @@ func (c *ClientWithResponses) AddShoppingWithBodyWithResponse(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
-	return ParseaddShoppingResponse(rsp)
+	return ParseAddShoppingResponse(rsp)
 }
 
 func (c *ClientWithResponses) AddShoppingWithResponse(ctx context.Context, params *AddShoppingParams, body AddShoppingJSONRequestBody) (*addShoppingResponse, error) {
@@ -1339,7 +1521,7 @@ func (c *ClientWithResponses) AddShoppingWithResponse(ctx context.Context, param
 	if err != nil {
 		return nil, err
 	}
-	return ParseaddShoppingResponse(rsp)
+	return ParseAddShoppingResponse(rsp)
 }
 
 // GetComingShoppingsWithResponse request returning *GetComingShoppingsResponse
@@ -1348,7 +1530,7 @@ func (c *ClientWithResponses) GetComingShoppingsWithResponse(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	return ParsegetComingShoppingsResponse(rsp)
+	return ParseGetComingShoppingsResponse(rsp)
 }
 
 // GetGoodsWithResponse request returning *GetGoodsResponse
@@ -1357,7 +1539,16 @@ func (c *ClientWithResponses) GetGoodsWithResponse(ctx context.Context, shopping
 	if err != nil {
 		return nil, err
 	}
-	return ParsegetGoodsResponse(rsp)
+	return ParseGetGoodsResponse(rsp)
+}
+
+// GetShoppingWithResponse request returning *GetShoppingResponse
+func (c *ClientWithResponses) GetShoppingWithResponse(ctx context.Context, shoppingID ShoppingID, params *GetShoppingParams) (*getShoppingResponse, error) {
+	rsp, err := c.GetShopping(ctx, shoppingID, params)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetShoppingResponse(rsp)
 }
 
 // GetShoppingDaysWithResponse request returning *GetShoppingDaysResponse
@@ -1366,7 +1557,7 @@ func (c *ClientWithResponses) GetShoppingDaysWithResponse(ctx context.Context, y
 	if err != nil {
 		return nil, err
 	}
-	return ParsegetShoppingDaysResponse(rsp)
+	return ParseGetShoppingDaysResponse(rsp)
 }
 
 // GetShoppingsByDayWithResponse request returning *GetShoppingsByDayResponse
@@ -1375,7 +1566,7 @@ func (c *ClientWithResponses) GetShoppingsByDayWithResponse(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	return ParsegetShoppingsByDayResponse(rsp)
+	return ParseGetShoppingsByDayResponse(rsp)
 }
 
 // LastShoppingWithResponse request returning *LastShoppingResponse
@@ -1384,11 +1575,11 @@ func (c *ClientWithResponses) LastShoppingWithResponse(ctx context.Context, para
 	if err != nil {
 		return nil, err
 	}
-	return ParselastShoppingResponse(rsp)
+	return ParseLastShoppingResponse(rsp)
 }
 
-// ParseaddItemResponse parses an HTTP response from a AddItemWithResponse call
-func ParseaddItemResponse(rsp *http.Response) (*addItemResponse, error) {
+// ParseAddItemResponse parses an HTTP response from a AddItemWithResponse call
+func ParseAddItemResponse(rsp *http.Response) (*addItemResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer rsp.Body.Close()
 	if err != nil {
@@ -1419,10 +1610,16 @@ func ParseaddItemResponse(rsp *http.Response) (*addItemResponse, error) {
 			// Embedded fields due to inline allOf schema
 			Errors *struct {
 				Validation *struct {
-					CategoryID  *int    `json:"categoryID,omitempty"`
+
+					// Идентификатор категории товара
+					CategoryID *int `json:"categoryID,omitempty"`
+
+					// Идентификатор списка покупок
 					ListID      *int    `json:"listID,omitempty"`
 					ProductName *string `json:"productName,omitempty"`
-					Quantity    *int    `json:"quantity,omitempty"`
+
+					// Количество товара
+					Quantity *int `json:"quantity,omitempty"`
 				} `json:"validation,omitempty"`
 			} `json:"errors,omitempty"`
 		}{}
@@ -1471,8 +1668,8 @@ func ParseaddItemResponse(rsp *http.Response) (*addItemResponse, error) {
 	return response, nil
 }
 
-// ParseaddShoppingResponse parses an HTTP response from a AddShoppingWithResponse call
-func ParseaddShoppingResponse(rsp *http.Response) (*addShoppingResponse, error) {
+// ParseAddShoppingResponse parses an HTTP response from a AddShoppingWithResponse call
+func ParseAddShoppingResponse(rsp *http.Response) (*addShoppingResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer rsp.Body.Close()
 	if err != nil {
@@ -1539,8 +1736,8 @@ func ParseaddShoppingResponse(rsp *http.Response) (*addShoppingResponse, error) 
 	return response, nil
 }
 
-// ParsegetComingShoppingsResponse parses an HTTP response from a GetComingShoppingsWithResponse call
-func ParsegetComingShoppingsResponse(rsp *http.Response) (*getComingShoppingsResponse, error) {
+// ParseGetComingShoppingsResponse parses an HTTP response from a GetComingShoppingsWithResponse call
+func ParseGetComingShoppingsResponse(rsp *http.Response) (*getComingShoppingsResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer rsp.Body.Close()
 	if err != nil {
@@ -1569,6 +1766,8 @@ func ParsegetComingShoppingsResponse(rsp *http.Response) (*getComingShoppingsRes
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
 			// Embedded fields due to inline allOf schema
+
+			// Свойства ошибки валидации
 			Errors *ComingShoppingsProperty `json:"errors,omitempty"`
 		}{}
 		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
@@ -1616,8 +1815,8 @@ func ParsegetComingShoppingsResponse(rsp *http.Response) (*getComingShoppingsRes
 	return response, nil
 }
 
-// ParsegetGoodsResponse parses an HTTP response from a GetGoodsWithResponse call
-func ParsegetGoodsResponse(rsp *http.Response) (*getGoodsResponse, error) {
+// ParseGetGoodsResponse parses an HTTP response from a GetGoodsWithResponse call
+func ParseGetGoodsResponse(rsp *http.Response) (*getGoodsResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer rsp.Body.Close()
 	if err != nil {
@@ -1697,8 +1896,74 @@ func ParsegetGoodsResponse(rsp *http.Response) (*getGoodsResponse, error) {
 	return response, nil
 }
 
-// ParsegetShoppingDaysResponse parses an HTTP response from a GetShoppingDaysWithResponse call
-func ParsegetShoppingDaysResponse(rsp *http.Response) (*getShoppingDaysResponse, error) {
+// ParseGetShoppingResponse parses an HTTP response from a GetShoppingWithResponse call
+func ParseGetShoppingResponse(rsp *http.Response) (*getShoppingResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &getShoppingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		response.JSON200 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Success)
+			Success
+			// Embedded fields due to inline allOf schema
+			Data *[]ShoppingWithId `json:"data,omitempty"`
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		response.JSON401 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_401)
+			Error401
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		response.JSON404 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_404)
+			Error404
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
+		response.JSON405 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_405)
+			Error405
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		response.JSON500 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_500)
+			Error500
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+			return nil, err
+		}
+
+	}
+
+	return response, nil
+}
+
+// ParseGetShoppingDaysResponse parses an HTTP response from a GetShoppingDaysWithResponse call
+func ParseGetShoppingDaysResponse(rsp *http.Response) (*getShoppingDaysResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer rsp.Body.Close()
 	if err != nil {
@@ -1765,8 +2030,8 @@ func ParsegetShoppingDaysResponse(rsp *http.Response) (*getShoppingDaysResponse,
 	return response, nil
 }
 
-// ParsegetShoppingsByDayResponse parses an HTTP response from a GetShoppingsByDayWithResponse call
-func ParsegetShoppingsByDayResponse(rsp *http.Response) (*getShoppingsByDayResponse, error) {
+// ParseGetShoppingsByDayResponse parses an HTTP response from a GetShoppingsByDayWithResponse call
+func ParseGetShoppingsByDayResponse(rsp *http.Response) (*getShoppingsByDayResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer rsp.Body.Close()
 	if err != nil {
@@ -1833,8 +2098,8 @@ func ParsegetShoppingsByDayResponse(rsp *http.Response) (*getShoppingsByDayRespo
 	return response, nil
 }
 
-// ParselastShoppingResponse parses an HTTP response from a LastShoppingWithResponse call
-func ParselastShoppingResponse(rsp *http.Response) (*lastShoppingResponse, error) {
+// ParseLastShoppingResponse parses an HTTP response from a LastShoppingWithResponse call
+func ParseLastShoppingResponse(rsp *http.Response) (*lastShoppingResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer rsp.Body.Close()
 	if err != nil {

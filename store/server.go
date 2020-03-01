@@ -146,12 +146,10 @@ func (s *Server) sqlcToShopping(shopping sqlc.Shopping) (api.ShoppingWithId, err
 // AddShopping inserts new shopping
 func (s *Server) AddShopping(ctx echo.Context, params api.AddShoppingParams) error {
 	response200 := func(shopping api.ShoppingWithId) error {
-		var response api.LastShopping200
-		var data []api.ShoppingWithId
-		data = append(data, shopping)
+		var response api.Shopping200
 		response.Version = &s.Version
 		response.Message = SuccessMessage
-		response.Data = &data
+		response.Data = &shopping
 		return ctx.JSON(http.StatusOK, response)
 	}
 	response400 := func(err error, validation *api.ShoppingValidation) error {

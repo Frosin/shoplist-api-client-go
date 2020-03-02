@@ -33,6 +33,13 @@ type ComingShoppingsValidation struct {
 	Date *string `json:"date,omitempty"`
 }
 
+// DeleteIds defines model for Delete_ids.
+type DeleteIds struct {
+
+	// Массив идентификаторв для удаления
+	Ids []int `json:"ids"`
+}
+
 // Error defines model for Error.
 type Error struct {
 	// Embedded struct due to allOf(#/components/schemas/Base)
@@ -230,6 +237,18 @@ type Token string
 // Year defines model for year.
 type Year int
 
+// Base200 defines model for Base_200.
+type Base200 struct {
+	// Embedded struct due to allOf(#/components/schemas/Success)
+	Success
+}
+
+// Base400 defines model for Base_400.
+type Base400 struct {
+	// Embedded struct due to allOf(#/components/schemas/Error_400)
+	Error400
+}
+
 // Base401 defines model for Base_401.
 type Base401 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error_401)
@@ -377,6 +396,12 @@ type Shoppings400 struct {
 	Errors *ShoppingsByDayErrors `json:"errors,omitempty"`
 }
 
+// DeleteItemsRequest defines model for Delete_items_request.
+type DeleteItemsRequest DeleteIds
+
+// DeleteShoppingsRequest defines model for Delete_shoppings_request.
+type DeleteShoppingsRequest DeleteIds
+
 // ItemRequest defines model for Item_request.
 type ItemRequest struct {
 	// Embedded struct due to allOf(#/components/schemas/shoppingItemParams)
@@ -398,6 +423,20 @@ type AddItemParams struct {
 
 // AddShoppingParams defines parameters for AddShopping.
 type AddShoppingParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// DeleteItemsParams defines parameters for DeleteItems.
+type DeleteItemsParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// DeleteShoppingsParams defines parameters for DeleteShoppings.
+type DeleteShoppingsParams struct {
 
 	// Токен доступа
 	Token Token `json:"token"`
@@ -450,6 +489,12 @@ type AddItemJSONRequestBody ItemRequest
 
 // AddShoppingRequestBody defines body for AddShopping for application/json ContentType.
 type AddShoppingJSONRequestBody ShoppingRequest
+
+// DeleteItemsRequestBody defines body for DeleteItems for application/json ContentType.
+type DeleteItemsJSONRequestBody DeleteItemsRequest
+
+// DeleteShoppingsRequestBody defines body for DeleteShoppings for application/json ContentType.
+type DeleteShoppingsJSONRequestBody DeleteShoppingsRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(req *http.Request, ctx context.Context) error
@@ -528,6 +573,16 @@ type ClientInterface interface {
 
 	AddShopping(ctx context.Context, params *AddShoppingParams, body AddShoppingJSONRequestBody) (*http.Response, error)
 
+	// DeleteItems request  with any body
+	DeleteItemsWithBody(ctx context.Context, params *DeleteItemsParams, contentType string, body io.Reader) (*http.Response, error)
+
+	DeleteItems(ctx context.Context, params *DeleteItemsParams, body DeleteItemsJSONRequestBody) (*http.Response, error)
+
+	// DeleteShoppings request  with any body
+	DeleteShoppingsWithBody(ctx context.Context, params *DeleteShoppingsParams, contentType string, body io.Reader) (*http.Response, error)
+
+	DeleteShoppings(ctx context.Context, params *DeleteShoppingsParams, body DeleteShoppingsJSONRequestBody) (*http.Response, error)
+
 	// GetComingShoppings request
 	GetComingShoppings(ctx context.Context, date Date, params *GetComingShoppingsParams) (*http.Response, error)
 
@@ -594,6 +649,66 @@ func (c *Client) AddShoppingWithBody(ctx context.Context, params *AddShoppingPar
 
 func (c *Client) AddShopping(ctx context.Context, params *AddShoppingParams, body AddShoppingJSONRequestBody) (*http.Response, error) {
 	req, err := NewAddShoppingRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteItemsWithBody(ctx context.Context, params *DeleteItemsParams, contentType string, body io.Reader) (*http.Response, error) {
+	req, err := NewDeleteItemsRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteItems(ctx context.Context, params *DeleteItemsParams, body DeleteItemsJSONRequestBody) (*http.Response, error) {
+	req, err := NewDeleteItemsRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteShoppingsWithBody(ctx context.Context, params *DeleteShoppingsParams, contentType string, body io.Reader) (*http.Response, error) {
+	req, err := NewDeleteShoppingsRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteShoppings(ctx context.Context, params *DeleteShoppingsParams, body DeleteShoppingsJSONRequestBody) (*http.Response, error) {
+	req, err := NewDeleteShoppingsRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -787,6 +902,104 @@ func NewAddShoppingRequestWithBody(server string, params *AddShoppingParams, con
 	queryUrl.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("POST", queryUrl.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+	return req, nil
+}
+
+// NewDeleteItemsRequest calls the generic DeleteItems builder with application/json body
+func NewDeleteItemsRequest(server string, params *DeleteItemsParams, body DeleteItemsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteItemsRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewDeleteItemsRequestWithBody generates requests for DeleteItems with any type of body
+func NewDeleteItemsRequestWithBody(server string, params *DeleteItemsParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	queryUrl, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/deleteItems"))
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryUrl.Query()
+
+	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
+		return nil, err
+	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+		return nil, err
+	} else {
+		for k, v := range parsed {
+			for _, v2 := range v {
+				queryValues.Add(k, v2)
+			}
+		}
+	}
+
+	queryUrl.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("DELETE", queryUrl.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+	return req, nil
+}
+
+// NewDeleteShoppingsRequest calls the generic DeleteShoppings builder with application/json body
+func NewDeleteShoppingsRequest(server string, params *DeleteShoppingsParams, body DeleteShoppingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteShoppingsRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewDeleteShoppingsRequestWithBody generates requests for DeleteShoppings with any type of body
+func NewDeleteShoppingsRequestWithBody(server string, params *DeleteShoppingsParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	queryUrl, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/deleteShoppings"))
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryUrl.Query()
+
+	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
+		return nil, err
+	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+		return nil, err
+	} else {
+		for k, v := range parsed {
+			for _, v2 := range v {
+				queryValues.Add(k, v2)
+			}
+		}
+	}
+
+	queryUrl.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("DELETE", queryUrl.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -1210,6 +1423,88 @@ func (r addShoppingResponse) StatusCode() int {
 	return 0
 }
 
+type deleteItemsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Embedded struct due to allOf(#/components/schemas/Success)
+		Success
+	}
+	JSON400 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_400)
+		Error400
+	}
+	JSON401 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_401)
+		Error401
+	}
+	JSON405 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_405)
+		Error405
+	}
+	JSON500 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_500)
+		Error500
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r deleteItemsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r deleteItemsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type deleteShoppingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Embedded struct due to allOf(#/components/schemas/Success)
+		Success
+	}
+	JSON400 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_400)
+		Error400
+	}
+	JSON401 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_401)
+		Error401
+	}
+	JSON405 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_405)
+		Error405
+	}
+	JSON500 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_500)
+		Error500
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r deleteShoppingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r deleteShoppingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type getComingShoppingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1524,6 +1819,40 @@ func (c *ClientWithResponses) AddShoppingWithResponse(ctx context.Context, param
 	return ParseAddShoppingResponse(rsp)
 }
 
+// DeleteItemsWithBodyWithResponse request with arbitrary body returning *DeleteItemsResponse
+func (c *ClientWithResponses) DeleteItemsWithBodyWithResponse(ctx context.Context, params *DeleteItemsParams, contentType string, body io.Reader) (*deleteItemsResponse, error) {
+	rsp, err := c.DeleteItemsWithBody(ctx, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteItemsResponse(rsp)
+}
+
+func (c *ClientWithResponses) DeleteItemsWithResponse(ctx context.Context, params *DeleteItemsParams, body DeleteItemsJSONRequestBody) (*deleteItemsResponse, error) {
+	rsp, err := c.DeleteItems(ctx, params, body)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteItemsResponse(rsp)
+}
+
+// DeleteShoppingsWithBodyWithResponse request with arbitrary body returning *DeleteShoppingsResponse
+func (c *ClientWithResponses) DeleteShoppingsWithBodyWithResponse(ctx context.Context, params *DeleteShoppingsParams, contentType string, body io.Reader) (*deleteShoppingsResponse, error) {
+	rsp, err := c.DeleteShoppingsWithBody(ctx, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteShoppingsResponse(rsp)
+}
+
+func (c *ClientWithResponses) DeleteShoppingsWithResponse(ctx context.Context, params *DeleteShoppingsParams, body DeleteShoppingsJSONRequestBody) (*deleteShoppingsResponse, error) {
+	rsp, err := c.DeleteShoppings(ctx, params, body)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteShoppingsResponse(rsp)
+}
+
 // GetComingShoppingsWithResponse request returning *GetComingShoppingsResponse
 func (c *ClientWithResponses) GetComingShoppingsWithResponse(ctx context.Context, date Date, params *GetComingShoppingsParams) (*getComingShoppingsResponse, error) {
 	rsp, err := c.GetComingShoppings(ctx, date, params)
@@ -1699,6 +2028,134 @@ func ParseAddShoppingResponse(rsp *http.Response) (*addShoppingResponse, error) 
 			Error400
 			// Embedded fields due to inline allOf schema
 			Errors *ShoppingProperty `json:"errors,omitempty"`
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		response.JSON401 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_401)
+			Error401
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
+		response.JSON405 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_405)
+			Error405
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		response.JSON500 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_500)
+			Error500
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+			return nil, err
+		}
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteItemsResponse parses an HTTP response from a DeleteItemsWithResponse call
+func ParseDeleteItemsResponse(rsp *http.Response) (*deleteItemsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &deleteItemsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		response.JSON200 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Success)
+			Success
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		response.JSON400 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_400)
+			Error400
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		response.JSON401 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_401)
+			Error401
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
+		response.JSON405 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_405)
+			Error405
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		response.JSON500 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_500)
+			Error500
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+			return nil, err
+		}
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteShoppingsResponse parses an HTTP response from a DeleteShoppingsWithResponse call
+func ParseDeleteShoppingsResponse(rsp *http.Response) (*deleteShoppingsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &deleteShoppingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		response.JSON200 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Success)
+			Success
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		response.JSON400 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_400)
+			Error400
 		}{}
 		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
 			return nil, err

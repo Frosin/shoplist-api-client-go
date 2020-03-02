@@ -32,6 +32,13 @@ type ComingShoppingsValidation struct {
 	Date *string `json:"date,omitempty"`
 }
 
+// DeleteIds defines model for Delete_ids.
+type DeleteIds struct {
+
+	// Массив идентификаторв для удаления
+	Ids []int `json:"ids"`
+}
+
 // Error defines model for Error.
 type Error struct {
 	// Embedded struct due to allOf(#/components/schemas/Base)
@@ -229,6 +236,18 @@ type Token string
 // Year defines model for year.
 type Year int
 
+// Base200 defines model for Base_200.
+type Base200 struct {
+	// Embedded struct due to allOf(#/components/schemas/Success)
+	Success
+}
+
+// Base400 defines model for Base_400.
+type Base400 struct {
+	// Embedded struct due to allOf(#/components/schemas/Error_400)
+	Error400
+}
+
 // Base401 defines model for Base_401.
 type Base401 struct {
 	// Embedded struct due to allOf(#/components/schemas/Error_401)
@@ -376,6 +395,12 @@ type Shoppings400 struct {
 	Errors *ShoppingsByDayErrors `json:"errors,omitempty"`
 }
 
+// DeleteItemsRequest defines model for Delete_items_request.
+type DeleteItemsRequest DeleteIds
+
+// DeleteShoppingsRequest defines model for Delete_shoppings_request.
+type DeleteShoppingsRequest DeleteIds
+
 // ItemRequest defines model for Item_request.
 type ItemRequest struct {
 	// Embedded struct due to allOf(#/components/schemas/shoppingItemParams)
@@ -397,6 +422,20 @@ type AddItemParams struct {
 
 // AddShoppingParams defines parameters for AddShopping.
 type AddShoppingParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// DeleteItemsParams defines parameters for DeleteItems.
+type DeleteItemsParams struct {
+
+	// Токен доступа
+	Token Token `json:"token"`
+}
+
+// DeleteShoppingsParams defines parameters for DeleteShoppings.
+type DeleteShoppingsParams struct {
 
 	// Токен доступа
 	Token Token `json:"token"`
@@ -450,6 +489,12 @@ type AddItemJSONRequestBody ItemRequest
 // AddShoppingRequestBody defines body for AddShopping for application/json ContentType.
 type AddShoppingJSONRequestBody ShoppingRequest
 
+// DeleteItemsRequestBody defines body for DeleteItems for application/json ContentType.
+type DeleteItemsJSONRequestBody DeleteItemsRequest
+
+// DeleteShoppingsRequestBody defines body for DeleteShoppings for application/json ContentType.
+type DeleteShoppingsJSONRequestBody DeleteShoppingsRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Добавление товара в покупку
@@ -458,6 +503,12 @@ type ServerInterface interface {
 	// Добавление покупки
 	// (POST /addShopping)
 	AddShopping(ctx echo.Context, params AddShoppingParams) error
+	// Удаление товаров
+	// (DELETE /deleteItems)
+	DeleteItems(ctx echo.Context, params DeleteItemsParams) error
+	// Удаление покупок
+	// (DELETE /deleteShoppings)
+	DeleteShoppings(ctx echo.Context, params DeleteShoppingsParams) error
 	// Ближайшие 5 покупок
 	// (GET /getComingShoppings/{date})
 	GetComingShoppings(ctx echo.Context, date Date, params GetComingShoppingsParams) error
@@ -526,6 +577,52 @@ func (w *ServerInterfaceWrapper) AddShopping(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.AddShopping(ctx, params)
+	return err
+}
+
+// DeleteItems converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteItems(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteItemsParams
+	// ------------- Required query parameter "token" -------------
+	if paramValue := ctx.QueryParam("token"); paramValue != "" {
+
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Query argument token is required, but not found"))
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", ctx.QueryParams(), &params.Token)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter token: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.DeleteItems(ctx, params)
+	return err
+}
+
+// DeleteShoppings converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteShoppings(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteShoppingsParams
+	// ------------- Required query parameter "token" -------------
+	if paramValue := ctx.QueryParam("token"); paramValue != "" {
+
+	} else {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Query argument token is required, but not found"))
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", ctx.QueryParams(), &params.Token)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter token: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.DeleteShoppings(ctx, params)
 	return err
 }
 
@@ -745,6 +842,8 @@ func RegisterHandlers(router interface {
 
 	router.POST("/addItem", wrapper.AddItem)
 	router.POST("/addShopping", wrapper.AddShopping)
+	router.DELETE("/deleteItems", wrapper.DeleteItems)
+	router.DELETE("/deleteShoppings", wrapper.DeleteShoppings)
 	router.GET("/getComingShoppings/:date", wrapper.GetComingShoppings)
 	router.GET("/getGoods/:shoppingID", wrapper.GetGoods)
 	router.GET("/getShopping/:shoppingID", wrapper.GetShopping)
@@ -757,45 +856,48 @@ func RegisterHandlers(router interface {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the Swagger specification corresponding to the generated code

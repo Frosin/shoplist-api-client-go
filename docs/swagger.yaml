@@ -91,6 +91,27 @@ paths:
           $ref: "#/components/responses/Base_405"
         "500":
           $ref: "#/components/responses/Base_500"
+  "/deleteItems":
+    delete:
+      operationId: "deleteItems"
+      parameters:
+        - $ref: "#/components/parameters/token"
+      requestBody:
+        $ref: "#/components/requestBodies/Delete_items_request"
+      tags:
+        - Shopping items
+      summary: Удаление товаров
+      responses:
+        "200":
+          $ref: "#/components/responses/Base_200"
+        "400":
+          $ref: "#/components/responses/Base_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
   "/getShopping/{shoppingID}":
     get:
       operationId: getShopping
@@ -126,6 +147,27 @@ paths:
           $ref: "#/components/responses/Shopping_200"
         "400":
           $ref: "#/components/responses/Shopping_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
+  "/deleteShoppings":
+    delete:
+      operationId: "deleteShoppings"
+      parameters:
+        - $ref: "#/components/parameters/token"
+      requestBody:
+        $ref: "#/components/requestBodies/Delete_shoppings_request"
+      tags:
+        - Shopping
+      summary: Удаление покупок
+      responses:
+        "200":
+          $ref: "#/components/responses/Base_200"
+        "400":
+          $ref: "#/components/responses/Base_400"
         "401":
           $ref: "#/components/responses/Base_401"
         "405":
@@ -400,6 +442,16 @@ components:
           - name
           - time
           - ownerID
+      Delete_ids:
+        title: Идентификаторы для удаления
+        properties:
+          ids:
+            type: array
+            description: Массив идентификаторв для удаления
+            items:
+              type: integer
+        required:
+          - ids
       ComingShoppingsProperty:
         description: "Свойства ошибки валидации"
         type: object
@@ -497,7 +549,31 @@ components:
           schema:
             allOf:
               - $ref: "#/components/schemas/Shopping"
+    Delete_shoppings_request:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Delete_ids"
+    Delete_items_request:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Delete_ids"
   responses:
+      Base_200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Success"
+      Base_400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Error_400"
       Base_401:
         description: Unauthorized
         content:

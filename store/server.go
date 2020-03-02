@@ -556,6 +556,70 @@ func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID, params
 	return response200(data)
 }
 
+// Удаление товаров
+// (DELETE /deleteItems)
+func (s *Server) DeleteItems(ctx echo.Context, params api.DeleteItemsParams) error {
+	response200 := func() error {
+		response := api.Base200{}
+		response.Version = &s.Version
+		response.Message = SuccessMessage
+		return ctx.JSON(http.StatusOK, response)
+	}
+	response400 := func(err error) error {
+		return s.error(ctx, http.StatusBadRequest, err, nil)
+	}
+	response500 := func(err error) error {
+		return s.error(ctx, http.StatusInternalServerError, err, nil)
+	}
+
+	var deleteNumbers api.DeleteItemsRequest
+	if err := ctx.Bind(&deleteNumbers); err != nil {
+		return response400(err)
+	}
+
+	query, args, err := sqlx.In("DELETE FROM shop_list WHERE id IN (?);", deleteNumbers.Ids)
+	if err != nil {
+		return response500(err)
+	}
+	_, err = s.DB.Exec(query, args...)
+	if err != nil {
+		return response500(err)
+	}
+	return response200()
+}
+
+// Удаление покупок
+// (DELETE /deleteShoppings)
+func (s *Server) DeleteShoppings(ctx echo.Context, params api.DeleteShoppingsParams) error {
+	response200 := func() error {
+		response := api.Base200{}
+		response.Version = &s.Version
+		response.Message = SuccessMessage
+		return ctx.JSON(http.StatusOK, response)
+	}
+	response400 := func(err error) error {
+		return s.error(ctx, http.StatusBadRequest, err, nil)
+	}
+	response500 := func(err error) error {
+		return s.error(ctx, http.StatusInternalServerError, err, nil)
+	}
+
+	var deleteNumbers api.DeleteItemsRequest
+	if err := ctx.Bind(&deleteNumbers); err != nil {
+		return response400(err)
+	}
+
+	query, args, err := sqlx.In("DELETE FROM shopping WHERE id IN (?);", deleteNumbers.Ids)
+	if err != nil {
+		return response500(err)
+	}
+	_, err = s.DB.Exec(query, args...)
+	if err != nil {
+		return response500(err)
+	}
+	return response200()
+}
+
 func (s *Server) error(ctx echo.Context, httpCode int, err error, validation *[]interface{}) error {
 	if err != nil {
 		log.Info(err.Error())

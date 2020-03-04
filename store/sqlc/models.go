@@ -6,15 +6,6 @@ import (
 	"database/sql"
 )
 
-type Owner struct {
-	ID         int32          `json:"id"`
-	TelegramID sql.NullInt32  `json:"telegram_id"`
-	FirstName  sql.NullString `json:"first_name"`
-	LastName   sql.NullString `json:"last_name"`
-	UserName   sql.NullString `json:"user_name"`
-	Token      sql.NullString `json:"token"`
-}
-
 type Shop struct {
 	ID   int32          `json:"id"`
 	Name sql.NullString `json:"name"`
@@ -37,4 +28,12 @@ type Shopping struct {
 	Complete sql.NullInt32  `json:"complete"`
 	Time     sql.NullString `json:"time"`
 	OwnerID  sql.NullInt32  `json:"owner_id"`
+}
+
+type User struct {
+	ID               int32          `json:"id"`
+	TelegramID       int32          `json:"telegram_id"`
+	TelegramUsername sql.NullString `json:"telegram_username"`
+	ComunityID       string         `json:"comunity_id"`
+	Token            sql.NullString `json:"token"`
 }

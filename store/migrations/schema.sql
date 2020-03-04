@@ -19,11 +19,10 @@ CREATE TABLE IF NOT EXISTS shop (
 	id	INTEGER NOT NULL PRIMARY KEY,
 	name	TEXT
 );
-CREATE TABLE IF NOT EXISTS owner (
+CREATE TABLE IF NOT EXISTS users (
 	id	INTEGER NOT NULL PRIMARY KEY,
-	telegram_id INTEGER,
-	first_name	TEXT,
-	last_name TEXT,
-	user_name TEXT,
-	token TEXT
+	telegram_id	INTEGER NOT NULL,
+	telegram_username	TEXT,
+	comunity_id	TEXT NOT NULL,
+	token	TEXT
 );

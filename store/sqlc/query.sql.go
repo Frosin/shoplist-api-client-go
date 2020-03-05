@@ -210,3 +210,57 @@ func (q *Queries) GetShoppingsByDay(ctx context.Context, date sql.NullString) ([
 	}
 	return items, nil
 }
+
+const getUserByTelegramID = `-- name: GetUserByTelegramID :one
+SELECT id, telegram_id, telegram_username, comunity_id, token, chat_id FROM users
+WHERE telegram_id=$1
+`
+
+func (q *Queries) GetUserByTelegramID(ctx context.Context, telegramID int32) (User, error) {
+	row := q.queryRow(ctx, q.getUserByTelegramIDStmt, getUserByTelegramID, telegramID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.TelegramID,
+		&i.TelegramUsername,
+		&i.ComunityID,
+		&i.Token,
+		&i.ChatID,
+	)
+	return i, err
+}
+
+const getUsersByComunityID = `-- name: GetUsersByComunityID :many
+SELECT id, telegram_id, telegram_username, comunity_id, token, chat_id FROM users
+WHERE comunity_id=$1
+`
+
+func (q *Queries) GetUsersByComunityID(ctx context.Context, comunityID string) ([]User, error) {
+	rows, err := q.query(ctx, q.getUsersByComunityIDStmt, getUsersByComunityID, comunityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.TelegramID,
+			&i.TelegramUsername,
+			&i.ComunityID,
+			&i.Token,
+			&i.ChatID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

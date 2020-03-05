@@ -80,3 +80,41 @@ func (q *Queries) AddShopping(ctx context.Context, arg AddShoppingParams) (int64
 	}
 	return insertedID, nil
 }
+
+// add user
+
+const addUser = `
+INSERT INTO users (
+	telegram_id, telegram_username, comunity_id,
+	token, chat_id
+) VALUES (
+    $1, $2, $3, $4, $5
+)`
+
+type AddUserParams struct {
+	TelegramID       sql.NullInt32  `json:"telegram_id"`
+	TelegramUsername sql.NullString `json:"telegram_username"`
+	ComunityID       sql.NullString `json:"comunity_id"`
+	Token            sql.NullString `json:"token"`
+	ChatID           sql.NullInt32  `json:"chat_id"`
+}
+
+func (q *Queries) AddUser(ctx context.Context, arg AddUserParams) (int64, error) {
+	insertResult, err := q.db.ExecContext(
+		ctx,
+		addUser,
+		arg.TelegramID,
+		arg.TelegramUsername,
+		arg.ComunityID,
+		arg.Token,
+		arg.ChatID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	insertedID, err := insertResult.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return insertedID, nil
+}

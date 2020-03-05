@@ -4,11 +4,12 @@ info:
   version: '1.0'
 servers:
   - url: https://api.server.test/v1
+security:
+  - token: []
 paths:
   "/getGoods/{shoppingID}":
     parameters:
     - $ref: "#/components/parameters/shoppingID"
-    - $ref: "#/components/parameters/token"
     get:
       operationId: getGoods
       tags:
@@ -30,7 +31,6 @@ paths:
   "/getComingShoppings/{date}":
     parameters:
     - $ref: "#/components/parameters/date"
-    - $ref: "#/components/parameters/token"
     get:
       operationId: GetComingShoppings
       tags:
@@ -52,8 +52,6 @@ paths:
   "/lastShopping":
     get:
       operationId: lastShopping
-      parameters:
-        - $ref: "#/components/parameters/token"
       tags:
         - Shopping
       summary: Последняя покупка
@@ -71,8 +69,6 @@ paths:
   "/addItem": 
     post:
       operationId: addItem
-      parameters:
-        - $ref: "#/components/parameters/token"
       requestBody:
         $ref: "#/components/requestBodies/Item_request"
       tags:
@@ -92,10 +88,8 @@ paths:
         "500":
           $ref: "#/components/responses/Base_500"
   "/deleteItems":
-    delete:
+    post:
       operationId: "deleteItems"
-      parameters:
-        - $ref: "#/components/parameters/token"
       requestBody:
         $ref: "#/components/requestBodies/Delete_items_request"
       tags:
@@ -116,7 +110,6 @@ paths:
     get:
       operationId: getShopping
       parameters:
-        - $ref: "#/components/parameters/token"
         - $ref: "#/components/parameters/shoppingID"
       tags:
         - Shopping
@@ -135,8 +128,6 @@ paths:
   "/addShopping":
     post:
       operationId: "addShopping"
-      parameters:
-        - $ref: "#/components/parameters/token"
       requestBody:
         $ref: "#/components/requestBodies/Shopping_request"
       tags:
@@ -154,10 +145,8 @@ paths:
         "500":
           $ref: "#/components/responses/Base_500"
   "/deleteShoppings":
-    delete:
+    post:
       operationId: "deleteShoppings"
-      parameters:
-        - $ref: "#/components/parameters/token"
       requestBody:
         $ref: "#/components/requestBodies/Delete_shoppings_request"
       tags:
@@ -178,7 +167,6 @@ paths:
     get:
       operationId: "getShoppingDays"
       parameters:
-        - $ref: "#/components/parameters/token"
         - $ref: "#/components/parameters/year"
         - $ref: "#/components/parameters/month"
       tags:
@@ -199,7 +187,6 @@ paths:
     get:
       operationId: "getShoppingsByDay"
       parameters:
-        - $ref: "#/components/parameters/token"
         - $ref: "#/components/parameters/year"
         - $ref: "#/components/parameters/month"
         - $ref: "#/components/parameters/day"
@@ -217,7 +204,70 @@ paths:
           $ref: "#/components/responses/Base_405"
         "500":
           $ref: "#/components/responses/Base_500"
+  "/users":
+    get:
+      operationId: "getUser"
+      parameters:
+        - $ref: "#/components/parameters/telegram_user_id"
+        - $ref: "#/components/parameters/comunity_id"
+      tags:
+        - Users
+      summary: Получение юзера по telegram user id
+      responses:
+        "200":
+          $ref: "#/components/responses/Users_200"
+        "400":
+          $ref: "#/components/responses/Base_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
+        "404":
+          $ref: "#/components/responses/Base_404"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
+    post:
+      operationId: "createUser"
+      requestBody:
+        $ref: "#/components/requestBodies/User_request"
+      tags:
+        - Users
+      summary: Добавление юзера
+      responses:
+        "200":
+          $ref: "#/components/responses/Base_200"
+        "400":
+          $ref: "#/components/responses/Base_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
+    patch:
+      operationId: "updateUser"
+      requestBody:
+        $ref: "#/components/requestBodies/User_request"
+      tags:
+        - Users
+      summary: Добавление юзера
+      responses:
+        "200":
+          $ref: "#/components/responses/Base_200"
+        "400":
+          $ref: "#/components/responses/Base_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
 components:
+  securitySchemes:
+    token:
+      type: apiKey
+      in: query
+      name: token
   schemas:
       Base:
         description: Возвращает статус ответа
@@ -362,6 +412,29 @@ components:
           - categoryID
           - complete
           - listID
+      user:
+        title: Данные юзера
+        properties:
+          id:
+            type: integer
+            description: id
+            example: 3
+          telegram_id:
+            type: integer
+            description: telegram_id
+            example: 364534
+          telegram_username:
+            type: string
+            description: telegram_username
+            example: jhon_snow
+          comunity_id:
+            type: string
+            description: comunity_id
+            example: "gfrf4jfdf"
+          token:
+            type: string
+            description: token
+            example: "gfrf4jfdf"
       shoppingItemParamsWithId:
         allOf:
           - type: object
@@ -480,7 +553,7 @@ components:
             enum:
               - format 
           name:
-            type: integer
+            type: string
             example: "min"
             enum:
               - min
@@ -490,7 +563,7 @@ components:
             enum:
               - format 
           ownerID:
-            type: integer
+            type: string
             example: "format"
             enum:
               - format
@@ -559,6 +632,11 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Delete_ids"
+    User_request:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/user"
   responses:
       Base_200:
         description: Success
@@ -669,19 +747,19 @@ components:
                               enum:
                                 - min
                             quantity:
-                              type: integer
+                              type: string
                               description: Количество товара
                               example: "format"
                               enum:
                                 - format
                             categoryID:
-                              type: integer
+                              type: string
                               description: Идентификатор категории товара
                               example: "format"
                               enum:
                                 - format
                             listID:
-                              type: integer
+                              type: string
                               description: Идентификатор списка покупок
                               example: "format"
                               enum:
@@ -795,6 +873,19 @@ components:
                   properties:
                     errors: 
                       $ref: "#/components/schemas/shoppingsByDayErrors"
+      Users_200:
+        description: Данные юзера
+        content: 
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Success"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/user"
   parameters:
     shoppingID:
       name: shoppingID
@@ -810,13 +901,6 @@ components:
       description: Дата отсчета 5 ближайших покупок
       schema: 
         type: string
-    token:
-      name: token
-      in: query
-      required: true
-      description: Токен доступа
-      schema:
-        type: string
     year:
       name: year
       in: path
@@ -831,10 +915,22 @@ components:
       description: Месяц
       schema:
         type: integer
-    day:    
+    day:
       name: day
       in: path
       required: true
       description: День
       schema:
-        type: integer   
+        type: integer
+    telegram_user_id:
+      name: telegram_user_id
+      in: query
+      description: telegram user id
+      schema:
+        type: integer
+    comunity_id:
+      name: comunity_id
+      in: query
+      description: comunity_id
+      schema:
+        type: string

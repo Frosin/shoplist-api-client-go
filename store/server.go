@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/gommon/log"
-
 	"github.com/Frosin/shoplist-api-client-go/api"
 	"github.com/Frosin/shoplist-api-client-go/store/sqlc"
 	"github.com/jmoiron/sqlx"
@@ -44,7 +42,7 @@ type Server struct {
 }
 
 // GetGoods returns all products by shoppingId
-func (s *Server) GetGoods(ctx echo.Context, shoppingID api.ShoppingID, params api.GetGoodsParams) error {
+func (s *Server) GetGoods(ctx echo.Context, shoppingID api.ShoppingID) error {
 	response200 := func(items *[]api.ShoppingItem) error {
 		var response api.Goods200
 		response.Version = &s.Version
@@ -95,7 +93,7 @@ func sqlcToShoppingItems(goods []sqlc.ShopList) (shoppingItems []api.ShoppingIte
 }
 
 // LastShopping returns LastShopping information
-func (s *Server) LastShopping(ctx echo.Context, params api.LastShoppingParams) error {
+func (s *Server) LastShopping(ctx echo.Context) error {
 	response200 := func(shopping api.ShoppingWithId) error {
 		var response api.LastShopping200
 		var data []api.ShoppingWithId
@@ -144,7 +142,7 @@ func (s *Server) sqlcToShopping(shopping sqlc.Shopping) (api.ShoppingWithId, err
 }
 
 // AddShopping inserts new shopping
-func (s *Server) AddShopping(ctx echo.Context, params api.AddShoppingParams) error {
+func (s *Server) AddShopping(ctx echo.Context) error {
 	response200 := func(shopping api.ShoppingWithId) error {
 		var response api.Shopping200
 		response.Version = &s.Version
@@ -231,7 +229,7 @@ func shoppingToSqlc(shopping api.ShoppingParams, shopID int32) (params sqlc.AddS
 }
 
 // AddItem inserts new product to shopping cart
-func (s *Server) AddItem(ctx echo.Context, params api.AddItemParams) error {
+func (s *Server) AddItem(ctx echo.Context) error {
 	response200 := func(item api.ShoppingItemParamsWithId) error {
 		var response api.Item200
 		var data []api.ShoppingItemParamsWithId
@@ -301,7 +299,7 @@ func itemToItemWithID(item api.ShoppingItemParams, id int64) api.ShoppingItemPar
 }
 
 // GetComingShoppings returns coming shoppings
-func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date, params api.GetComingShoppingsParams) error {
+func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date) error {
 	response200 := func(shoppings []api.ShoppingWithId) error {
 		var response api.ComingShoppings200
 		response.Version = &s.Version
@@ -350,7 +348,7 @@ func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date, params api.
 }
 
 // GetShoppingDays returns days with shopping by month and year
-func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Month, params api.GetShoppingDaysParams) error {
+func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Month) error {
 	response200 := func(days []int) error {
 		var response api.ShoppingDays200
 		response.Version = &s.Version
@@ -455,7 +453,7 @@ func (s *Server) sqlcToShoppingWithId(sh []sqlc.Shopping) (*[]api.ShoppingWithId
 }
 
 //GetShoppingsByDay returns shoppings by day
-func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Month, day api.Day, params api.GetShoppingsByDayParams) error {
+func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Month, day api.Day) error {
 	response200 := func(data *[]api.ShoppingWithId) error {
 		var response api.Shoppings200
 		response.Version = &s.Version
@@ -527,7 +525,7 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 	return response200(shoppings)
 }
 
-func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID, params api.GetShoppingParams) error {
+func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID) error {
 	response200 := func(shopping api.ShoppingWithId) error {
 		var response api.Shopping200
 		response.Version = &s.Version
@@ -558,7 +556,7 @@ func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID, params
 
 // Удаление товаров
 // (DELETE /deleteItems)
-func (s *Server) DeleteItems(ctx echo.Context, params api.DeleteItemsParams) error {
+func (s *Server) DeleteItems(ctx echo.Context) error {
 	response200 := func() error {
 		response := api.Base200{}
 		response.Version = &s.Version
@@ -590,7 +588,7 @@ func (s *Server) DeleteItems(ctx echo.Context, params api.DeleteItemsParams) err
 
 // Удаление покупок
 // (DELETE /deleteShoppings)
-func (s *Server) DeleteShoppings(ctx echo.Context, params api.DeleteShoppingsParams) error {
+func (s *Server) DeleteShoppings(ctx echo.Context) error {
 	response200 := func() error {
 		response := api.Base200{}
 		response.Version = &s.Version
@@ -620,70 +618,20 @@ func (s *Server) DeleteShoppings(ctx echo.Context, params api.DeleteShoppingsPar
 	return response200()
 }
 
-func (s *Server) error(ctx echo.Context, httpCode int, err error, validation *[]interface{}) error {
-	if err != nil {
-		log.Info(err.Error())
-	}
-
-	switch httpCode {
-	case 400: // BadRequest
-		var response api.Error400
-		response.Version = &s.Version
-
-		if validation != nil {
-			response.Errors = *validation
-		}
-		response.Message = err.Error()
-		return ctx.JSON(httpCode, response)
-	case 404: // NotFound
-		return ctx.JSON(httpCode, api.Error404{
-			Error: api.Error{
-				Base: api.Base{
-					Version: &s.Version,
-				},
-			},
-			Message: NotFoundMessage,
-		})
-	case 405: // MethodNotAllowed
-		return ctx.JSON(httpCode, api.Error405{
-			Error: api.Error{
-				Base: api.Base{
-					Version: &s.Version,
-				},
-			},
-			Message: &MethodNotAllowedMessage,
-		})
-	}
-
-	return ctx.JSON(httpCode, api.Error500{
-		Error: api.Error{
-			Base: api.Base{
-				Version: &s.Version,
-			},
-		},
-		Errors:  err.Error(),
-		Message: InternalServerErrorMessage,
-	})
+// Получение юзера по telegram user id
+// (GET /users)
+func (s *Server) GetUser(ctx echo.Context, params api.GetUserParams) error {
+	return nil
 }
 
-func int32ToNullInt32(i int32) sql.NullInt32 {
-	return sql.NullInt32{
-		Int32: i,
-		Valid: true,
-	}
+// Добавление юзера
+// (PATCH /users)
+func (s *Server) UpdateUser(ctx echo.Context) error {
+	return nil
 }
 
-func stringToNullString(s string) sql.NullString {
-	return sql.NullString{
-		String: s,
-		Valid:  true,
-	}
-}
-
-func strPtr(s string) *string {
-	return &s
-}
-
-func intPtr(i int) *int {
-	return &i
+// Добавление юзера
+// (POST /users)
+func (s *Server) CreateUser(ctx echo.Context) error {
+	return nil
 }

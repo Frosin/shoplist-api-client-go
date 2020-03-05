@@ -36,4 +36,5 @@ type User struct {
 	TelegramUsername sql.NullString `json:"telegram_username"`
 	ComunityID       string         `json:"comunity_id"`
 	Token            sql.NullString `json:"token"`
+	ChatID           sql.NullInt32  `json:"chat_id"`
 }

@@ -33,3 +33,11 @@ WHERE date LIKE $1;
 -- name: GetShoppingsByDay :many
 SELECT * FROM shopping 
 WHERE date=$1;
+
+-- name: GetUserByTelegramID :one
+SELECT * FROM users
+WHERE telegram_id=$1;
+
+-- name: GetUsersByComunityID :many
+SELECT * FROM users
+WHERE comunity_id=$1;

@@ -114,8 +114,8 @@ type ShoppingProperty struct {
 // ShoppingValidation defines model for ShoppingValidation.
 type ShoppingValidation struct {
 	Date    *string `json:"date,omitempty"`
-	Name    *int    `json:"name,omitempty"`
-	OwnerID *int    `json:"ownerID,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	OwnerID *string `json:"ownerID,omitempty"`
 	Time    *string `json:"time,omitempty"`
 }
 
@@ -219,6 +219,28 @@ type ShoppingsByDayValidation struct {
 	Year  *string `json:"year,omitempty"`
 }
 
+// User defines model for user.
+type User struct {
+
+	// comunity_id
+	ComunityId *string `json:"comunity_id,omitempty"`
+
+	// id
+	Id *int `json:"id,omitempty"`
+
+	// telegram_id
+	TelegramId *int `json:"telegram_id,omitempty"`
+
+	// telegram_username
+	TelegramUsername *string `json:"telegram_username,omitempty"`
+
+	// token
+	Token *string `json:"token,omitempty"`
+}
+
+// ComunityId defines model for comunity_id.
+type ComunityId string
+
 // Date defines model for date.
 type Date string
 
@@ -231,8 +253,8 @@ type Month int
 // ShoppingID defines model for shoppingID.
 type ShoppingID int
 
-// Token defines model for token.
-type Token string
+// TelegramUserId defines model for telegram_user_id.
+type TelegramUserId int
 
 // Year defines model for year.
 type Year int
@@ -328,14 +350,14 @@ type Item400 struct {
 		Validation *struct {
 
 			// Идентификатор категории товара
-			CategoryID *int `json:"categoryID,omitempty"`
+			CategoryID *string `json:"categoryID,omitempty"`
 
 			// Идентификатор списка покупок
-			ListID      *int    `json:"listID,omitempty"`
+			ListID      *string `json:"listID,omitempty"`
 			ProductName *string `json:"productName,omitempty"`
 
 			// Количество товара
-			Quantity *int `json:"quantity,omitempty"`
+			Quantity *string `json:"quantity,omitempty"`
 		} `json:"validation,omitempty"`
 	} `json:"errors,omitempty"`
 }
@@ -396,6 +418,14 @@ type Shoppings400 struct {
 	Errors *ShoppingsByDayErrors `json:"errors,omitempty"`
 }
 
+// Users200 defines model for Users_200.
+type Users200 struct {
+	// Embedded struct due to allOf(#/components/schemas/Success)
+	Success
+	// Embedded fields due to inline allOf schema
+	Data *[]User `json:"data,omitempty"`
+}
+
 // DeleteItemsRequest defines model for Delete_items_request.
 type DeleteItemsRequest DeleteIds
 
@@ -414,74 +444,17 @@ type ShoppingRequest struct {
 	Shopping
 }
 
-// AddItemParams defines parameters for AddItem.
-type AddItemParams struct {
+// UserRequest defines model for User_request.
+type UserRequest User
 
-	// Токен доступа
-	Token Token `json:"token"`
-}
+// GetUserParams defines parameters for GetUser.
+type GetUserParams struct {
 
-// AddShoppingParams defines parameters for AddShopping.
-type AddShoppingParams struct {
+	// telegram user id
+	TelegramUserId *TelegramUserId `json:"telegram_user_id,omitempty"`
 
-	// Токен доступа
-	Token Token `json:"token"`
-}
-
-// DeleteItemsParams defines parameters for DeleteItems.
-type DeleteItemsParams struct {
-
-	// Токен доступа
-	Token Token `json:"token"`
-}
-
-// DeleteShoppingsParams defines parameters for DeleteShoppings.
-type DeleteShoppingsParams struct {
-
-	// Токен доступа
-	Token Token `json:"token"`
-}
-
-// GetComingShoppingsParams defines parameters for GetComingShoppings.
-type GetComingShoppingsParams struct {
-
-	// Токен доступа
-	Token Token `json:"token"`
-}
-
-// GetGoodsParams defines parameters for GetGoods.
-type GetGoodsParams struct {
-
-	// Токен доступа
-	Token Token `json:"token"`
-}
-
-// GetShoppingParams defines parameters for GetShopping.
-type GetShoppingParams struct {
-
-	// Токен доступа
-	Token Token `json:"token"`
-}
-
-// GetShoppingDaysParams defines parameters for GetShoppingDays.
-type GetShoppingDaysParams struct {
-
-	// Токен доступа
-	Token Token `json:"token"`
-}
-
-// GetShoppingsByDayParams defines parameters for GetShoppingsByDay.
-type GetShoppingsByDayParams struct {
-
-	// Токен доступа
-	Token Token `json:"token"`
-}
-
-// LastShoppingParams defines parameters for LastShopping.
-type LastShoppingParams struct {
-
-	// Токен доступа
-	Token Token `json:"token"`
+	// comunity_id
+	ComunityId *ComunityId `json:"comunity_id,omitempty"`
 }
 
 // AddItemRequestBody defines body for AddItem for application/json ContentType.
@@ -495,6 +468,12 @@ type DeleteItemsJSONRequestBody DeleteItemsRequest
 
 // DeleteShoppingsRequestBody defines body for DeleteShoppings for application/json ContentType.
 type DeleteShoppingsJSONRequestBody DeleteShoppingsRequest
+
+// UpdateUserRequestBody defines body for UpdateUser for application/json ContentType.
+type UpdateUserJSONRequestBody UserRequest
+
+// CreateUserRequestBody defines body for CreateUser for application/json ContentType.
+type CreateUserJSONRequestBody UserRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(req *http.Request, ctx context.Context) error
@@ -564,46 +543,59 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 	// AddItem request  with any body
-	AddItemWithBody(ctx context.Context, params *AddItemParams, contentType string, body io.Reader) (*http.Response, error)
+	AddItemWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error)
 
-	AddItem(ctx context.Context, params *AddItemParams, body AddItemJSONRequestBody) (*http.Response, error)
+	AddItem(ctx context.Context, body AddItemJSONRequestBody) (*http.Response, error)
 
 	// AddShopping request  with any body
-	AddShoppingWithBody(ctx context.Context, params *AddShoppingParams, contentType string, body io.Reader) (*http.Response, error)
+	AddShoppingWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error)
 
-	AddShopping(ctx context.Context, params *AddShoppingParams, body AddShoppingJSONRequestBody) (*http.Response, error)
+	AddShopping(ctx context.Context, body AddShoppingJSONRequestBody) (*http.Response, error)
 
 	// DeleteItems request  with any body
-	DeleteItemsWithBody(ctx context.Context, params *DeleteItemsParams, contentType string, body io.Reader) (*http.Response, error)
+	DeleteItemsWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error)
 
-	DeleteItems(ctx context.Context, params *DeleteItemsParams, body DeleteItemsJSONRequestBody) (*http.Response, error)
+	DeleteItems(ctx context.Context, body DeleteItemsJSONRequestBody) (*http.Response, error)
 
 	// DeleteShoppings request  with any body
-	DeleteShoppingsWithBody(ctx context.Context, params *DeleteShoppingsParams, contentType string, body io.Reader) (*http.Response, error)
+	DeleteShoppingsWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error)
 
-	DeleteShoppings(ctx context.Context, params *DeleteShoppingsParams, body DeleteShoppingsJSONRequestBody) (*http.Response, error)
+	DeleteShoppings(ctx context.Context, body DeleteShoppingsJSONRequestBody) (*http.Response, error)
 
 	// GetComingShoppings request
-	GetComingShoppings(ctx context.Context, date Date, params *GetComingShoppingsParams) (*http.Response, error)
+	GetComingShoppings(ctx context.Context, date Date) (*http.Response, error)
 
 	// GetGoods request
-	GetGoods(ctx context.Context, shoppingID ShoppingID, params *GetGoodsParams) (*http.Response, error)
+	GetGoods(ctx context.Context, shoppingID ShoppingID) (*http.Response, error)
 
 	// GetShopping request
-	GetShopping(ctx context.Context, shoppingID ShoppingID, params *GetShoppingParams) (*http.Response, error)
+	GetShopping(ctx context.Context, shoppingID ShoppingID) (*http.Response, error)
 
 	// GetShoppingDays request
-	GetShoppingDays(ctx context.Context, year Year, month Month, params *GetShoppingDaysParams) (*http.Response, error)
+	GetShoppingDays(ctx context.Context, year Year, month Month) (*http.Response, error)
 
 	// GetShoppingsByDay request
-	GetShoppingsByDay(ctx context.Context, year Year, month Month, day Day, params *GetShoppingsByDayParams) (*http.Response, error)
+	GetShoppingsByDay(ctx context.Context, year Year, month Month, day Day) (*http.Response, error)
 
 	// LastShopping request
-	LastShopping(ctx context.Context, params *LastShoppingParams) (*http.Response, error)
+	LastShopping(ctx context.Context) (*http.Response, error)
+
+	// GetUser request
+	GetUser(ctx context.Context, params *GetUserParams) (*http.Response, error)
+
+	// UpdateUser request  with any body
+	UpdateUserWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error)
+
+	UpdateUser(ctx context.Context, body UpdateUserJSONRequestBody) (*http.Response, error)
+
+	// CreateUser request  with any body
+	CreateUserWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error)
+
+	CreateUser(ctx context.Context, body CreateUserJSONRequestBody) (*http.Response, error)
 }
 
-func (c *Client) AddItemWithBody(ctx context.Context, params *AddItemParams, contentType string, body io.Reader) (*http.Response, error) {
-	req, err := NewAddItemRequestWithBody(c.Server, params, contentType, body)
+func (c *Client) AddItemWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error) {
+	req, err := NewAddItemRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -617,8 +609,8 @@ func (c *Client) AddItemWithBody(ctx context.Context, params *AddItemParams, con
 	return c.Client.Do(req)
 }
 
-func (c *Client) AddItem(ctx context.Context, params *AddItemParams, body AddItemJSONRequestBody) (*http.Response, error) {
-	req, err := NewAddItemRequest(c.Server, params, body)
+func (c *Client) AddItem(ctx context.Context, body AddItemJSONRequestBody) (*http.Response, error) {
+	req, err := NewAddItemRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -632,8 +624,8 @@ func (c *Client) AddItem(ctx context.Context, params *AddItemParams, body AddIte
 	return c.Client.Do(req)
 }
 
-func (c *Client) AddShoppingWithBody(ctx context.Context, params *AddShoppingParams, contentType string, body io.Reader) (*http.Response, error) {
-	req, err := NewAddShoppingRequestWithBody(c.Server, params, contentType, body)
+func (c *Client) AddShoppingWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error) {
+	req, err := NewAddShoppingRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -647,8 +639,8 @@ func (c *Client) AddShoppingWithBody(ctx context.Context, params *AddShoppingPar
 	return c.Client.Do(req)
 }
 
-func (c *Client) AddShopping(ctx context.Context, params *AddShoppingParams, body AddShoppingJSONRequestBody) (*http.Response, error) {
-	req, err := NewAddShoppingRequest(c.Server, params, body)
+func (c *Client) AddShopping(ctx context.Context, body AddShoppingJSONRequestBody) (*http.Response, error) {
+	req, err := NewAddShoppingRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -662,8 +654,8 @@ func (c *Client) AddShopping(ctx context.Context, params *AddShoppingParams, bod
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteItemsWithBody(ctx context.Context, params *DeleteItemsParams, contentType string, body io.Reader) (*http.Response, error) {
-	req, err := NewDeleteItemsRequestWithBody(c.Server, params, contentType, body)
+func (c *Client) DeleteItemsWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error) {
+	req, err := NewDeleteItemsRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -677,8 +669,8 @@ func (c *Client) DeleteItemsWithBody(ctx context.Context, params *DeleteItemsPar
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteItems(ctx context.Context, params *DeleteItemsParams, body DeleteItemsJSONRequestBody) (*http.Response, error) {
-	req, err := NewDeleteItemsRequest(c.Server, params, body)
+func (c *Client) DeleteItems(ctx context.Context, body DeleteItemsJSONRequestBody) (*http.Response, error) {
+	req, err := NewDeleteItemsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -692,8 +684,8 @@ func (c *Client) DeleteItems(ctx context.Context, params *DeleteItemsParams, bod
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteShoppingsWithBody(ctx context.Context, params *DeleteShoppingsParams, contentType string, body io.Reader) (*http.Response, error) {
-	req, err := NewDeleteShoppingsRequestWithBody(c.Server, params, contentType, body)
+func (c *Client) DeleteShoppingsWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error) {
+	req, err := NewDeleteShoppingsRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -707,8 +699,8 @@ func (c *Client) DeleteShoppingsWithBody(ctx context.Context, params *DeleteShop
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteShoppings(ctx context.Context, params *DeleteShoppingsParams, body DeleteShoppingsJSONRequestBody) (*http.Response, error) {
-	req, err := NewDeleteShoppingsRequest(c.Server, params, body)
+func (c *Client) DeleteShoppings(ctx context.Context, body DeleteShoppingsJSONRequestBody) (*http.Response, error) {
+	req, err := NewDeleteShoppingsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -722,8 +714,8 @@ func (c *Client) DeleteShoppings(ctx context.Context, params *DeleteShoppingsPar
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetComingShoppings(ctx context.Context, date Date, params *GetComingShoppingsParams) (*http.Response, error) {
-	req, err := NewGetComingShoppingsRequest(c.Server, date, params)
+func (c *Client) GetComingShoppings(ctx context.Context, date Date) (*http.Response, error) {
+	req, err := NewGetComingShoppingsRequest(c.Server, date)
 	if err != nil {
 		return nil, err
 	}
@@ -737,8 +729,8 @@ func (c *Client) GetComingShoppings(ctx context.Context, date Date, params *GetC
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetGoods(ctx context.Context, shoppingID ShoppingID, params *GetGoodsParams) (*http.Response, error) {
-	req, err := NewGetGoodsRequest(c.Server, shoppingID, params)
+func (c *Client) GetGoods(ctx context.Context, shoppingID ShoppingID) (*http.Response, error) {
+	req, err := NewGetGoodsRequest(c.Server, shoppingID)
 	if err != nil {
 		return nil, err
 	}
@@ -752,8 +744,8 @@ func (c *Client) GetGoods(ctx context.Context, shoppingID ShoppingID, params *Ge
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetShopping(ctx context.Context, shoppingID ShoppingID, params *GetShoppingParams) (*http.Response, error) {
-	req, err := NewGetShoppingRequest(c.Server, shoppingID, params)
+func (c *Client) GetShopping(ctx context.Context, shoppingID ShoppingID) (*http.Response, error) {
+	req, err := NewGetShoppingRequest(c.Server, shoppingID)
 	if err != nil {
 		return nil, err
 	}
@@ -767,8 +759,8 @@ func (c *Client) GetShopping(ctx context.Context, shoppingID ShoppingID, params 
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetShoppingDays(ctx context.Context, year Year, month Month, params *GetShoppingDaysParams) (*http.Response, error) {
-	req, err := NewGetShoppingDaysRequest(c.Server, year, month, params)
+func (c *Client) GetShoppingDays(ctx context.Context, year Year, month Month) (*http.Response, error) {
+	req, err := NewGetShoppingDaysRequest(c.Server, year, month)
 	if err != nil {
 		return nil, err
 	}
@@ -782,8 +774,8 @@ func (c *Client) GetShoppingDays(ctx context.Context, year Year, month Month, pa
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetShoppingsByDay(ctx context.Context, year Year, month Month, day Day, params *GetShoppingsByDayParams) (*http.Response, error) {
-	req, err := NewGetShoppingsByDayRequest(c.Server, year, month, day, params)
+func (c *Client) GetShoppingsByDay(ctx context.Context, year Year, month Month, day Day) (*http.Response, error) {
+	req, err := NewGetShoppingsByDayRequest(c.Server, year, month, day)
 	if err != nil {
 		return nil, err
 	}
@@ -797,8 +789,83 @@ func (c *Client) GetShoppingsByDay(ctx context.Context, year Year, month Month, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) LastShopping(ctx context.Context, params *LastShoppingParams) (*http.Response, error) {
-	req, err := NewLastShoppingRequest(c.Server, params)
+func (c *Client) LastShopping(ctx context.Context) (*http.Response, error) {
+	req, err := NewLastShoppingRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetUser(ctx context.Context, params *GetUserParams) (*http.Response, error) {
+	req, err := NewGetUserRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateUserWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error) {
+	req, err := NewUpdateUserRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateUser(ctx context.Context, body UpdateUserJSONRequestBody) (*http.Response, error) {
+	req, err := NewUpdateUserRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateUserWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error) {
+	req, err := NewCreateUserRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if c.RequestEditor != nil {
+		err = c.RequestEditor(req, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateUser(ctx context.Context, body CreateUserJSONRequestBody) (*http.Response, error) {
+	req, err := NewCreateUserRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -813,18 +880,18 @@ func (c *Client) LastShopping(ctx context.Context, params *LastShoppingParams) (
 }
 
 // NewAddItemRequest calls the generic AddItem builder with application/json body
-func NewAddItemRequest(server string, params *AddItemParams, body AddItemJSONRequestBody) (*http.Request, error) {
+func NewAddItemRequest(server string, body AddItemJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewAddItemRequestWithBody(server, params, "application/json", bodyReader)
+	return NewAddItemRequestWithBody(server, "application/json", bodyReader)
 }
 
 // NewAddItemRequestWithBody generates requests for AddItem with any type of body
-func NewAddItemRequestWithBody(server string, params *AddItemParams, contentType string, body io.Reader) (*http.Request, error) {
+func NewAddItemRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	queryUrl, err := url.Parse(server)
@@ -836,22 +903,6 @@ func NewAddItemRequestWithBody(server string, params *AddItemParams, contentType
 		return nil, err
 	}
 
-	queryValues := queryUrl.Query()
-
-	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	queryUrl.RawQuery = queryValues.Encode()
-
 	req, err := http.NewRequest("POST", queryUrl.String(), body)
 	if err != nil {
 		return nil, err
@@ -862,18 +913,18 @@ func NewAddItemRequestWithBody(server string, params *AddItemParams, contentType
 }
 
 // NewAddShoppingRequest calls the generic AddShopping builder with application/json body
-func NewAddShoppingRequest(server string, params *AddShoppingParams, body AddShoppingJSONRequestBody) (*http.Request, error) {
+func NewAddShoppingRequest(server string, body AddShoppingJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewAddShoppingRequestWithBody(server, params, "application/json", bodyReader)
+	return NewAddShoppingRequestWithBody(server, "application/json", bodyReader)
 }
 
 // NewAddShoppingRequestWithBody generates requests for AddShopping with any type of body
-func NewAddShoppingRequestWithBody(server string, params *AddShoppingParams, contentType string, body io.Reader) (*http.Request, error) {
+func NewAddShoppingRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	queryUrl, err := url.Parse(server)
@@ -885,22 +936,6 @@ func NewAddShoppingRequestWithBody(server string, params *AddShoppingParams, con
 		return nil, err
 	}
 
-	queryValues := queryUrl.Query()
-
-	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	queryUrl.RawQuery = queryValues.Encode()
-
 	req, err := http.NewRequest("POST", queryUrl.String(), body)
 	if err != nil {
 		return nil, err
@@ -911,18 +946,18 @@ func NewAddShoppingRequestWithBody(server string, params *AddShoppingParams, con
 }
 
 // NewDeleteItemsRequest calls the generic DeleteItems builder with application/json body
-func NewDeleteItemsRequest(server string, params *DeleteItemsParams, body DeleteItemsJSONRequestBody) (*http.Request, error) {
+func NewDeleteItemsRequest(server string, body DeleteItemsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewDeleteItemsRequestWithBody(server, params, "application/json", bodyReader)
+	return NewDeleteItemsRequestWithBody(server, "application/json", bodyReader)
 }
 
 // NewDeleteItemsRequestWithBody generates requests for DeleteItems with any type of body
-func NewDeleteItemsRequestWithBody(server string, params *DeleteItemsParams, contentType string, body io.Reader) (*http.Request, error) {
+func NewDeleteItemsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	queryUrl, err := url.Parse(server)
@@ -934,23 +969,7 @@ func NewDeleteItemsRequestWithBody(server string, params *DeleteItemsParams, con
 		return nil, err
 	}
 
-	queryValues := queryUrl.Query()
-
-	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	queryUrl.RawQuery = queryValues.Encode()
-
-	req, err := http.NewRequest("DELETE", queryUrl.String(), body)
+	req, err := http.NewRequest("POST", queryUrl.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -960,18 +979,18 @@ func NewDeleteItemsRequestWithBody(server string, params *DeleteItemsParams, con
 }
 
 // NewDeleteShoppingsRequest calls the generic DeleteShoppings builder with application/json body
-func NewDeleteShoppingsRequest(server string, params *DeleteShoppingsParams, body DeleteShoppingsJSONRequestBody) (*http.Request, error) {
+func NewDeleteShoppingsRequest(server string, body DeleteShoppingsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewDeleteShoppingsRequestWithBody(server, params, "application/json", bodyReader)
+	return NewDeleteShoppingsRequestWithBody(server, "application/json", bodyReader)
 }
 
 // NewDeleteShoppingsRequestWithBody generates requests for DeleteShoppings with any type of body
-func NewDeleteShoppingsRequestWithBody(server string, params *DeleteShoppingsParams, contentType string, body io.Reader) (*http.Request, error) {
+func NewDeleteShoppingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	queryUrl, err := url.Parse(server)
@@ -983,23 +1002,7 @@ func NewDeleteShoppingsRequestWithBody(server string, params *DeleteShoppingsPar
 		return nil, err
 	}
 
-	queryValues := queryUrl.Query()
-
-	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	queryUrl.RawQuery = queryValues.Encode()
-
-	req, err := http.NewRequest("DELETE", queryUrl.String(), body)
+	req, err := http.NewRequest("POST", queryUrl.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -1009,7 +1012,7 @@ func NewDeleteShoppingsRequestWithBody(server string, params *DeleteShoppingsPar
 }
 
 // NewGetComingShoppingsRequest generates requests for GetComingShoppings
-func NewGetComingShoppingsRequest(server string, date Date, params *GetComingShoppingsParams) (*http.Request, error) {
+func NewGetComingShoppingsRequest(server string, date Date) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1028,22 +1031,6 @@ func NewGetComingShoppingsRequest(server string, date Date, params *GetComingSho
 		return nil, err
 	}
 
-	queryValues := queryUrl.Query()
-
-	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	queryUrl.RawQuery = queryValues.Encode()
-
 	req, err := http.NewRequest("GET", queryUrl.String(), nil)
 	if err != nil {
 		return nil, err
@@ -1053,7 +1040,7 @@ func NewGetComingShoppingsRequest(server string, date Date, params *GetComingSho
 }
 
 // NewGetGoodsRequest generates requests for GetGoods
-func NewGetGoodsRequest(server string, shoppingID ShoppingID, params *GetGoodsParams) (*http.Request, error) {
+func NewGetGoodsRequest(server string, shoppingID ShoppingID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1072,22 +1059,6 @@ func NewGetGoodsRequest(server string, shoppingID ShoppingID, params *GetGoodsPa
 		return nil, err
 	}
 
-	queryValues := queryUrl.Query()
-
-	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	queryUrl.RawQuery = queryValues.Encode()
-
 	req, err := http.NewRequest("GET", queryUrl.String(), nil)
 	if err != nil {
 		return nil, err
@@ -1097,7 +1068,7 @@ func NewGetGoodsRequest(server string, shoppingID ShoppingID, params *GetGoodsPa
 }
 
 // NewGetShoppingRequest generates requests for GetShopping
-func NewGetShoppingRequest(server string, shoppingID ShoppingID, params *GetShoppingParams) (*http.Request, error) {
+func NewGetShoppingRequest(server string, shoppingID ShoppingID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1116,22 +1087,6 @@ func NewGetShoppingRequest(server string, shoppingID ShoppingID, params *GetShop
 		return nil, err
 	}
 
-	queryValues := queryUrl.Query()
-
-	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	queryUrl.RawQuery = queryValues.Encode()
-
 	req, err := http.NewRequest("GET", queryUrl.String(), nil)
 	if err != nil {
 		return nil, err
@@ -1141,7 +1096,7 @@ func NewGetShoppingRequest(server string, shoppingID ShoppingID, params *GetShop
 }
 
 // NewGetShoppingDaysRequest generates requests for GetShoppingDays
-func NewGetShoppingDaysRequest(server string, year Year, month Month, params *GetShoppingDaysParams) (*http.Request, error) {
+func NewGetShoppingDaysRequest(server string, year Year, month Month) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1167,22 +1122,6 @@ func NewGetShoppingDaysRequest(server string, year Year, month Month, params *Ge
 		return nil, err
 	}
 
-	queryValues := queryUrl.Query()
-
-	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	queryUrl.RawQuery = queryValues.Encode()
-
 	req, err := http.NewRequest("GET", queryUrl.String(), nil)
 	if err != nil {
 		return nil, err
@@ -1192,7 +1131,7 @@ func NewGetShoppingDaysRequest(server string, year Year, month Month, params *Ge
 }
 
 // NewGetShoppingsByDayRequest generates requests for GetShoppingsByDay
-func NewGetShoppingsByDayRequest(server string, year Year, month Month, day Day, params *GetShoppingsByDayParams) (*http.Request, error) {
+func NewGetShoppingsByDayRequest(server string, year Year, month Month, day Day) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1225,18 +1164,80 @@ func NewGetShoppingsByDayRequest(server string, year Year, month Month, day Day,
 		return nil, err
 	}
 
+	req, err := http.NewRequest("GET", queryUrl.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewLastShoppingRequest generates requests for LastShopping
+func NewLastShoppingRequest(server string) (*http.Request, error) {
+	var err error
+
+	queryUrl, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/lastShopping"))
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryUrl.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetUserRequest generates requests for GetUser
+func NewGetUserRequest(server string, params *GetUserParams) (*http.Request, error) {
+	var err error
+
+	queryUrl, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/users"))
+	if err != nil {
+		return nil, err
+	}
+
 	queryValues := queryUrl.Query()
 
-	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
+	if params.TelegramUserId != nil {
+
+		if queryFrag, err := runtime.StyleParam("form", true, "telegram_user_id", *params.TelegramUserId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
 			}
 		}
+
+	}
+
+	if params.ComunityId != nil {
+
+		if queryFrag, err := runtime.StyleParam("form", true, "comunity_id", *params.ComunityId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
 	}
 
 	queryUrl.RawQuery = queryValues.Encode()
@@ -1249,40 +1250,69 @@ func NewGetShoppingsByDayRequest(server string, year Year, month Month, day Day,
 	return req, nil
 }
 
-// NewLastShoppingRequest generates requests for LastShopping
-func NewLastShoppingRequest(server string, params *LastShoppingParams) (*http.Request, error) {
+// NewUpdateUserRequest calls the generic UpdateUser builder with application/json body
+func NewUpdateUserRequest(server string, body UpdateUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateUserRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewUpdateUserRequestWithBody generates requests for UpdateUser with any type of body
+func NewUpdateUserRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	queryUrl, err := url.Parse(server)
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/lastShopping"))
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/users"))
 	if err != nil {
 		return nil, err
 	}
 
-	queryValues := queryUrl.Query()
-
-	if queryFrag, err := runtime.StyleParam("form", true, "token", params.Token); err != nil {
-		return nil, err
-	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-		return nil, err
-	} else {
-		for k, v := range parsed {
-			for _, v2 := range v {
-				queryValues.Add(k, v2)
-			}
-		}
-	}
-
-	queryUrl.RawQuery = queryValues.Encode()
-
-	req, err := http.NewRequest("GET", queryUrl.String(), nil)
+	req, err := http.NewRequest("PATCH", queryUrl.String(), body)
 	if err != nil {
 		return nil, err
 	}
 
+	req.Header.Add("Content-Type", contentType)
+	return req, nil
+}
+
+// NewCreateUserRequest calls the generic CreateUser builder with application/json body
+func NewCreateUserRequest(server string, body CreateUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateUserRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateUserRequestWithBody generates requests for CreateUser with any type of body
+func NewCreateUserRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	queryUrl, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/users"))
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryUrl.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 	return req, nil
 }
 
@@ -1333,14 +1363,14 @@ type addItemResponse struct {
 			Validation *struct {
 
 				// Идентификатор категории товара
-				CategoryID *int `json:"categoryID,omitempty"`
+				CategoryID *string `json:"categoryID,omitempty"`
 
 				// Идентификатор списка покупок
-				ListID      *int    `json:"listID,omitempty"`
+				ListID      *string `json:"listID,omitempty"`
 				ProductName *string `json:"productName,omitempty"`
 
 				// Количество товара
-				Quantity *int `json:"quantity,omitempty"`
+				Quantity *string `json:"quantity,omitempty"`
 			} `json:"validation,omitempty"`
 		} `json:"errors,omitempty"`
 	}
@@ -1785,17 +1815,146 @@ func (r lastShoppingResponse) StatusCode() int {
 	return 0
 }
 
+type getUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Embedded struct due to allOf(#/components/schemas/Success)
+		Success
+		// Embedded fields due to inline allOf schema
+		Data *[]User `json:"data,omitempty"`
+	}
+	JSON400 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_400)
+		Error400
+	}
+	JSON401 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_401)
+		Error401
+	}
+	JSON404 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_404)
+		Error404
+	}
+	JSON405 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_405)
+		Error405
+	}
+	JSON500 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_500)
+		Error500
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r getUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r getUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type updateUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Embedded struct due to allOf(#/components/schemas/Success)
+		Success
+	}
+	JSON400 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_400)
+		Error400
+	}
+	JSON401 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_401)
+		Error401
+	}
+	JSON405 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_405)
+		Error405
+	}
+	JSON500 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_500)
+		Error500
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r updateUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r updateUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type createUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Embedded struct due to allOf(#/components/schemas/Success)
+		Success
+	}
+	JSON400 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_400)
+		Error400
+	}
+	JSON401 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_401)
+		Error401
+	}
+	JSON405 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_405)
+		Error405
+	}
+	JSON500 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_500)
+		Error500
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r createUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r createUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // AddItemWithBodyWithResponse request with arbitrary body returning *AddItemResponse
-func (c *ClientWithResponses) AddItemWithBodyWithResponse(ctx context.Context, params *AddItemParams, contentType string, body io.Reader) (*addItemResponse, error) {
-	rsp, err := c.AddItemWithBody(ctx, params, contentType, body)
+func (c *ClientWithResponses) AddItemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader) (*addItemResponse, error) {
+	rsp, err := c.AddItemWithBody(ctx, contentType, body)
 	if err != nil {
 		return nil, err
 	}
 	return ParseAddItemResponse(rsp)
 }
 
-func (c *ClientWithResponses) AddItemWithResponse(ctx context.Context, params *AddItemParams, body AddItemJSONRequestBody) (*addItemResponse, error) {
-	rsp, err := c.AddItem(ctx, params, body)
+func (c *ClientWithResponses) AddItemWithResponse(ctx context.Context, body AddItemJSONRequestBody) (*addItemResponse, error) {
+	rsp, err := c.AddItem(ctx, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1803,16 +1962,16 @@ func (c *ClientWithResponses) AddItemWithResponse(ctx context.Context, params *A
 }
 
 // AddShoppingWithBodyWithResponse request with arbitrary body returning *AddShoppingResponse
-func (c *ClientWithResponses) AddShoppingWithBodyWithResponse(ctx context.Context, params *AddShoppingParams, contentType string, body io.Reader) (*addShoppingResponse, error) {
-	rsp, err := c.AddShoppingWithBody(ctx, params, contentType, body)
+func (c *ClientWithResponses) AddShoppingWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader) (*addShoppingResponse, error) {
+	rsp, err := c.AddShoppingWithBody(ctx, contentType, body)
 	if err != nil {
 		return nil, err
 	}
 	return ParseAddShoppingResponse(rsp)
 }
 
-func (c *ClientWithResponses) AddShoppingWithResponse(ctx context.Context, params *AddShoppingParams, body AddShoppingJSONRequestBody) (*addShoppingResponse, error) {
-	rsp, err := c.AddShopping(ctx, params, body)
+func (c *ClientWithResponses) AddShoppingWithResponse(ctx context.Context, body AddShoppingJSONRequestBody) (*addShoppingResponse, error) {
+	rsp, err := c.AddShopping(ctx, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1820,16 +1979,16 @@ func (c *ClientWithResponses) AddShoppingWithResponse(ctx context.Context, param
 }
 
 // DeleteItemsWithBodyWithResponse request with arbitrary body returning *DeleteItemsResponse
-func (c *ClientWithResponses) DeleteItemsWithBodyWithResponse(ctx context.Context, params *DeleteItemsParams, contentType string, body io.Reader) (*deleteItemsResponse, error) {
-	rsp, err := c.DeleteItemsWithBody(ctx, params, contentType, body)
+func (c *ClientWithResponses) DeleteItemsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader) (*deleteItemsResponse, error) {
+	rsp, err := c.DeleteItemsWithBody(ctx, contentType, body)
 	if err != nil {
 		return nil, err
 	}
 	return ParseDeleteItemsResponse(rsp)
 }
 
-func (c *ClientWithResponses) DeleteItemsWithResponse(ctx context.Context, params *DeleteItemsParams, body DeleteItemsJSONRequestBody) (*deleteItemsResponse, error) {
-	rsp, err := c.DeleteItems(ctx, params, body)
+func (c *ClientWithResponses) DeleteItemsWithResponse(ctx context.Context, body DeleteItemsJSONRequestBody) (*deleteItemsResponse, error) {
+	rsp, err := c.DeleteItems(ctx, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1837,16 +1996,16 @@ func (c *ClientWithResponses) DeleteItemsWithResponse(ctx context.Context, param
 }
 
 // DeleteShoppingsWithBodyWithResponse request with arbitrary body returning *DeleteShoppingsResponse
-func (c *ClientWithResponses) DeleteShoppingsWithBodyWithResponse(ctx context.Context, params *DeleteShoppingsParams, contentType string, body io.Reader) (*deleteShoppingsResponse, error) {
-	rsp, err := c.DeleteShoppingsWithBody(ctx, params, contentType, body)
+func (c *ClientWithResponses) DeleteShoppingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader) (*deleteShoppingsResponse, error) {
+	rsp, err := c.DeleteShoppingsWithBody(ctx, contentType, body)
 	if err != nil {
 		return nil, err
 	}
 	return ParseDeleteShoppingsResponse(rsp)
 }
 
-func (c *ClientWithResponses) DeleteShoppingsWithResponse(ctx context.Context, params *DeleteShoppingsParams, body DeleteShoppingsJSONRequestBody) (*deleteShoppingsResponse, error) {
-	rsp, err := c.DeleteShoppings(ctx, params, body)
+func (c *ClientWithResponses) DeleteShoppingsWithResponse(ctx context.Context, body DeleteShoppingsJSONRequestBody) (*deleteShoppingsResponse, error) {
+	rsp, err := c.DeleteShoppings(ctx, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1854,8 +2013,8 @@ func (c *ClientWithResponses) DeleteShoppingsWithResponse(ctx context.Context, p
 }
 
 // GetComingShoppingsWithResponse request returning *GetComingShoppingsResponse
-func (c *ClientWithResponses) GetComingShoppingsWithResponse(ctx context.Context, date Date, params *GetComingShoppingsParams) (*getComingShoppingsResponse, error) {
-	rsp, err := c.GetComingShoppings(ctx, date, params)
+func (c *ClientWithResponses) GetComingShoppingsWithResponse(ctx context.Context, date Date) (*getComingShoppingsResponse, error) {
+	rsp, err := c.GetComingShoppings(ctx, date)
 	if err != nil {
 		return nil, err
 	}
@@ -1863,8 +2022,8 @@ func (c *ClientWithResponses) GetComingShoppingsWithResponse(ctx context.Context
 }
 
 // GetGoodsWithResponse request returning *GetGoodsResponse
-func (c *ClientWithResponses) GetGoodsWithResponse(ctx context.Context, shoppingID ShoppingID, params *GetGoodsParams) (*getGoodsResponse, error) {
-	rsp, err := c.GetGoods(ctx, shoppingID, params)
+func (c *ClientWithResponses) GetGoodsWithResponse(ctx context.Context, shoppingID ShoppingID) (*getGoodsResponse, error) {
+	rsp, err := c.GetGoods(ctx, shoppingID)
 	if err != nil {
 		return nil, err
 	}
@@ -1872,8 +2031,8 @@ func (c *ClientWithResponses) GetGoodsWithResponse(ctx context.Context, shopping
 }
 
 // GetShoppingWithResponse request returning *GetShoppingResponse
-func (c *ClientWithResponses) GetShoppingWithResponse(ctx context.Context, shoppingID ShoppingID, params *GetShoppingParams) (*getShoppingResponse, error) {
-	rsp, err := c.GetShopping(ctx, shoppingID, params)
+func (c *ClientWithResponses) GetShoppingWithResponse(ctx context.Context, shoppingID ShoppingID) (*getShoppingResponse, error) {
+	rsp, err := c.GetShopping(ctx, shoppingID)
 	if err != nil {
 		return nil, err
 	}
@@ -1881,8 +2040,8 @@ func (c *ClientWithResponses) GetShoppingWithResponse(ctx context.Context, shopp
 }
 
 // GetShoppingDaysWithResponse request returning *GetShoppingDaysResponse
-func (c *ClientWithResponses) GetShoppingDaysWithResponse(ctx context.Context, year Year, month Month, params *GetShoppingDaysParams) (*getShoppingDaysResponse, error) {
-	rsp, err := c.GetShoppingDays(ctx, year, month, params)
+func (c *ClientWithResponses) GetShoppingDaysWithResponse(ctx context.Context, year Year, month Month) (*getShoppingDaysResponse, error) {
+	rsp, err := c.GetShoppingDays(ctx, year, month)
 	if err != nil {
 		return nil, err
 	}
@@ -1890,8 +2049,8 @@ func (c *ClientWithResponses) GetShoppingDaysWithResponse(ctx context.Context, y
 }
 
 // GetShoppingsByDayWithResponse request returning *GetShoppingsByDayResponse
-func (c *ClientWithResponses) GetShoppingsByDayWithResponse(ctx context.Context, year Year, month Month, day Day, params *GetShoppingsByDayParams) (*getShoppingsByDayResponse, error) {
-	rsp, err := c.GetShoppingsByDay(ctx, year, month, day, params)
+func (c *ClientWithResponses) GetShoppingsByDayWithResponse(ctx context.Context, year Year, month Month, day Day) (*getShoppingsByDayResponse, error) {
+	rsp, err := c.GetShoppingsByDay(ctx, year, month, day)
 	if err != nil {
 		return nil, err
 	}
@@ -1899,12 +2058,55 @@ func (c *ClientWithResponses) GetShoppingsByDayWithResponse(ctx context.Context,
 }
 
 // LastShoppingWithResponse request returning *LastShoppingResponse
-func (c *ClientWithResponses) LastShoppingWithResponse(ctx context.Context, params *LastShoppingParams) (*lastShoppingResponse, error) {
-	rsp, err := c.LastShopping(ctx, params)
+func (c *ClientWithResponses) LastShoppingWithResponse(ctx context.Context) (*lastShoppingResponse, error) {
+	rsp, err := c.LastShopping(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return ParseLastShoppingResponse(rsp)
+}
+
+// GetUserWithResponse request returning *GetUserResponse
+func (c *ClientWithResponses) GetUserWithResponse(ctx context.Context, params *GetUserParams) (*getUserResponse, error) {
+	rsp, err := c.GetUser(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetUserResponse(rsp)
+}
+
+// UpdateUserWithBodyWithResponse request with arbitrary body returning *UpdateUserResponse
+func (c *ClientWithResponses) UpdateUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader) (*updateUserResponse, error) {
+	rsp, err := c.UpdateUserWithBody(ctx, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateUserResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateUserWithResponse(ctx context.Context, body UpdateUserJSONRequestBody) (*updateUserResponse, error) {
+	rsp, err := c.UpdateUser(ctx, body)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateUserResponse(rsp)
+}
+
+// CreateUserWithBodyWithResponse request with arbitrary body returning *CreateUserResponse
+func (c *ClientWithResponses) CreateUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader) (*createUserResponse, error) {
+	rsp, err := c.CreateUserWithBody(ctx, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateUserResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateUserWithResponse(ctx context.Context, body CreateUserJSONRequestBody) (*createUserResponse, error) {
+	rsp, err := c.CreateUser(ctx, body)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateUserResponse(rsp)
 }
 
 // ParseAddItemResponse parses an HTTP response from a AddItemWithResponse call
@@ -1941,14 +2143,14 @@ func ParseAddItemResponse(rsp *http.Response) (*addItemResponse, error) {
 				Validation *struct {
 
 					// Идентификатор категории товара
-					CategoryID *int `json:"categoryID,omitempty"`
+					CategoryID *string `json:"categoryID,omitempty"`
 
 					// Идентификатор списка покупок
-					ListID      *int    `json:"listID,omitempty"`
+					ListID      *string `json:"listID,omitempty"`
 					ProductName *string `json:"productName,omitempty"`
 
 					// Количество товара
-					Quantity *int `json:"quantity,omitempty"`
+					Quantity *string `json:"quantity,omitempty"`
 				} `json:"validation,omitempty"`
 			} `json:"errors,omitempty"`
 		}{}
@@ -2595,6 +2797,209 @@ func ParseLastShoppingResponse(rsp *http.Response) (*lastShoppingResponse, error
 			Error404
 		}{}
 		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
+		response.JSON405 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_405)
+			Error405
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		response.JSON500 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_500)
+			Error500
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+			return nil, err
+		}
+
+	}
+
+	return response, nil
+}
+
+// ParseGetUserResponse parses an HTTP response from a GetUserWithResponse call
+func ParseGetUserResponse(rsp *http.Response) (*getUserResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &getUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		response.JSON200 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Success)
+			Success
+			// Embedded fields due to inline allOf schema
+			Data *[]User `json:"data,omitempty"`
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		response.JSON400 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_400)
+			Error400
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		response.JSON401 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_401)
+			Error401
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		response.JSON404 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_404)
+			Error404
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
+		response.JSON405 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_405)
+			Error405
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		response.JSON500 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_500)
+			Error500
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+			return nil, err
+		}
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateUserResponse parses an HTTP response from a UpdateUserWithResponse call
+func ParseUpdateUserResponse(rsp *http.Response) (*updateUserResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &updateUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		response.JSON200 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Success)
+			Success
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		response.JSON400 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_400)
+			Error400
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		response.JSON401 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_401)
+			Error401
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
+		response.JSON405 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_405)
+			Error405
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		response.JSON500 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_500)
+			Error500
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+			return nil, err
+		}
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateUserResponse parses an HTTP response from a CreateUserWithResponse call
+func ParseCreateUserResponse(rsp *http.Response) (*createUserResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &createUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		response.JSON200 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Success)
+			Success
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		response.JSON400 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_400)
+			Error400
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+			return nil, err
+		}
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		response.JSON401 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_401)
+			Error401
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
 			return nil, err
 		}
 

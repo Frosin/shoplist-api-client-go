@@ -24,5 +24,6 @@ CREATE TABLE IF NOT EXISTS users (
 	telegram_id	INTEGER NOT NULL,
 	telegram_username	TEXT,
 	comunity_id	TEXT NOT NULL,
-	token	TEXT
+	token	TEXT,
+	chat_id	INTEGER
 );

@@ -52,6 +52,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getUserByTelegramIDStmt, err = db.PrepareContext(ctx, getUserByTelegramID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserByTelegramID: %w", err)
 	}
+	if q.getUserByTokenStmt, err = db.PrepareContext(ctx, getUserByToken); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserByToken: %w", err)
+	}
 	if q.getUsersByComunityIDStmt, err = db.PrepareContext(ctx, getUsersByComunityID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUsersByComunityID: %w", err)
 	}
@@ -110,6 +113,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getUserByTelegramIDStmt: %w", cerr)
 		}
 	}
+	if q.getUserByTokenStmt != nil {
+		if cerr := q.getUserByTokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserByTokenStmt: %w", cerr)
+		}
+	}
 	if q.getUsersByComunityIDStmt != nil {
 		if cerr := q.getUsersByComunityIDStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUsersByComunityIDStmt: %w", cerr)
@@ -164,6 +172,7 @@ type Queries struct {
 	getShoppingsByDayStmt    *sql.Stmt
 	getUserByIDStmt          *sql.Stmt
 	getUserByTelegramIDStmt  *sql.Stmt
+	getUserByTokenStmt       *sql.Stmt
 	getUsersByComunityIDStmt *sql.Stmt
 }
 
@@ -181,6 +190,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getShoppingsByDayStmt:    q.getShoppingsByDayStmt,
 		getUserByIDStmt:          q.getUserByIDStmt,
 		getUserByTelegramIDStmt:  q.getUserByTelegramIDStmt,
+		getUserByTokenStmt:       q.getUserByTokenStmt,
 		getUsersByComunityIDStmt: q.getUsersByComunityIDStmt,
 	}
 }

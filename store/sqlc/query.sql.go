@@ -249,6 +249,25 @@ func (q *Queries) GetUserByTelegramID(ctx context.Context, telegramID int32) (Us
 	return i, err
 }
 
+const getUserByToken = `-- name: GetUserByToken :one
+SELECT id, telegram_id, telegram_username, comunity_id, token, chat_id FROM users
+WHERE token=$1
+`
+
+func (q *Queries) GetUserByToken(ctx context.Context, token sql.NullString) (User, error) {
+	row := q.queryRow(ctx, q.getUserByTokenStmt, getUserByToken, token)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.TelegramID,
+		&i.TelegramUsername,
+		&i.ComunityID,
+		&i.Token,
+		&i.ChatID,
+	)
+	return i, err
+}
+
 const getUsersByComunityID = `-- name: GetUsersByComunityID :many
 SELECT id, telegram_id, telegram_username, comunity_id, token, chat_id FROM users
 WHERE comunity_id=$1

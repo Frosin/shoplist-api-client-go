@@ -26,6 +26,11 @@ func (s *Server) error(ctx echo.Context, httpCode int, err error, validation *[]
 		}
 		response.Message = err.Error()
 		return ctx.JSON(httpCode, response)
+	case 401: // UnAuthorized
+		var response api.Error401
+		response.Version = &s.Version
+		response.Message = err.Error()
+		return ctx.JSON(httpCode, response)
 	case 404: // NotFound
 		return ctx.JSON(httpCode, api.Error404{
 			Error: api.Error{

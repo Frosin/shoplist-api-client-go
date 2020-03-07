@@ -38,6 +38,10 @@ WHERE date=$1;
 SELECT * FROM users
 WHERE id=$1;
 
+-- name: GetUserByToken :one
+SELECT * FROM users
+WHERE token=$1;
+
 -- name: GetUserByTelegramID :one
 SELECT * FROM users
 WHERE telegram_id=$1;

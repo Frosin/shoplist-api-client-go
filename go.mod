@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/deepmap/oapi-codegen v1.3.3
+	github.com/facebookincubator/ent v0.1.2 // indirect
 	github.com/getkin/kin-openapi v0.2.0
 	github.com/getsentry/sentry-go v0.3.1
 	github.com/go-chi/chi v4.0.2+incompatible

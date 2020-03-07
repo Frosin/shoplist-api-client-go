@@ -41,6 +41,7 @@ var serveCmd = &cobra.Command{
 		myServer.DB = db
 		e := echo.New()
 		e.HTTPErrorHandler = errorHandler
+		e.Use(myServer.TokenHandler)
 		api.RegisterHandlers(e, &myServer)
 		e.Logger.SetLevel(log.INFO)
 		e.Logger.Debug(e.Start(":" + port))

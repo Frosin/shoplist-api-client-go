@@ -677,11 +677,140 @@ func (s *Server) GetUsers(ctx echo.Context, params api.GetUsersParams) error {
 // Добавление юзера
 // (PATCH /users)
 func (s *Server) UpdateUser(ctx echo.Context, params api.UpdateUserParams) error {
-	return nil
+	response200 := func() error {
+		var response api.Base200
+		response.Version = &s.Version
+		response.Message = SuccessMessage
+		return ctx.JSON(http.StatusOK, response)
+	}
+	response400 := func(err error) error {
+		return s.error(ctx, http.StatusBadRequest, err, nil)
+	}
+	response404 := func() error {
+		return s.error(ctx, http.StatusNotFound, nil, nil)
+	}
+	response500 := func(err error) error {
+		return s.error(ctx, http.StatusInternalServerError, err, nil)
+	}
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
+	_, err := s.Queries.GetUserByID(contx, int32(params.UserId))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return response404()
+		}
+		return response500(err)
+	}
+
+	var user api.UpdateUserJSONRequestBody
+	if err := ctx.Bind(&user); err != nil {
+		return response400(err)
+	}
+	updParams := []string{}
+
+	if user.ComunityId != nil {
+		updParams = append(updParams, "comunity_id='"+*user.ComunityId+"'")
+	}
+	if user.TelegramId != nil {
+		updParams = append(updParams, "telegram_id="+strconv.Itoa(*user.TelegramId))
+	}
+	if user.ChatId != nil {
+		updParams = append(updParams, "chat_id="+strconv.Itoa(*user.ChatId))
+	}
+	if user.TelegramUsername != nil {
+		updParams = append(updParams, "telegram_username='"+*user.TelegramUsername+"'")
+	}
+	if user.Token != nil {
+		updParams = append(updParams, "token='"+*user.Token+"'")
+	}
+
+	if len(updParams) == 0 {
+		return response400(ErrNilParameters)
+	}
+
+	set := strings.Join(updParams, ",")
+
+	query := "UPDATE users SET " + set + " WHERE id=?"
+	//
+	fmt.Println(query)
+	//
+	_, err = s.DB.Exec(query, int(params.UserId))
+	if err != nil {
+		return response500(err)
+	}
+
+	return response200()
 }
 
 // Добавление юзера
 // (POST /users)
 func (s *Server) CreateUser(ctx echo.Context) error {
-	return nil
+	response200 := func(users *[]api.UserWithID) error {
+		var response api.Users200
+		response.Version = &s.Version
+		response.Message = SuccessMessage
+		response.Data = users
+		return ctx.JSON(http.StatusOK, response)
+	}
+	response400 := func(err error) error {
+		return s.error(ctx, http.StatusBadRequest, err, nil)
+	}
+	response500 := func(err error) error {
+		return s.error(ctx, http.StatusInternalServerError, err, nil)
+	}
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
+	var user api.UpdateUserJSONRequestBody
+	if err := ctx.Bind(&user); err != nil {
+		return response400(err)
+	}
+
+	if user.ComunityId == nil ||
+		user.TelegramId == nil ||
+		user.ChatId == nil ||
+		user.TelegramUsername == nil ||
+		user.Token == nil {
+		return response400(ErrNilParameters)
+	}
+
+	createParams := sqlc.AddUserParams{
+		TelegramID: sql.NullInt32{
+			Int32: int32(*user.TelegramId),
+			Valid: true,
+		},
+		TelegramUsername: sql.NullString{
+			String: *user.TelegramUsername,
+			Valid:  true,
+		},
+		ComunityID: sql.NullString{
+			String: *user.ComunityId,
+			Valid:  true,
+		},
+		Token: sql.NullString{
+			String: *user.Token,
+			Valid:  true,
+		},
+		ChatID: sql.NullInt32{
+			Int32: int32(*user.ChatId),
+			Valid: true,
+		},
+	}
+
+	userID, err := s.Queries.AddUser(contx, createParams)
+	if err != nil {
+		return response500(err)
+	}
+
+	newUser, err := s.Queries.GetUserByID(contx, int32(userID))
+	if err != nil {
+		return response500(err)
+	}
+
+	users := sqlcToAPIUsers([]sqlc.User{
+		newUser,
+	})
+
+	return response200(users)
 }

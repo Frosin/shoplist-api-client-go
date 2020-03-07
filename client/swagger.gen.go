@@ -222,11 +222,11 @@ type ShoppingsByDayValidation struct {
 // User defines model for user.
 type User struct {
 
+	// chat_id
+	ChatId *int `json:"chat_id,omitempty"`
+
 	// comunity_id
 	ComunityId *string `json:"comunity_id,omitempty"`
-
-	// id
-	Id *int `json:"id,omitempty"`
 
 	// telegram_id
 	TelegramId *int `json:"telegram_id,omitempty"`
@@ -474,7 +474,7 @@ type GetUsersParams struct {
 type UpdateUserParams struct {
 
 	// user_id
-	UserId *UserId `json:"user_id,omitempty"`
+	UserId UserId `json:"user_id"`
 }
 
 // AddItemRequestBody defines body for AddItem for application/json ContentType.
@@ -1296,20 +1296,16 @@ func NewUpdateUserRequestWithBody(server string, params *UpdateUserParams, conte
 
 	queryValues := queryUrl.Query()
 
-	if params.UserId != nil {
-
-		if queryFrag, err := runtime.StyleParam("form", true, "user_id", *params.UserId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
+	if queryFrag, err := runtime.StyleParam("form", true, "user_id", params.UserId); err != nil {
+		return nil, err
+	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+		return nil, err
+	} else {
+		for k, v := range parsed {
+			for _, v2 := range v {
+				queryValues.Add(k, v2)
 			}
 		}
-
 	}
 
 	queryUrl.RawQuery = queryValues.Encode()

@@ -94,6 +94,7 @@ func sqlcToAPIUsers(users []sqlc.User) *[]api.UserWithID {
 				TelegramId:       intPtr(int(u.TelegramID)),
 				TelegramUsername: &u.TelegramUsername.String,
 				Token:            &u.Token.String,
+				ChatId:           intPtr(int(u.ChatID.Int32)),
 			},
 		})
 	}

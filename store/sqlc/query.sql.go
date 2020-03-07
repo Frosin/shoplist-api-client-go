@@ -211,6 +211,25 @@ func (q *Queries) GetShoppingsByDay(ctx context.Context, date sql.NullString) ([
 	return items, nil
 }
 
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, telegram_id, telegram_username, comunity_id, token, chat_id FROM users
+WHERE id=$1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
+	row := q.queryRow(ctx, q.getUserByIDStmt, getUserByID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.TelegramID,
+		&i.TelegramUsername,
+		&i.ComunityID,
+		&i.Token,
+		&i.ChatID,
+	)
+	return i, err
+}
+
 const getUserByTelegramID = `-- name: GetUserByTelegramID :one
 SELECT id, telegram_id, telegram_username, comunity_id, token, chat_id FROM users
 WHERE telegram_id=$1

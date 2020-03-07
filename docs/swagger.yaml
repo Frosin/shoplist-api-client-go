@@ -206,7 +206,7 @@ paths:
           $ref: "#/components/responses/Base_500"
   "/users":
     get:
-      operationId: "getUser"
+      operationId: "getUsers"
       parameters:
         - $ref: "#/components/parameters/telegram_user_id"
         - $ref: "#/components/parameters/comunity_id"
@@ -235,7 +235,7 @@ paths:
       summary: Добавление юзера
       responses:
         "200":
-          $ref: "#/components/responses/Base_200"
+          $ref: "#/components/responses/Users_200"
         "400":
           $ref: "#/components/responses/Base_400"
         "401":
@@ -246,6 +246,8 @@ paths:
           $ref: "#/components/responses/Base_500"
     patch:
       operationId: "updateUser"
+      parameters:
+        - $ref: "#/components/parameters/user_id"
       requestBody:
         $ref: "#/components/requestBodies/User_request"
       tags:
@@ -258,6 +260,8 @@ paths:
           $ref: "#/components/responses/Base_400"
         "401":
           $ref: "#/components/responses/Base_401"
+        "404":
+          $ref: "#/components/responses/Base_404"
         "405":
           $ref: "#/components/responses/Base_405"
         "500":
@@ -435,6 +439,15 @@ components:
             type: string
             description: token
             example: "gfrf4jfdf"
+      userWithID:
+        allOf:
+          - type: object
+            properties:
+              id:
+                type: integer
+                description: Идентификатор юзера
+                example: 55
+          - $ref: "#/components/schemas/user"        
       shoppingItemParamsWithId:
         allOf:
           - type: object
@@ -885,7 +898,7 @@ components:
                     data:
                       type: array
                       items:
-                        $ref: "#/components/schemas/user"
+                        $ref: "#/components/schemas/userWithID"
   parameters:
     shoppingID:
       name: shoppingID
@@ -934,3 +947,9 @@ components:
       description: comunity_id
       schema:
         type: string
+    user_id:
+      name: user_id
+      in: query
+      description: user_id
+      schema:
+        type: integer      

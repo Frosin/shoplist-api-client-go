@@ -238,6 +238,16 @@ type User struct {
 	Token *string `json:"token,omitempty"`
 }
 
+// UserWithID defines model for userWithID.
+type UserWithID struct {
+	// Embedded fields due to inline allOf schema
+
+	// Идентификатор юзера
+	Id *int `json:"id,omitempty"`
+	// Embedded struct due to allOf(#/components/schemas/user)
+	User
+}
+
 // ComunityId defines model for comunity_id.
 type ComunityId string
 
@@ -255,6 +265,9 @@ type ShoppingID int
 
 // TelegramUserId defines model for telegram_user_id.
 type TelegramUserId int
+
+// UserId defines model for user_id.
+type UserId int
 
 // Year defines model for year.
 type Year int
@@ -423,7 +436,7 @@ type Users200 struct {
 	// Embedded struct due to allOf(#/components/schemas/Success)
 	Success
 	// Embedded fields due to inline allOf schema
-	Data *[]User `json:"data,omitempty"`
+	Data *[]UserWithID `json:"data,omitempty"`
 }
 
 // DeleteItemsRequest defines model for Delete_items_request.
@@ -447,14 +460,21 @@ type ShoppingRequest struct {
 // UserRequest defines model for User_request.
 type UserRequest User
 
-// GetUserParams defines parameters for GetUser.
-type GetUserParams struct {
+// GetUsersParams defines parameters for GetUsers.
+type GetUsersParams struct {
 
 	// telegram user id
 	TelegramUserId *TelegramUserId `json:"telegram_user_id,omitempty"`
 
 	// comunity_id
 	ComunityId *ComunityId `json:"comunity_id,omitempty"`
+}
+
+// UpdateUserParams defines parameters for UpdateUser.
+type UpdateUserParams struct {
+
+	// user_id
+	UserId *UserId `json:"user_id,omitempty"`
 }
 
 // AddItemRequestBody defines body for AddItem for application/json ContentType.
@@ -580,13 +600,13 @@ type ClientInterface interface {
 	// LastShopping request
 	LastShopping(ctx context.Context) (*http.Response, error)
 
-	// GetUser request
-	GetUser(ctx context.Context, params *GetUserParams) (*http.Response, error)
+	// GetUsers request
+	GetUsers(ctx context.Context, params *GetUsersParams) (*http.Response, error)
 
 	// UpdateUser request  with any body
-	UpdateUserWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error)
+	UpdateUserWithBody(ctx context.Context, params *UpdateUserParams, contentType string, body io.Reader) (*http.Response, error)
 
-	UpdateUser(ctx context.Context, body UpdateUserJSONRequestBody) (*http.Response, error)
+	UpdateUser(ctx context.Context, params *UpdateUserParams, body UpdateUserJSONRequestBody) (*http.Response, error)
 
 	// CreateUser request  with any body
 	CreateUserWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error)
@@ -804,8 +824,8 @@ func (c *Client) LastShopping(ctx context.Context) (*http.Response, error) {
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetUser(ctx context.Context, params *GetUserParams) (*http.Response, error) {
-	req, err := NewGetUserRequest(c.Server, params)
+func (c *Client) GetUsers(ctx context.Context, params *GetUsersParams) (*http.Response, error) {
+	req, err := NewGetUsersRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -819,8 +839,8 @@ func (c *Client) GetUser(ctx context.Context, params *GetUserParams) (*http.Resp
 	return c.Client.Do(req)
 }
 
-func (c *Client) UpdateUserWithBody(ctx context.Context, contentType string, body io.Reader) (*http.Response, error) {
-	req, err := NewUpdateUserRequestWithBody(c.Server, contentType, body)
+func (c *Client) UpdateUserWithBody(ctx context.Context, params *UpdateUserParams, contentType string, body io.Reader) (*http.Response, error) {
+	req, err := NewUpdateUserRequestWithBody(c.Server, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -834,8 +854,8 @@ func (c *Client) UpdateUserWithBody(ctx context.Context, contentType string, bod
 	return c.Client.Do(req)
 }
 
-func (c *Client) UpdateUser(ctx context.Context, body UpdateUserJSONRequestBody) (*http.Response, error) {
-	req, err := NewUpdateUserRequest(c.Server, body)
+func (c *Client) UpdateUser(ctx context.Context, params *UpdateUserParams, body UpdateUserJSONRequestBody) (*http.Response, error) {
+	req, err := NewUpdateUserRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1193,8 +1213,8 @@ func NewLastShoppingRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetUserRequest generates requests for GetUser
-func NewGetUserRequest(server string, params *GetUserParams) (*http.Request, error) {
+// NewGetUsersRequest generates requests for GetUsers
+func NewGetUsersRequest(server string, params *GetUsersParams) (*http.Request, error) {
 	var err error
 
 	queryUrl, err := url.Parse(server)
@@ -1251,18 +1271,18 @@ func NewGetUserRequest(server string, params *GetUserParams) (*http.Request, err
 }
 
 // NewUpdateUserRequest calls the generic UpdateUser builder with application/json body
-func NewUpdateUserRequest(server string, body UpdateUserJSONRequestBody) (*http.Request, error) {
+func NewUpdateUserRequest(server string, params *UpdateUserParams, body UpdateUserJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewUpdateUserRequestWithBody(server, "application/json", bodyReader)
+	return NewUpdateUserRequestWithBody(server, params, "application/json", bodyReader)
 }
 
 // NewUpdateUserRequestWithBody generates requests for UpdateUser with any type of body
-func NewUpdateUserRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+func NewUpdateUserRequestWithBody(server string, params *UpdateUserParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	queryUrl, err := url.Parse(server)
@@ -1273,6 +1293,26 @@ func NewUpdateUserRequestWithBody(server string, contentType string, body io.Rea
 	if err != nil {
 		return nil, err
 	}
+
+	queryValues := queryUrl.Query()
+
+	if params.UserId != nil {
+
+		if queryFrag, err := runtime.StyleParam("form", true, "user_id", *params.UserId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryUrl.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("PATCH", queryUrl.String(), body)
 	if err != nil {
@@ -1815,14 +1855,14 @@ func (r lastShoppingResponse) StatusCode() int {
 	return 0
 }
 
-type getUserResponse struct {
+type getUsersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
 		// Embedded struct due to allOf(#/components/schemas/Success)
 		Success
 		// Embedded fields due to inline allOf schema
-		Data *[]User `json:"data,omitempty"`
+		Data *[]UserWithID `json:"data,omitempty"`
 	}
 	JSON400 *struct {
 		// Embedded struct due to allOf(#/components/schemas/Error_400)
@@ -1847,7 +1887,7 @@ type getUserResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r getUserResponse) Status() string {
+func (r getUsersResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1855,7 +1895,7 @@ func (r getUserResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r getUserResponse) StatusCode() int {
+func (r getUsersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1876,6 +1916,10 @@ type updateUserResponse struct {
 	JSON401 *struct {
 		// Embedded struct due to allOf(#/components/schemas/Error_401)
 		Error401
+	}
+	JSON404 *struct {
+		// Embedded struct due to allOf(#/components/schemas/Error_404)
+		Error404
 	}
 	JSON405 *struct {
 		// Embedded struct due to allOf(#/components/schemas/Error_405)
@@ -1909,6 +1953,8 @@ type createUserResponse struct {
 	JSON200      *struct {
 		// Embedded struct due to allOf(#/components/schemas/Success)
 		Success
+		// Embedded fields due to inline allOf schema
+		Data *[]UserWithID `json:"data,omitempty"`
 	}
 	JSON400 *struct {
 		// Embedded struct due to allOf(#/components/schemas/Error_400)
@@ -2066,26 +2112,26 @@ func (c *ClientWithResponses) LastShoppingWithResponse(ctx context.Context) (*la
 	return ParseLastShoppingResponse(rsp)
 }
 
-// GetUserWithResponse request returning *GetUserResponse
-func (c *ClientWithResponses) GetUserWithResponse(ctx context.Context, params *GetUserParams) (*getUserResponse, error) {
-	rsp, err := c.GetUser(ctx, params)
+// GetUsersWithResponse request returning *GetUsersResponse
+func (c *ClientWithResponses) GetUsersWithResponse(ctx context.Context, params *GetUsersParams) (*getUsersResponse, error) {
+	rsp, err := c.GetUsers(ctx, params)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetUserResponse(rsp)
+	return ParseGetUsersResponse(rsp)
 }
 
 // UpdateUserWithBodyWithResponse request with arbitrary body returning *UpdateUserResponse
-func (c *ClientWithResponses) UpdateUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader) (*updateUserResponse, error) {
-	rsp, err := c.UpdateUserWithBody(ctx, contentType, body)
+func (c *ClientWithResponses) UpdateUserWithBodyWithResponse(ctx context.Context, params *UpdateUserParams, contentType string, body io.Reader) (*updateUserResponse, error) {
+	rsp, err := c.UpdateUserWithBody(ctx, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
 	return ParseUpdateUserResponse(rsp)
 }
 
-func (c *ClientWithResponses) UpdateUserWithResponse(ctx context.Context, body UpdateUserJSONRequestBody) (*updateUserResponse, error) {
-	rsp, err := c.UpdateUser(ctx, body)
+func (c *ClientWithResponses) UpdateUserWithResponse(ctx context.Context, params *UpdateUserParams, body UpdateUserJSONRequestBody) (*updateUserResponse, error) {
+	rsp, err := c.UpdateUser(ctx, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2823,15 +2869,15 @@ func ParseLastShoppingResponse(rsp *http.Response) (*lastShoppingResponse, error
 	return response, nil
 }
 
-// ParseGetUserResponse parses an HTTP response from a GetUserWithResponse call
-func ParseGetUserResponse(rsp *http.Response) (*getUserResponse, error) {
+// ParseGetUsersResponse parses an HTTP response from a GetUsersWithResponse call
+func ParseGetUsersResponse(rsp *http.Response) (*getUsersResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer rsp.Body.Close()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &getUserResponse{
+	response := &getUsersResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -2842,7 +2888,7 @@ func ParseGetUserResponse(rsp *http.Response) (*getUserResponse, error) {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
-			Data *[]User `json:"data,omitempty"`
+			Data *[]UserWithID `json:"data,omitempty"`
 		}{}
 		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
 			return nil, err
@@ -2939,6 +2985,15 @@ func ParseUpdateUserResponse(rsp *http.Response) (*updateUserResponse, error) {
 			return nil, err
 		}
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		response.JSON404 = &struct {
+			// Embedded struct due to allOf(#/components/schemas/Error_404)
+			Error404
+		}{}
+		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+			return nil, err
+		}
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
 		response.JSON405 = &struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
@@ -2980,6 +3035,8 @@ func ParseCreateUserResponse(rsp *http.Response) (*createUserResponse, error) {
 		response.JSON200 = &struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
+			// Embedded fields due to inline allOf schema
+			Data *[]UserWithID `json:"data,omitempty"`
 		}{}
 		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
 			return nil, err

@@ -24,6 +24,9 @@ const (
 )
 
 var (
+	ReadTimeout  = 5 * time.Second
+	WriteTimeout = 10 * time.Second
+
 	SuccessMessage             = "success"
 	InternalServerErrorMessage = "Internal server error"
 	NotFoundMessage            = "Entity not found"
@@ -31,7 +34,8 @@ var (
 	UnknownPathMessage         = "Unknown path"
 	MethodNotAllowedMessage    = "Method not allowed"
 
-	ErrValidation = errors.New("Validation error")
+	ErrValidation    = errors.New("Validation error")
+	ErrNilParameters = errors.New("One or more params are nil")
 )
 
 // Server - basic route func type
@@ -620,13 +624,59 @@ func (s *Server) DeleteShoppings(ctx echo.Context) error {
 
 // Получение юзера по telegram user id
 // (GET /users)
-func (s *Server) GetUser(ctx echo.Context, params api.GetUserParams) error {
-	return nil
+func (s *Server) GetUsers(ctx echo.Context, params api.GetUsersParams) error {
+	response200 := func(users *[]api.UserWithID) error {
+		var response api.Users200
+		response.Version = &s.Version
+		response.Message = SuccessMessage
+		response.Data = users
+		return ctx.JSON(http.StatusOK, response)
+	}
+	response400 := func(err error) error {
+		return s.error(ctx, http.StatusBadRequest, err, nil)
+	}
+	response404 := func() error {
+		return s.error(ctx, http.StatusNotFound, nil, nil)
+	}
+	response500 := func(err error) error {
+		return s.error(ctx, http.StatusInternalServerError, err, nil)
+	}
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
+	var users []sqlc.User
+	var err error
+
+	if params.ComunityId == nil && params.TelegramUserId == nil {
+		return response400(ErrNilParameters)
+	}
+
+	switch params.ComunityId {
+	case nil:
+		user, err := s.Queries.GetUserByTelegramID(contx, int32(*params.TelegramUserId))
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return response404()
+			}
+			return response500(err)
+		}
+		users = append(users, user)
+	default:
+		users, err = s.Queries.GetUsersByComunityID(contx, string(*params.ComunityId))
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return response404()
+			}
+			return response500(err)
+		}
+	}
+	apiUsers := sqlcToAPIUsers(users)
+	return response200(apiUsers)
 }
 
 // Добавление юзера
 // (PATCH /users)
-func (s *Server) UpdateUser(ctx echo.Context) error {
+func (s *Server) UpdateUser(ctx echo.Context, params api.UpdateUserParams) error {
 	return nil
 }
 

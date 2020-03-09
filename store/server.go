@@ -8,12 +8,16 @@ import (
 	"math"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Frosin/shoplist-api-client-go/api"
-	"github.com/Frosin/shoplist-api-client-go/store/sqlc"
-	"github.com/jmoiron/sqlx"
+	"github.com/Frosin/shoplist-api-client-go/ent"
+	"github.com/Frosin/shoplist-api-client-go/ent/item"
+	"github.com/Frosin/shoplist-api-client-go/ent/predicate"
+	"github.com/Frosin/shoplist-api-client-go/ent/shop"
+	"github.com/Frosin/shoplist-api-client-go/ent/shopping"
+	"github.com/Frosin/shoplist-api-client-go/ent/user"
+	entSql "github.com/facebookincubator/ent/dialect/sql"
 
 	"github.com/labstack/echo/v4"
 )
@@ -34,22 +38,33 @@ var (
 	UnknownPathMessage         = "Unknown path"
 	MethodNotAllowedMessage    = "Method not allowed"
 
-	ErrValidation    = errors.New("Validation error")
-	ErrNilParameters = errors.New("One or more params are nil")
+	ErrValidation            = errors.New("Validation error")
+	ErrNilParameters         = errors.New("One or more params are nil")
+	ErrTypeAssertion         = errors.New("type assertion error")
+	ErrUpdateUserConstFields = errors.New("can't update constant user fields")
 )
 
 // Server - basic route func type
 type Server struct {
-	Version string
-	Queries *sqlc.Queries
-	DB      *sqlx.DB
+	version string
+	//Queries *sqlc.Queries
+	ent *ent.Client
+	db  *sql.DB
+}
+
+func NewServer(v string, e *ent.Client, db *sql.DB) *Server {
+	return &Server{
+		version: v,
+		ent:     e,
+		db:      db,
+	}
 }
 
 // GetGoods returns all products by shoppingId
 func (s *Server) GetGoods(ctx echo.Context, shoppingID api.ShoppingID) error {
 	response200 := func(items *[]api.ShoppingItem) error {
 		var response api.Goods200
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		response.Data = items
 		return ctx.JSON(http.StatusOK, response)
@@ -61,40 +76,100 @@ func (s *Server) GetGoods(ctx echo.Context, shoppingID api.ShoppingID) error {
 	response500 := func(err error) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
-	goods, err := s.Queries.GetGoodsByShoppingID(context.Background(), int32ToNullInt32(int32(shoppingID)))
+
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
+	goods, err := s.ent.Item.
+		Query().
+		WithShopping().
+		Where(item.HasShoppingWith(shopping.IDEQ(int(shoppingID)))).
+		All(contx)
+	// goods, err := s.Queries.GetGoodsByShoppingID(context.Background(), int32ToNullInt32(int32(shoppingID)))
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return response404()
+		}
 		return response500(err)
 	}
-	if len(goods) == 0 {
-		return response404()
-	}
-	items := sqlcToShoppingItems(goods)
+	// if len(goods) == 0 {
+	// 	return response404()
+	// }
+	items := entToShoppingItems(goods)
 	return response200(&items)
 }
 
-func sqlcToShoppingItems(goods []sqlc.ShopList) (shoppingItems []api.ShoppingItem) {
-	for _, i := range goods {
-		var item api.ShoppingItem
-		id := int(i.ID)
-		category := int(i.CategoryID.Int32)
-		complete := true
-		if i.Complete.Int32 == 0 {
-			complete = false
-		}
-		listID := int(i.ListID.Int32)
-		productName := i.ProductName.String
-		quantity := int(i.Quantity.Int32)
+// // Добавление товара в покупку
+// // (POST /addItem)
+// func (s *Server) AddItem(ctx echo.Context) error {
+// 	return nil
+// }
 
-		item.Id = &id
-		item.CategoryID = category
-		item.Complete = complete
-		item.ListID = listID
-		item.ProductName = productName
-		item.Quantity = quantity
-		shoppingItems = append(shoppingItems, item)
-	}
-	return
-}
+// // Добавление покупки
+// // (POST /addShopping)
+// func (s *Server) AddShopping(ctx echo.Context) error {
+// 	return nil
+// }
+
+// // Удаление товаров
+// // (POST /deleteItems)
+// func (s *Server) DeleteItems(ctx echo.Context) error {
+// 	return nil
+// }
+
+// // Удаление покупок
+// // (POST /deleteShoppings)
+// func (s *Server) DeleteShoppings(ctx echo.Context) error {
+// 	return nil
+// }
+
+// // Ближайшие 5 покупок
+// // (GET /getComingShoppings/{date})
+// func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date) error {
+// 	return nil
+// }
+
+// // Даные покупки
+// // (GET /getShopping/{shoppingID})
+// func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID) error {
+// 	return nil
+// }
+
+// // Получение списка дней с покупками по месяцу и году
+// // (GET /getShoppingDays/{year}/{month})
+// func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Month) error {
+// 	return nil
+// }
+
+// // Получение списка покупок по конекретному дню
+// // (GET /getShoppingsByDay/{year}/{month}/{day})
+// func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Month, day api.Day) error {
+// 	return nil
+// }
+
+// // Последняя покупка
+// // (GET /lastShopping)
+// func (s *Server) LastShopping(ctx echo.Context) error {
+// 	return nil
+// }
+
+// // Получение юзера по telegram user id
+// // (GET /users)
+// func (s *Server) GetUsers(ctx echo.Context, params api.GetUsersParams) error {
+// 	return nil
+// }
+
+// // Добавление юзера
+// // (PATCH /users)
+// func (s *Server) UpdateUser(ctx echo.Context, params api.UpdateUserParams) error {
+// 	return nil
+// }
+
+// // Добавление юзера
+// // (POST /users)
+// func (s *Server) CreateUser(ctx echo.Context) error {
+// 	return nil
+// }
 
 // LastShopping returns LastShopping information
 func (s *Server) LastShopping(ctx echo.Context) error {
@@ -102,7 +177,7 @@ func (s *Server) LastShopping(ctx echo.Context) error {
 		var response api.LastShopping200
 		var data []api.ShoppingWithId
 		data = append(data, shopping)
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		response.Data = &data
 		return ctx.JSON(http.StatusOK, response)
@@ -113,50 +188,41 @@ func (s *Server) LastShopping(ctx echo.Context) error {
 	response500 := func(err error) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
-	lastShopping, err := s.Queries.GetLastShopping(context.Background())
+
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
+	lastShopping, err := s.ent.Shopping.Query().
+		WithShop().
+		Order(ent.Desc("rowid")).
+		Limit(1).
+		Only(contx)
+
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if ent.IsNotFound(err) {
 			return response404()
 		}
 		return response500(err)
 	}
-	data, err := s.sqlcToShopping(lastShopping)
+	data := entToShopping(lastShopping)
 	if err != nil {
 		return response500(err)
 	}
 	return response200(data)
 }
 
-func (s *Server) sqlcToShopping(shopping sqlc.Shopping) (api.ShoppingWithId, error) {
-	var sqlcShopping api.ShoppingWithId
-	id := int(shopping.ID)
-	sqlcShopping.Id = &id
-	sqlcShopping.Date = shopping.Date.String
-	ownerID := int(shopping.OwnerID.Int32)
-	sqlcShopping.OwnerID = ownerID
-	sqlcShopping.Time = shopping.Time.String
-
-	shop, err := s.Queries.GetShopByID(context.Background(), shopping.ShopID.Int32)
-	if err != nil {
-		return api.ShoppingWithId{}, err
-	}
-	sqlcShopping.Name = shop.Name.String
-
-	return sqlcShopping, nil
-}
-
 // AddShopping inserts new shopping
 func (s *Server) AddShopping(ctx echo.Context) error {
 	response200 := func(shopping api.ShoppingWithId) error {
 		var response api.Shopping200
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		response.Data = &shopping
 		return ctx.JSON(http.StatusOK, response)
 	}
 	response400 := func(err error, validation *api.ShoppingValidation) error {
 		var response api.Shopping400
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = err.Error()
 
 		if validation != nil {
@@ -169,11 +235,18 @@ func (s *Server) AddShopping(ctx echo.Context) error {
 	response500 := func(err error) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+	userID, ok := ctx.Get("ownerID").(int)
+	if !ok {
+		return response500(ErrTypeAssertion)
+	}
+
 	var shParams api.ShoppingParams
 	if err := ctx.Bind(&shParams); err != nil {
 		return response400(err, nil)
 	}
-	_, err := time.Parse(dateLayout, shParams.Date)
+	date, err := time.Parse(dateLayout, shParams.Date)
 	if err != nil {
 		validation := api.ShoppingValidation{
 			Date: strPtr("format"),
@@ -187,49 +260,45 @@ func (s *Server) AddShopping(ctx echo.Context) error {
 		}
 		return response400(err, &validation)
 	}
-	shopID, err := s.getShopID(shParams.Name)
-	if err != nil {
-		return response500(err)
-	}
-	shopping := shoppingToSqlc(shParams, shopID)
-	insRes, err := s.Queries.AddShopping(context.Background(), shopping)
-	if err != nil {
-		return response500(err)
-	}
-	responseBody := shoppingToShoppingWithID(shParams, insRes)
-	return response200(responseBody)
-}
 
-func shoppingToShoppingWithID(shopping api.ShoppingParams, shID int64) api.ShoppingWithId {
-	shoppingID := int(shID)
-	return api.ShoppingWithId{
-		ShoppingParams: shopping,
-		Id:             &shoppingID,
-	}
-}
+	shop, err := s.ent.Shop.
+		Query().
+		Where(shop.NameEQ(shParams.Name)).
+		First(contx)
 
-func (s *Server) getShopID(name string) (int32, error) {
-	shopName := sql.NullString{
-		String: name,
-		Valid:  true,
-	}
-	findRes, err := s.Queries.GetShopByName(context.Background(), shopName)
 	if err != nil {
-		insRes, err := s.Queries.AddShop(context.Background(), shopName)
-		if err != nil {
-			return 0, err
+		if ent.IsNotFound(err) {
+			shop, err = s.ent.Shop.
+				Create().
+				SetName(shParams.Name).Save(contx)
+			if err != nil {
+				return response500(err)
+			}
 		}
-		return int32(insRes), nil
+		return response500(err)
 	}
-	return findRes.ID, nil
-}
 
-func shoppingToSqlc(shopping api.ShoppingParams, shopID int32) (params sqlc.AddShoppingParams) {
-	params.Date = stringToNullString(shopping.Date)
-	params.ShopID = int32ToNullInt32(shopID)
-	params.Time = stringToNullString(shopping.Time)
-	params.OwnerID = int32ToNullInt32(int32(shopping.OwnerID))
-	return
+	var newShopping *ent.Shopping
+	err = s.ent.WithTx(contx, func(tx *ent.Tx) error {
+		newShopping, err = tx.Shopping.
+			Create().
+			SetShop(shop).
+			SetDate(date).
+			SetUserID(userID).
+			Save(contx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return response500(err)
+	}
+
+	return response200(api.ShoppingWithId{
+		ShoppingParams: shParams,
+		Id:             &newShopping.ID,
+	})
 }
 
 // AddItem inserts new product to shopping cart
@@ -238,82 +307,78 @@ func (s *Server) AddItem(ctx echo.Context) error {
 		var response api.Item200
 		var data []api.ShoppingItemParamsWithId
 		data = append(data, item)
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		response.Data = &data
 		return ctx.JSON(http.StatusOK, response)
 	}
-
 	response400 := func(err error, validation *[]interface{}) error {
 		var response api.Item400
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = err.Error()
 		return ctx.JSON(http.StatusBadRequest, response)
 	}
-
 	response404 := func() error {
 		return s.error(ctx, http.StatusNotFound, nil, nil)
 	}
-
 	response500 := func(err error) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
+
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
 
 	var itemParams api.ShoppingItemParams
 	if err := ctx.Bind(&itemParams); err != nil {
 		return response400(ErrValidation, nil)
 	}
 
-	_, err := s.Queries.GetShoppingByID(context.Background(), int32(itemParams.ListID))
+	shopping, err := s.ent.Shopping.
+		Query().
+		Where(shopping.IDEQ(itemParams.ListID)).
+		Only(contx)
+
 	if err != nil {
-		return response404()
+		if ent.IsNotFound(err) {
+			return response404()
+		}
+		return response500(err)
 	}
 
-	sqlcItem := itemToSqlc(itemParams)
-	insID, err := s.Queries.AddProductItem(context.Background(), sqlcItem)
-
+	var newItem *ent.Item
+	err = s.ent.WithTx(contx, func(tx *ent.Tx) error {
+		newItem, err = tx.Item.
+			Create().
+			SetProductName(itemParams.ProductName).
+			SetShopping(shopping).
+			Save(contx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return response500(err)
 	}
 
-	responseBody := itemToItemWithID(itemParams, insID)
-	return response200(responseBody)
-}
-
-func itemToSqlc(itemParams api.ShoppingItemParams) (params sqlc.AddProductItemParams) {
-	params.ProductName = stringToNullString(itemParams.ProductName)
-	params.Quantity = int32ToNullInt32(int32(itemParams.Quantity))
-	params.ListID = int32ToNullInt32(int32(itemParams.ListID))
-	params.Complete = sql.NullBool{
-		Bool:  false,
-		Valid: true,
-	}
-	params.CategoryID = int32ToNullInt32(int32(itemParams.CategoryID))
-
-	return
-}
-
-func itemToItemWithID(item api.ShoppingItemParams, id int64) api.ShoppingItemParamsWithId {
-	intID := int(id)
-	return api.ShoppingItemParamsWithId{
-		ShoppingItemParams: item,
-		Id:                 &intID,
-	}
-
+	return response200(api.ShoppingItemParamsWithId{
+		Id:                 &newItem.ID,
+		ShoppingItemParams: itemParams,
+	})
 }
 
 // GetComingShoppings returns coming shoppings
 func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date) error {
 	response200 := func(shoppings []api.ShoppingWithId) error {
 		var response api.ComingShoppings200
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		response.Data = &shoppings
 		return ctx.JSON(http.StatusOK, response)
 	}
 	response400 := func(err error) error {
 		var response api.ComingShoppings400
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = err.Error()
 		response.Errors = &api.ComingShoppingsProperty{
 			Validation: &api.ComingShoppingsValidation{
@@ -329,40 +394,43 @@ func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
 	dateParam := string(date)
-	_, err := time.Parse(dateLayout, dateParam)
+	dTime, err := time.Parse(dateLayout, dateParam)
 	if err != nil {
 		return response400(err)
 	}
-	commingShoppings, err := s.Queries.GetComingShoppings(context.Background(), stringToNullString(dateParam))
+
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
+	commingShoppings, err := s.ent.Shopping.
+		Query().
+		Where(shopping.DateGTE(dTime)).
+		Order(ent.Desc("rowid")).
+		Limit(5).
+		All(contx)
+
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if ent.IsNotFound(err) {
 			return response404()
 		}
 		return response500(err)
 	}
-	var result []api.ShoppingWithId
-	for _, v := range commingShoppings {
-		data, err := s.sqlcToShopping(v)
-		if err != nil {
-			return response500(err)
-		}
-		result = append(result, data)
-	}
-	return response200(result)
+
+	return response200(entToShoppings(commingShoppings))
 }
 
 // GetShoppingDays returns days with shopping by month and year
 func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Month) error {
 	response200 := func(days []int) error {
 		var response api.ShoppingDays200
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		response.Data = &days
 		return ctx.JSON(http.StatusOK, response)
 	}
 	response400 := func(validation *api.ShoppingDaysValidation) error {
 		var response api.ShoppingDays400
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = ErrValidation.Error()
 		response.Errors = &api.ShoppingDaysErrors{
 			Validation: validation,
@@ -391,83 +459,46 @@ func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Mont
 		return response400(&validation)
 	}
 
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
 	strMonth := strconv.Itoa(int(month))
 	if month < 10 {
 		strMonth = "0" + strMonth
 	}
 	queryParam := fmt.Sprintf("%v-%s", year, strMonth)
-	queryParam = queryParam + "%"
 
-	days, err := s.Queries.GetShoppingDays(ctx.Request().Context(), sql.NullString{
-		String: queryParam,
-		Valid:  true,
-	})
+	monthShoppings, err := s.ent.Shopping.Query().Where(predicate.Shopping(func(s *entSql.Selector) {
+		s.Where(entSql.Like(s.C(shopping.FieldDate), queryParam))
+	})).All(contx)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if ent.IsNotFound(err) {
 			return response404()
 		}
 		return response500(err)
 	}
+
 	var result []int
-	for _, v := range days {
-		fDate, err := time.Parse(dateLayout, v.String)
-		if err != nil {
-			return response500(err)
-		}
-		result = append(result, fDate.Day())
+	for _, v := range monthShoppings {
+		result = append(result, v.Date.Day())
 	}
+
 	return response200(result)
-}
-
-func (s *Server) sqlcToShoppingWithId(sh []sqlc.Shopping) (*[]api.ShoppingWithId, error) {
-	result := []api.ShoppingWithId{}
-	shopIDs := []interface{}{}
-	paramLabels := []string{}
-	for i, v := range sh {
-		shopIDs = append(shopIDs, v.ShopID.Int32)
-		paramLabels = append(paramLabels, "$"+strconv.Itoa(i))
-	}
-	params := strings.Join(paramLabels, ",")
-	query := strings.Replace(sqlc.GetShopNamesQuery, "$", params, 1)
-	rows, err := s.DB.Query(query, shopIDs...)
-
-	if err != nil {
-		return nil, err
-	}
-	shopNames := []string{}
-	for rows.Next() {
-		name := ""
-		err = rows.Scan(&name)
-		if err != nil {
-			return nil, err
-		}
-		shopNames = append(shopNames, name)
-	}
-	for i, v := range sh {
-		var shopping api.ShoppingWithId
-		shopping.Id = intPtr(int(v.ID))
-		shopping.Date = v.Date.String
-		shopping.Name = shopNames[i]
-		shopping.OwnerID = int(v.OwnerID.Int32)
-		shopping.Time = v.Time.String
-		result = append(result, shopping)
-	}
-	return &result, nil
 }
 
 //GetShoppingsByDay returns shoppings by day
 func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Month, day api.Day) error {
-	response200 := func(data *[]api.ShoppingWithId) error {
+	response200 := func(data []api.ShoppingWithId) error {
 		var response api.Shoppings200
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
-		response.Data = data
+		response.Data = &data
 		return ctx.JSON(http.StatusOK, response)
 	}
 	response400 := func(validation *api.ShoppingsByDayValidation) error {
 		var response api.Shoppings400
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = ErrValidation.Error()
 		response.Errors = &api.ShoppingsByDayErrors{
 			Validation: validation,
@@ -480,6 +511,9 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 	response500 := func(err error) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
+
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
 
 	curYear := time.Now().Year()
 	var validation api.ShoppingsByDayValidation
@@ -512,27 +546,24 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 
 	queryParam := fmt.Sprintf("%v-%s-%s", year, strMonth, strDay)
 
-	result, err := s.Queries.GetShoppingsByDay(ctx.Request().Context(), sql.NullString{
-		String: queryParam,
-		Valid:  true,
-	})
-
-	shoppings, err := s.sqlcToShoppingWithId(result)
+	shoppings, err := s.ent.Shopping.Query().Where(predicate.Shopping(func(s *entSql.Selector) {
+		s.Where(entSql.Like(s.C(shopping.FieldDate), queryParam))
+	})).All(contx)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if ent.IsNotFound(err) {
 			return response404()
 		}
 		return response500(err)
 	}
 
-	return response200(shoppings)
+	return response200(entToShoppings(shoppings))
 }
 
 func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID) error {
 	response200 := func(shopping api.ShoppingWithId) error {
 		var response api.Shopping200
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		response.Data = &shopping
 		return ctx.JSON(http.StatusOK, response)
@@ -544,18 +575,21 @@ func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID) error 
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
 
-	shopping, err := s.Queries.GetShoppingByID(context.Background(), int32(shoppingID))
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
+	shopping, err := s.ent.Shopping.
+		Query().
+		Where(shopping.IDEQ(int(shoppingID))).
+		Only(contx)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if ent.IsNotFound(err) {
 			return response404()
 		}
 		return response500(err)
 	}
-	data, err := s.sqlcToShopping(shopping)
-	if err != nil {
-		return response500(err)
-	}
-	return response200(data)
+
+	return response200(entToShopping(shopping))
 }
 
 // Удаление товаров
@@ -563,7 +597,7 @@ func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID) error 
 func (s *Server) DeleteItems(ctx echo.Context) error {
 	response200 := func() error {
 		response := api.Base200{}
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		return ctx.JSON(http.StatusOK, response)
 	}
@@ -574,19 +608,19 @@ func (s *Server) DeleteItems(ctx echo.Context) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
 
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
 	var deleteNumbers api.DeleteItemsRequest
 	if err := ctx.Bind(&deleteNumbers); err != nil {
 		return response400(err)
 	}
 
-	query, args, err := sqlx.In("DELETE FROM shop_list WHERE id IN (?);", deleteNumbers.Ids)
+	_, err := s.ent.Item.Delete().Where(item.IDIn(deleteNumbers.Ids...)).Exec(contx)
 	if err != nil {
 		return response500(err)
 	}
-	_, err = s.DB.Exec(query, args...)
-	if err != nil {
-		return response500(err)
-	}
+
 	return response200()
 }
 
@@ -595,7 +629,7 @@ func (s *Server) DeleteItems(ctx echo.Context) error {
 func (s *Server) DeleteShoppings(ctx echo.Context) error {
 	response200 := func() error {
 		response := api.Base200{}
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		return ctx.JSON(http.StatusOK, response)
 	}
@@ -606,16 +640,15 @@ func (s *Server) DeleteShoppings(ctx echo.Context) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
 
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
 	var deleteNumbers api.DeleteItemsRequest
 	if err := ctx.Bind(&deleteNumbers); err != nil {
 		return response400(err)
 	}
 
-	query, args, err := sqlx.In("DELETE FROM shopping WHERE id IN (?);", deleteNumbers.Ids)
-	if err != nil {
-		return response500(err)
-	}
-	_, err = s.DB.Exec(query, args...)
+	_, err := s.ent.Shopping.Delete().Where(shopping.IDIn(deleteNumbers.Ids...)).Exec(contx)
 	if err != nil {
 		return response500(err)
 	}
@@ -627,7 +660,7 @@ func (s *Server) DeleteShoppings(ctx echo.Context) error {
 func (s *Server) GetUsers(ctx echo.Context, params api.GetUsersParams) error {
 	response200 := func(users *[]api.UserWithID) error {
 		var response api.Users200
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		response.Data = users
 		return ctx.JSON(http.StatusOK, response)
@@ -644,7 +677,7 @@ func (s *Server) GetUsers(ctx echo.Context, params api.GetUsersParams) error {
 	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 	defer cancel()
 
-	var users []sqlc.User
+	var users []*ent.User
 	var err error
 
 	if params.ComunityId == nil && params.TelegramUserId == nil {
@@ -653,25 +686,31 @@ func (s *Server) GetUsers(ctx echo.Context, params api.GetUsersParams) error {
 
 	switch params.ComunityId {
 	case nil:
-		user, err := s.Queries.GetUserByTelegramID(contx, int32(*params.TelegramUserId))
+		user, err := s.ent.User.
+			Query().
+			Where(user.TelegramIDEQ(int64(*params.TelegramUserId))).
+			Only(contx)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
+			if ent.IsNotFound(err) {
 				return response404()
 			}
 			return response500(err)
 		}
 		users = append(users, user)
 	default:
-		users, err = s.Queries.GetUsersByComunityID(contx, string(*params.ComunityId))
+		users, err = s.ent.User.
+			Query().
+			Where(user.ComunityIDEQ(string(*params.ComunityId))).
+			All(contx)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
+			if ent.IsNotFound(err) {
 				return response404()
 			}
 			return response500(err)
 		}
 	}
-	apiUsers := sqlcToAPIUsers(users)
-	return response200(apiUsers)
+	apiUsers := entToUsers(users)
+	return response200(&apiUsers)
 }
 
 // Добавление юзера
@@ -679,7 +718,7 @@ func (s *Server) GetUsers(ctx echo.Context, params api.GetUsersParams) error {
 func (s *Server) UpdateUser(ctx echo.Context, params api.UpdateUserParams) error {
 	response200 := func() error {
 		var response api.Base200
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		return ctx.JSON(http.StatusOK, response)
 	}
@@ -695,49 +734,47 @@ func (s *Server) UpdateUser(ctx echo.Context, params api.UpdateUserParams) error
 	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 	defer cancel()
 
-	_, err := s.Queries.GetUserByID(contx, int32(params.UserId))
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return response404()
-		}
-		return response500(err)
-	}
-
 	var user api.UpdateUserJSONRequestBody
-	if err := ctx.Bind(&user); err != nil {
+	var err error
+	if err = ctx.Bind(&user); err != nil {
 		return response400(err)
 	}
-	updParams := []string{}
+	updNum := 0
+
+	if user.ChatId != nil || user.TelegramId != nil || user.Token != nil {
+		return response400(ErrUpdateUserConstFields)
+	}
 
 	if user.ComunityId != nil {
-		updParams = append(updParams, "comunity_id='"+*user.ComunityId+"'")
+		_, err = s.ent.User.
+			UpdateOneID(int(params.UserId)).
+			SetComunityID(*user.ComunityId).
+			Save(contx)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return response404()
+			}
+			return response500(err)
+		}
+		updNum++
 	}
-	if user.TelegramId != nil {
-		updParams = append(updParams, "telegram_id="+strconv.Itoa(*user.TelegramId))
-	}
-	if user.ChatId != nil {
-		updParams = append(updParams, "chat_id="+strconv.Itoa(*user.ChatId))
-	}
+
 	if user.TelegramUsername != nil {
-		updParams = append(updParams, "telegram_username='"+*user.TelegramUsername+"'")
-	}
-	if user.Token != nil {
-		updParams = append(updParams, "token='"+*user.Token+"'")
+		_, err = s.ent.User.
+			UpdateOneID(int(params.UserId)).
+			SetTelegramUsername(*user.TelegramUsername).
+			Save(contx)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return response404()
+			}
+			return response500(err)
+		}
+		updNum++
 	}
 
-	if len(updParams) == 0 {
+	if updNum == 0 {
 		return response400(ErrNilParameters)
-	}
-
-	set := strings.Join(updParams, ",")
-
-	query := "UPDATE users SET " + set + " WHERE id=?"
-	//
-	fmt.Println(query)
-	//
-	_, err = s.DB.Exec(query, int(params.UserId))
-	if err != nil {
-		return response500(err)
 	}
 
 	return response200()
@@ -748,7 +785,7 @@ func (s *Server) UpdateUser(ctx echo.Context, params api.UpdateUserParams) error
 func (s *Server) CreateUser(ctx echo.Context) error {
 	response200 := func(users *[]api.UserWithID) error {
 		var response api.Users200
-		response.Version = &s.Version
+		response.Version = &s.version
 		response.Message = SuccessMessage
 		response.Data = users
 		return ctx.JSON(http.StatusOK, response)
@@ -762,55 +799,32 @@ func (s *Server) CreateUser(ctx echo.Context) error {
 	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 	defer cancel()
 
-	var user api.UpdateUserJSONRequestBody
-	if err := ctx.Bind(&user); err != nil {
+	var u api.UpdateUserJSONRequestBody
+	if err := ctx.Bind(&u); err != nil {
 		return response400(err)
 	}
 
-	if user.ComunityId == nil ||
-		user.TelegramId == nil ||
-		user.ChatId == nil ||
-		user.TelegramUsername == nil ||
-		user.Token == nil {
+	if u.ComunityId == nil ||
+		u.TelegramId == nil ||
+		u.ChatId == nil ||
+		u.TelegramUsername == nil ||
+		u.Token == nil {
 		return response400(ErrNilParameters)
 	}
 
-	createParams := sqlc.AddUserParams{
-		TelegramID: sql.NullInt32{
-			Int32: int32(*user.TelegramId),
-			Valid: true,
-		},
-		TelegramUsername: sql.NullString{
-			String: *user.TelegramUsername,
-			Valid:  true,
-		},
-		ComunityID: sql.NullString{
-			String: *user.ComunityId,
-			Valid:  true,
-		},
-		Token: sql.NullString{
-			String: *user.Token,
-			Valid:  true,
-		},
-		ChatID: sql.NullInt32{
-			Int32: int32(*user.ChatId),
-			Valid: true,
-		},
-	}
+	user, err := s.ent.User.
+		Create().
+		SetChatID(int64(*u.ChatId)).
+		SetComunityID(*u.ComunityId).
+		SetTelegramID(int64(*u.TelegramId)).
+		SetTelegramUsername(*u.TelegramUsername).
+		SetToken(*u.Token).Save(contx)
 
-	userID, err := s.Queries.AddUser(contx, createParams)
 	if err != nil {
 		return response500(err)
 	}
 
-	newUser, err := s.Queries.GetUserByID(contx, int32(userID))
-	if err != nil {
-		return response500(err)
-	}
-
-	users := sqlcToAPIUsers([]sqlc.User{
-		newUser,
+	return response200(&[]api.UserWithID{
+		entToUser(user),
 	})
-
-	return response200(users)
 }

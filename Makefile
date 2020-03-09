@@ -1,7 +1,8 @@
 gen:
 	oapi-codegen --package api --generate types,server,spec ./docs/swagger.yaml > ./api/swagger.gen.go
 	oapi-codegen --package client --generate types,client ./docs/swagger.yaml > ./client/swagger.gen.go
-	sqlc generate
+	#sqlc generate
+	entc generate ./ent/schema
 build:
 	export CC=
 	CGO_ENABLED=1 GOOS=linux go build ./cmd/shoplist

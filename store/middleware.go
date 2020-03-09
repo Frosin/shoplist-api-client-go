@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Frosin/shoplist-api-client-go/ent/user"
 	"github.com/labstack/echo/v4"
 )
 
@@ -27,10 +28,10 @@ func (s *Server) TokenHandler(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 		defer cancel()
-		user, err := s.Queries.GetUserByToken(contx, sql.NullString{
-			Valid:  true,
-			String: token,
-		})
+		user, err := s.ent.User.
+			Query().
+			Where(user.TokenEQ(token)).
+			Only(contx)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return response401(ErrTokenNotFound)

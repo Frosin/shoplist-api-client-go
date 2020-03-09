@@ -1,15 +1,18 @@
 package cmd
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"net"
 	"net/http"
 	"strings"
 
 	"github.com/Frosin/shoplist-api-client-go/api"
+	"github.com/Frosin/shoplist-api-client-go/ent"
+	"github.com/Frosin/shoplist-api-client-go/ent/migrate"
 	"github.com/Frosin/shoplist-api-client-go/store"
-	"github.com/Frosin/shoplist-api-client-go/store/sqlc"
-	"github.com/jmoiron/sqlx"
+	entsql "github.com/facebookincubator/ent/dialect/sql"
 
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getsentry/sentry-go"
@@ -31,18 +34,34 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			log.Info("Error = ", err)
 		}
-		var myServer store.Server
-		db, err := sqlx.Open("sqlite3", "store/db/"+viper.GetString("SHOPLIST_DB_FILE_NAME"))
+
+		db, err := sql.Open("sqlite3", "store/db/"+viper.GetString("SHOPLIST_DB_FILE_NAME")+"?_fk=1")
 		if err != nil {
 			log.Fatal(err)
 		}
-		myServer.Queries = sqlc.New(db)
-		myServer.Version = version
-		myServer.DB = db
+
+		entClient := ent.NewClient(ent.Driver(entsql.OpenDB("sqlite3", db)))
+
+		//run migration
+		if err := entClient.Schema.Create(
+			context.Background(),
+			migrate.WithGlobalUniqueID(true),
+		); err != nil {
+			log.Fatal(err)
+		}
+
+		//
+
+		//myServer.Queries = sqlc.New(db)
+		server := store.NewServer(version, entClient, db)
+		//
+		server.FillFixtures()
+		//
 		e := echo.New()
+		api.RegisterHandlers(e, server)
 		e.HTTPErrorHandler = errorHandler
-		e.Use(myServer.TokenHandler)
-		api.RegisterHandlers(e, &myServer)
+		e.Use(server.TokenHandler)
+
 		e.Logger.SetLevel(log.INFO)
 		e.Logger.Debug(e.Start(":" + port))
 	},

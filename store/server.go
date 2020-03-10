@@ -189,12 +189,19 @@ func (s *Server) LastShopping(ctx echo.Context) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
 
+	userIDs, ok := ctx.Get("comunityUserIDs").([]int)
+	if !ok {
+		return response500(ErrTypeAssertion)
+	}
 	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 	defer cancel()
 
 	lastShopping, err := s.ent.Shopping.Query().
 		WithShop().
 		Order(ent.Desc("rowid")).
+		Where(shopping.HasUserWith(
+			user.IDIn(userIDs...),
+		)).
 		Limit(1).
 		Only(contx)
 
@@ -399,12 +406,19 @@ func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date) error {
 		return response400(err)
 	}
 
+	userIDs, ok := ctx.Get("comunityUserIDs").([]int)
+	if !ok {
+		return response500(ErrTypeAssertion)
+	}
 	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 	defer cancel()
 
 	commingShoppings, err := s.ent.Shopping.
 		Query().
-		Where(shopping.DateGTE(dTime)).
+		Where(
+			shopping.DateGTE(dTime),
+			shopping.HasUserWith(user.IDIn(userIDs...)),
+		).
 		Order(ent.Desc("rowid")).
 		Limit(5).
 		All(contx)
@@ -459,6 +473,10 @@ func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Mont
 		return response400(&validation)
 	}
 
+	userIDs, ok := ctx.Get("comunityUserIDs").([]int)
+	if !ok {
+		return response500(ErrTypeAssertion)
+	}
 	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 	defer cancel()
 
@@ -468,9 +486,16 @@ func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Mont
 	}
 	queryParam := fmt.Sprintf("%v-%s", year, strMonth)
 
-	monthShoppings, err := s.ent.Shopping.Query().Where(predicate.Shopping(func(s *entSql.Selector) {
-		s.Where(entSql.Like(s.C(shopping.FieldDate), queryParam))
-	})).All(contx)
+	monthShoppings, err := s.ent.Shopping.
+		Query().
+		Where(
+			shopping.HasUserWith(
+				user.IDIn(userIDs...),
+			),
+			predicate.Shopping(func(s *entSql.Selector) {
+				s.Where(entSql.Like(s.C(shopping.FieldDate), queryParam))
+			})).
+		All(contx)
 
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -512,6 +537,10 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
 
+	userIDs, ok := ctx.Get("comunityUserIDs").([]int)
+	if !ok {
+		return response500(ErrTypeAssertion)
+	}
 	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 	defer cancel()
 
@@ -546,9 +575,16 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 
 	queryParam := fmt.Sprintf("%v-%s-%s", year, strMonth, strDay)
 
-	shoppings, err := s.ent.Shopping.Query().Where(predicate.Shopping(func(s *entSql.Selector) {
-		s.Where(entSql.Like(s.C(shopping.FieldDate), queryParam))
-	})).All(contx)
+	shoppings, err := s.ent.Shopping.
+		Query().
+		Where(
+			shopping.HasUserWith(
+				user.IDIn(userIDs...),
+			),
+			predicate.Shopping(func(s *entSql.Selector) {
+				s.Where(entSql.Like(s.C(shopping.FieldDate), queryParam))
+			})).
+		All(contx)
 
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -575,12 +611,20 @@ func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID) error 
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
 
+	userIDs, ok := ctx.Get("comunityUserIDs").([]int)
+	if !ok {
+		return response500(ErrTypeAssertion)
+	}
 	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 	defer cancel()
 
 	shopping, err := s.ent.Shopping.
 		Query().
-		Where(shopping.IDEQ(int(shoppingID))).
+		Where(
+			shopping.IDEQ(int(shoppingID)),
+			shopping.HasUserWith(
+				user.IDIn(userIDs...),
+			)).
 		Only(contx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -640,6 +684,10 @@ func (s *Server) DeleteShoppings(ctx echo.Context) error {
 		return s.error(ctx, http.StatusInternalServerError, err, nil)
 	}
 
+	userIDs, ok := ctx.Get("comunityUserIDs").([]int)
+	if !ok {
+		return response500(ErrTypeAssertion)
+	}
 	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 	defer cancel()
 
@@ -648,7 +696,15 @@ func (s *Server) DeleteShoppings(ctx echo.Context) error {
 		return response400(err)
 	}
 
-	_, err := s.ent.Shopping.Delete().Where(shopping.IDIn(deleteNumbers.Ids...)).Exec(contx)
+	_, err := s.ent.Shopping.
+		Delete().
+		Where(
+			shopping.HasUserWith(
+				user.IDIn(userIDs...),
+			),
+			shopping.IDIn(deleteNumbers.Ids...),
+		).
+		Exec(contx)
 	if err != nil {
 		return response500(err)
 	}

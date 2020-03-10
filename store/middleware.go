@@ -28,7 +28,7 @@ func (s *Server) TokenHandler(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
 		defer cancel()
-		user, err := s.ent.User.
+		usr, err := s.ent.User.
 			Query().
 			Where(user.TokenEQ(token)).
 			Only(contx)
@@ -38,7 +38,21 @@ func (s *Server) TokenHandler(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			return response500(err)
 		}
-		c.Set("ownerID", user.ID)
+		c.Set("ownerID", usr.ID)
+
+		comunityUsers, err := s.ent.User.
+			Query().
+			Where(user.ComunityIDEQ(usr.ComunityID)).
+			All(contx)
+		if err != nil {
+			return response500(err)
+		}
+		comUserIDs := []int{}
+		for _, v := range comunityUsers {
+			comUserIDs = append(comUserIDs, v.ID)
+		}
+		c.Set("comunityUserIDs", comUserIDs)
+
 		return next(c)
 	}
 }

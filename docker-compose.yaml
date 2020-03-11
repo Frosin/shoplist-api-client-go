@@ -1,0 +1,24 @@
+# version: '3.7'
+
+# services:
+#   sqlite3:
+#     image: nouchka/sqlite3:latest
+#     stdin_open: true
+#     tty: true
+#     volumes:
+#       - ./db/:/root/db/
+#   shoplist:
+#     build:
+#       context: ./
+#       dockerfile: Dockerfile
+#       args:
+#         _path: cmd/shoplist
+#     container_name: shoplist_server
+#     environment:
+#       - SHOPLIST_API_VERSION="0.0.1"
+#       - SHOPLIST_DB_FILE_NAME="shoplist.db"
+#       - SHOPLIST_SENTRY_DSN="https://70d91cb8123d4b149c225c315849f53c@sentry.io/1840045"
+#     depends_on:
+#       - sqlite3
+#     tty: true
+#     command: ./bin/shoplist serve -p 8081

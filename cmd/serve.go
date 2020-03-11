@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/Frosin/shoplist-api-client-go/api"
@@ -35,7 +36,8 @@ var serveCmd = &cobra.Command{
 			log.Info("Error = ", err)
 		}
 
-		db, err := sql.Open("sqlite3", "store/db/"+viper.GetString("SHOPLIST_DB_FILE_NAME")+"?_fk=1")
+		dbFullFileName := "store/db/" + viper.GetString("SHOPLIST_DB_FILE_NAME")
+		db, err := sql.Open("sqlite3", dbFullFileName+"?_fk=1")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -43,20 +45,14 @@ var serveCmd = &cobra.Command{
 		entClient := ent.NewClient(ent.Driver(entsql.OpenDB("sqlite3", db)))
 
 		//run migration
-		if err := entClient.Schema.Create(
-			context.Background(),
-			migrate.WithGlobalUniqueID(true),
-		); err != nil {
-			log.Fatal(err)
+		if _, err := os.Stat(dbFullFileName); os.IsNotExist(err) {
+			runMigration(entClient)
 		}
 
-		//
-
-		//myServer.Queries = sqlc.New(db)
 		server := store.NewServer(version, entClient, db)
-		//
+		//fill fixtures
 		server.FillFixtures()
-		//
+
 		e := echo.New()
 		api.RegisterHandlers(e, server)
 		e.HTTPErrorHandler = errorHandler
@@ -152,4 +148,11 @@ func sentryRequestFromHTTP(r *http.Request) sentry.Request {
 	}
 
 	return sentryRequest
+}
+
+func runMigration(entClient *ent.Client) error {
+	return entClient.Schema.Create(
+		context.Background(),
+		migrate.WithGlobalUniqueID(true),
+	)
 }

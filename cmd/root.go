@@ -41,7 +41,7 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	} else {
 		viper.AddConfigPath(".")
-		viper.SetConfigName(".shoplist")
+		viper.SetConfigName(".shoplist.yaml")
 	}
 
 	viper.AutomaticEnv()

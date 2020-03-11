@@ -4,3 +4,5 @@ store/db
 shoplist
 shoplist_arm
 .shoplist.yaml
+vendor
+bin

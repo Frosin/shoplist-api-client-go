@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/Frosin/shoplist-api-client-go/ent/user"
 	"github.com/labstack/echo/v4"
@@ -22,6 +23,17 @@ func (s *Server) TokenHandler(next echo.HandlerFunc) echo.HandlerFunc {
 		response500 := func(err error) error {
 			return s.error(c, http.StatusInternalServerError, err, nil)
 		}
+		dontNeedToken := func(request *http.Request) bool {
+			return strings.Contains(c.Request().RequestURI, "users") &&
+				c.Request().Method == "GET" ||
+				c.Request().Method == "POST"
+		}
+
+		//if it create or get users api we dont need token
+		if dontNeedToken(c.Request()) {
+			return next(c)
+		}
+
 		token := c.QueryParam("token")
 		if token == "" {
 			return response401(ErrTokenNotFound)

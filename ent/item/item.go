@@ -28,7 +28,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "shopping" package.
 	ShoppingInverseTable = "shoppings"
 	// ShoppingColumn is the table column denoting the shopping relation/edge.
-	ShoppingColumn = "shopping_item"
+	ShoppingColumn = "shopping_id"
 )
 
 // Columns holds all SQL columns for item fields.
@@ -42,7 +42,7 @@ var Columns = []string{
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Item type.
 var ForeignKeys = []string{
-	"shopping_item",
+	"shopping_id",
 }
 
 var (

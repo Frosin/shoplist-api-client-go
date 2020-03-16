@@ -22,7 +22,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "shopping" package.
 	ShoppingInverseTable = "shoppings"
 	// ShoppingColumn is the table column denoting the shopping relation/edge.
-	ShoppingColumn = "shop_shopping"
+	ShoppingColumn = "shop_id"
 )
 
 // Columns holds all SQL columns for shop fields.

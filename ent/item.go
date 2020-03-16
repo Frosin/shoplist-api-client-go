@@ -26,8 +26,8 @@ type Item struct {
 	Complete bool `json:"complete,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ItemQuery when eager-loading is set.
-	Edges         ItemEdges `json:"edges"`
-	shopping_item *int
+	Edges       ItemEdges `json:"edges"`
+	shopping_id *int
 }
 
 // ItemEdges holds the relations/edges for other nodes in the graph.
@@ -67,7 +67,7 @@ func (*Item) scanValues() []interface{} {
 // fkValues returns the types for scanning foreign-keys values from sql.Rows.
 func (*Item) fkValues() []interface{} {
 	return []interface{}{
-		&sql.NullInt64{}, // shopping_item
+		&sql.NullInt64{}, // shopping_id
 	}
 }
 
@@ -106,10 +106,10 @@ func (i *Item) assignValues(values ...interface{}) error {
 	values = values[4:]
 	if len(values) == len(item.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
-			return fmt.Errorf("unexpected type %T for edge-field shopping_item", value)
+			return fmt.Errorf("unexpected type %T for edge-field shopping_id", value)
 		} else if value.Valid {
-			i.shopping_item = new(int)
-			*i.shopping_item = int(value.Int64)
+			i.shopping_id = new(int)
+			*i.shopping_id = int(value.Int64)
 		}
 	}
 	return nil

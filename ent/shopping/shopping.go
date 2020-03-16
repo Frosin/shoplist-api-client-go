@@ -28,21 +28,21 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "item" package.
 	ItemInverseTable = "items"
 	// ItemColumn is the table column denoting the item relation/edge.
-	ItemColumn = "shopping_item"
+	ItemColumn = "shopping_id"
 	// ShopTable is the table the holds the shop relation/edge.
 	ShopTable = "shoppings"
 	// ShopInverseTable is the table name for the Shop entity.
 	// It exists in this package in order to avoid circular dependency with the "shop" package.
 	ShopInverseTable = "shops"
 	// ShopColumn is the table column denoting the shop relation/edge.
-	ShopColumn = "shop_shopping"
+	ShopColumn = "shop_id"
 	// UserTable is the table the holds the user relation/edge.
 	UserTable = "shoppings"
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_shopping"
+	UserColumn = "user_id"
 )
 
 // Columns holds all SQL columns for shopping fields.
@@ -55,8 +55,8 @@ var Columns = []string{
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Shopping type.
 var ForeignKeys = []string{
-	"shop_shopping",
-	"user_shopping",
+	"shop_id",
+	"user_id",
 }
 
 var (

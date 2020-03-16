@@ -18,7 +18,7 @@ var (
 		{Name: "quantity", Type: field.TypeInt, Default: item.DefaultQuantity},
 		{Name: "category_id", Type: field.TypeInt, Default: item.DefaultCategoryID},
 		{Name: "complete", Type: field.TypeBool, Default: item.DefaultComplete},
-		{Name: "shopping_item", Type: field.TypeInt, Nullable: true},
+		{Name: "shopping_id", Type: field.TypeInt, Nullable: true},
 	}
 	// ItemsTable holds the schema information for the "items" table.
 	ItemsTable = &schema.Table{
@@ -53,8 +53,8 @@ var (
 		{Name: "date", Type: field.TypeTime},
 		{Name: "sum", Type: field.TypeInt, Default: shopping.DefaultSum},
 		{Name: "complete", Type: field.TypeBool, Default: shopping.DefaultComplete},
-		{Name: "shop_shopping", Type: field.TypeInt, Nullable: true},
-		{Name: "user_shopping", Type: field.TypeInt, Nullable: true},
+		{Name: "shop_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
 	}
 	// ShoppingsTable holds the schema information for the "shoppings" table.
 	ShoppingsTable = &schema.Table{

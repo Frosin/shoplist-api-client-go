@@ -518,7 +518,7 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 		var response api.Shoppings200
 		response.Version = &s.version
 		response.Message = SuccessMessage
-		response.Data = &data
+		response.Data = data
 		return ctx.JSON(http.StatusOK, response)
 	}
 	response400 := func(validation *api.ShoppingsByDayValidation) error {

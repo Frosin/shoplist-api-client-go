@@ -874,7 +874,9 @@ components:
                     data:
                       type: array
                       items:
-                        $ref: "#/components/schemas/Shopping_with_id"      
+                        $ref: "#/components/schemas/Shopping_with_id"
+                  required:
+                    - data
       Shoppings_400:
         description: Validation error
         content:

@@ -14,7 +14,7 @@ import (
 
 func (s *Server) error(ctx echo.Context, httpCode int, err error, validation *[]interface{}) error {
 	if err != nil {
-		log.Info(err.Error())
+		log.Errorf("code=%v, msg=%v", httpCode, err.Error())
 	}
 
 	switch httpCode {

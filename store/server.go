@@ -20,6 +20,7 @@ import (
 	entSql "github.com/facebookincubator/ent/dialect/sql"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 const (
@@ -66,7 +67,7 @@ func (s *Server) GetGoods(ctx echo.Context, shoppingID api.ShoppingID) error {
 		var response api.Goods200
 		response.Version = &s.version
 		response.Message = SuccessMessage
-		response.Data = items
+		response.Data = *items
 		return ctx.JSON(http.StatusOK, response)
 	}
 	response404 := func() error {
@@ -99,78 +100,6 @@ func (s *Server) GetGoods(ctx echo.Context, shoppingID api.ShoppingID) error {
 	return response200(&items)
 }
 
-// // Добавление товара в покупку
-// // (POST /addItem)
-// func (s *Server) AddItem(ctx echo.Context) error {
-// 	return nil
-// }
-
-// // Добавление покупки
-// // (POST /addShopping)
-// func (s *Server) AddShopping(ctx echo.Context) error {
-// 	return nil
-// }
-
-// // Удаление товаров
-// // (POST /deleteItems)
-// func (s *Server) DeleteItems(ctx echo.Context) error {
-// 	return nil
-// }
-
-// // Удаление покупок
-// // (POST /deleteShoppings)
-// func (s *Server) DeleteShoppings(ctx echo.Context) error {
-// 	return nil
-// }
-
-// // Ближайшие 5 покупок
-// // (GET /getComingShoppings/{date})
-// func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date) error {
-// 	return nil
-// }
-
-// // Даные покупки
-// // (GET /getShopping/{shoppingID})
-// func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID) error {
-// 	return nil
-// }
-
-// // Получение списка дней с покупками по месяцу и году
-// // (GET /getShoppingDays/{year}/{month})
-// func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Month) error {
-// 	return nil
-// }
-
-// // Получение списка покупок по конекретному дню
-// // (GET /getShoppingsByDay/{year}/{month}/{day})
-// func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Month, day api.Day) error {
-// 	return nil
-// }
-
-// // Последняя покупка
-// // (GET /lastShopping)
-// func (s *Server) LastShopping(ctx echo.Context) error {
-// 	return nil
-// }
-
-// // Получение юзера по telegram user id
-// // (GET /users)
-// func (s *Server) GetUsers(ctx echo.Context, params api.GetUsersParams) error {
-// 	return nil
-// }
-
-// // Добавление юзера
-// // (PATCH /users)
-// func (s *Server) UpdateUser(ctx echo.Context, params api.UpdateUserParams) error {
-// 	return nil
-// }
-
-// // Добавление юзера
-// // (POST /users)
-// func (s *Server) CreateUser(ctx echo.Context) error {
-// 	return nil
-// }
-
 // LastShopping returns LastShopping information
 func (s *Server) LastShopping(ctx echo.Context) error {
 	response200 := func(shopping api.ShoppingWithId) error {
@@ -198,6 +127,7 @@ func (s *Server) LastShopping(ctx echo.Context) error {
 
 	lastShopping, err := s.ent.Shopping.Query().
 		WithShop().
+		WithUser().
 		Order(ent.Desc("rowid")).
 		Where(shopping.HasUserWith(
 			user.IDIn(userIDs...),
@@ -268,28 +198,33 @@ func (s *Server) AddShopping(ctx echo.Context) error {
 		return response400(err, &validation)
 	}
 
-	shop, err := s.ent.Shop.
+	shp := &ent.Shop{}
+	shp, err = s.ent.Shop.
 		Query().
 		Where(shop.NameEQ(shParams.Name)).
 		First(contx)
 
 	if err != nil {
-		if ent.IsNotFound(err) {
-			shop, err = s.ent.Shop.
+		switch {
+		case ent.IsNotFound(err):
+			shp, err = s.ent.Shop.
 				Create().
-				SetName(shParams.Name).Save(contx)
+				SetName(shParams.Name).
+				Save(contx)
 			if err != nil {
+				log.Errorf("shop addition")
 				return response500(err)
 			}
+		default:
+			return response500(err)
 		}
-		return response500(err)
 	}
 
 	var newShopping *ent.Shopping
 	err = s.ent.WithTx(contx, func(tx *ent.Tx) error {
 		newShopping, err = tx.Shopping.
 			Create().
-			SetShop(shop).
+			SetShop(shp).
 			SetDate(date).
 			SetUserID(userID).
 			Save(contx)
@@ -415,6 +350,8 @@ func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date) error {
 
 	commingShoppings, err := s.ent.Shopping.
 		Query().
+		WithShop().
+		WithUser().
 		Where(
 			shopping.DateGTE(dTime),
 			shopping.HasUserWith(user.IDIn(userIDs...)),
@@ -484,7 +421,7 @@ func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Mont
 	if month < 10 {
 		strMonth = "0" + strMonth
 	}
-	queryParam := fmt.Sprintf("%v-%s", year, strMonth)
+	queryParam := fmt.Sprintf("%v-%s%%", year, strMonth)
 
 	monthShoppings, err := s.ent.Shopping.
 		Query().
@@ -573,10 +510,12 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 		strDay = "0" + strDay
 	}
 
-	queryParam := fmt.Sprintf("%v-%s-%s", year, strMonth, strDay)
+	queryParam := fmt.Sprintf("%v-%s-%s%%", year, strMonth, strDay)
 
 	shoppings, err := s.ent.Shopping.
 		Query().
+		WithShop().
+		WithUser().
 		Where(
 			shopping.HasUserWith(
 				user.IDIn(userIDs...),
@@ -620,6 +559,8 @@ func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID) error 
 
 	shopping, err := s.ent.Shopping.
 		Query().
+		WithShop().
+		WithUser().
 		Where(
 			shopping.IDEQ(int(shoppingID)),
 			shopping.HasUserWith(

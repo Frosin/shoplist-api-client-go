@@ -51,7 +51,7 @@ var serveCmd = &cobra.Command{
 
 		server := store.NewServer(version, entClient, db)
 		//fill fixtures
-		server.FillFixtures()
+		//server.FillFixtures()
 
 		e := echo.New()
 		api.RegisterHandlers(e, server)

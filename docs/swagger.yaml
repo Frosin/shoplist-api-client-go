@@ -706,6 +706,8 @@ components:
                       type: array
                       items:
                         $ref: "#/components/schemas/Shopping_item"
+                  required:
+                    - data
       Goods_400:
         description: Validation error
         content:

@@ -9,6 +9,7 @@ import (
 
 	"github.com/Frosin/shoplist-api-client-go/ent/user"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 var (
@@ -24,15 +25,17 @@ func (s *Server) TokenHandler(next echo.HandlerFunc) echo.HandlerFunc {
 			return s.error(c, http.StatusInternalServerError, err, nil)
 		}
 		dontNeedToken := func(request *http.Request) bool {
-			return strings.Contains(c.Request().RequestURI, "users") &&
-				c.Request().Method == "GET" ||
-				c.Request().Method == "POST"
+			return strings.Contains(request.RequestURI, "users") &&
+				(request.Method == "GET" ||
+					request.Method == "POST")
 		}
 
 		//if it create or get users api we dont need token
 		if dontNeedToken(c.Request()) {
+			log.Infof("request: %s, %s", c.Request().RequestURI, "pass token check")
 			return next(c)
 		}
+		log.Infof("request: %s", c.Request().RequestURI)
 
 		token := c.QueryParam("token")
 		if token == "" {
@@ -50,6 +53,7 @@ func (s *Server) TokenHandler(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			return response500(err)
 		}
+		log.Infof("userID=%v, userTelegramID=%v, userToken=%v, userComunityID=%v", usr.ID, usr.TelegramID, usr.Token, usr.ComunityID)
 		c.Set("ownerID", usr.ID)
 
 		comunityUsers, err := s.ent.User.

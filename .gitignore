@@ -5,4 +5,4 @@ shoplist
 shoplist_arm
 .shoplist.yaml
 vendor
-bin
+bin/*.*

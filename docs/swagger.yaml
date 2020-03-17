@@ -437,6 +437,7 @@ components:
             example: "gfrf4jfdf"
           chat_id:
             type: integer
+            format: int64
             description: chat_id
             example: 324432
       userWithID:

@@ -147,7 +147,7 @@ func entToShoppings(shoppings []*ent.Shopping) (apiShs []api.ShoppingWithId) {
 
 func entToUser(u *ent.User) (apiUser api.UserWithID) {
 	apiUser.Id = &u.ID
-	chatID := int(u.ChatID)
+	chatID := int64(u.ChatID)
 	apiUser.ChatId = &chatID
 	apiUser.ComunityId = &u.ComunityID
 	TelegramID := int(u.TelegramID)

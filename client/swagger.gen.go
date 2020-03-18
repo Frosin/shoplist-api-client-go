@@ -223,7 +223,7 @@ type ShoppingsByDayValidation struct {
 type User struct {
 
 	// chat_id
-	ChatId *int `json:"chat_id,omitempty"`
+	ChatId *int64 `json:"chat_id,omitempty"`
 
 	// comunity_id
 	ComunityId *string `json:"comunity_id,omitempty"`

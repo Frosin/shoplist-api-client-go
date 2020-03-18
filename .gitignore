@@ -1,7 +1,6 @@
 *.txt
 *.db
 store/db
-shoplist
 shoplist_arm
 .shoplist.yaml
 vendor

@@ -102,14 +102,14 @@ func (u *User) assignValues(values ...interface{}) error {
 
 // QueryShopping queries the shopping edge of the User.
 func (u *User) QueryShopping() *ShoppingQuery {
-	return (&UserClient{u.config}).QueryShopping(u)
+	return (&UserClient{config: u.config}).QueryShopping(u)
 }
 
 // Update returns a builder for updating this User.
 // Note that, you need to call User.Unwrap() before calling this method, if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (u *User) Update() *UserUpdateOne {
-	return (&UserClient{u.config}).UpdateOne(u)
+	return (&UserClient{config: u.config}).UpdateOne(u)
 }
 
 // Unwrap unwraps the entity that was returned from a transaction after it was closed,

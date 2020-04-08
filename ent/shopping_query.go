@@ -396,13 +396,13 @@ func (sq *ShoppingQuery) sqlAll(ctx context.Context) ([]*Shopping, error) {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			fk := n.shopping_id
+			fk := n.shopping_item
 			if fk == nil {
-				return nil, fmt.Errorf(`foreign-key "shopping_id" is nil for node %v`, n.ID)
+				return nil, fmt.Errorf(`foreign-key "shopping_item" is nil for node %v`, n.ID)
 			}
 			node, ok := nodeids[*fk]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "shopping_id" returned %v for node %v`, *fk, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "shopping_item" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Item = append(node.Edges.Item, n)
 		}
@@ -412,7 +412,7 @@ func (sq *ShoppingQuery) sqlAll(ctx context.Context) ([]*Shopping, error) {
 		ids := make([]int, 0, len(nodes))
 		nodeids := make(map[int][]*Shopping)
 		for i := range nodes {
-			if fk := nodes[i].shop_id; fk != nil {
+			if fk := nodes[i].shop_shopping; fk != nil {
 				ids = append(ids, *fk)
 				nodeids[*fk] = append(nodeids[*fk], nodes[i])
 			}
@@ -425,7 +425,7 @@ func (sq *ShoppingQuery) sqlAll(ctx context.Context) ([]*Shopping, error) {
 		for _, n := range neighbors {
 			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "shop_id" returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "shop_shopping" returned %v`, n.ID)
 			}
 			for i := range nodes {
 				nodes[i].Edges.Shop = n
@@ -437,7 +437,7 @@ func (sq *ShoppingQuery) sqlAll(ctx context.Context) ([]*Shopping, error) {
 		ids := make([]int, 0, len(nodes))
 		nodeids := make(map[int][]*Shopping)
 		for i := range nodes {
-			if fk := nodes[i].user_id; fk != nil {
+			if fk := nodes[i].user_shopping; fk != nil {
 				ids = append(ids, *fk)
 				nodeids[*fk] = append(nodeids[*fk], nodes[i])
 			}
@@ -450,7 +450,7 @@ func (sq *ShoppingQuery) sqlAll(ctx context.Context) ([]*Shopping, error) {
 		for _, n := range neighbors {
 			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "user_shopping" returned %v`, n.ID)
 			}
 			for i := range nodes {
 				nodes[i].Edges.User = n

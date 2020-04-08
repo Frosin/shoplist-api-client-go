@@ -16,7 +16,7 @@ type User struct {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("telegram_id").Immutable(),
-		field.String("telegram_username").NotEmpty(),
+		field.String("telegram_username"),
 		field.String("comunity_id").NotEmpty(),
 		field.String("token").NotEmpty().Immutable(),
 		field.Int64("chat_id").Immutable(),

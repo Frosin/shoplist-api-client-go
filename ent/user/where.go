@@ -10,27 +10,23 @@ import (
 
 // ID filters vertices based on their identifier.
 func ID(id int) predicate.User {
-	return predicate.User(
-		func(s *sql.Selector) {
-			s.Where(sql.EQ(s.C(FieldID), id))
-		},
-	)
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldID), id))
+	})
 }
 
 // IDEQ applies the EQ predicate on the ID field.
 func IDEQ(id int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
 func IDNEQ(id int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // IDIn applies the In predicate on the ID field.
@@ -47,8 +43,7 @@ func IDIn(ids ...int) predicate.User {
 			v[i] = ids[i]
 		}
 		s.Where(sql.In(s.C(FieldID), v...))
-	},
-	)
+	})
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
@@ -65,96 +60,84 @@ func IDNotIn(ids ...int) predicate.User {
 			v[i] = ids[i]
 		}
 		s.Where(sql.NotIn(s.C(FieldID), v...))
-	},
-	)
+	})
 }
 
 // IDGT applies the GT predicate on the ID field.
 func IDGT(id int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // IDGTE applies the GTE predicate on the ID field.
 func IDGTE(id int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // IDLT applies the LT predicate on the ID field.
 func IDLT(id int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // IDLTE applies the LTE predicate on the ID field.
 func IDLTE(id int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // TelegramID applies equality check predicate on the "telegram_id" field. It's identical to TelegramIDEQ.
 func TelegramID(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldTelegramID), v))
-	},
-	)
+	})
 }
 
 // TelegramUsername applies equality check predicate on the "telegram_username" field. It's identical to TelegramUsernameEQ.
 func TelegramUsername(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // ComunityID applies equality check predicate on the "comunity_id" field. It's identical to ComunityIDEQ.
 func ComunityID(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // Token applies equality check predicate on the "token" field. It's identical to TokenEQ.
 func Token(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // ChatID applies equality check predicate on the "chat_id" field. It's identical to ChatIDEQ.
 func ChatID(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldChatID), v))
-	},
-	)
+	})
 }
 
 // TelegramIDEQ applies the EQ predicate on the "telegram_id" field.
 func TelegramIDEQ(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldTelegramID), v))
-	},
-	)
+	})
 }
 
 // TelegramIDNEQ applies the NEQ predicate on the "telegram_id" field.
 func TelegramIDNEQ(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldTelegramID), v))
-	},
-	)
+	})
 }
 
 // TelegramIDIn applies the In predicate on the "telegram_id" field.
@@ -171,8 +154,7 @@ func TelegramIDIn(vs ...int64) predicate.User {
 			return
 		}
 		s.Where(sql.In(s.C(FieldTelegramID), v...))
-	},
-	)
+	})
 }
 
 // TelegramIDNotIn applies the NotIn predicate on the "telegram_id" field.
@@ -189,56 +171,49 @@ func TelegramIDNotIn(vs ...int64) predicate.User {
 			return
 		}
 		s.Where(sql.NotIn(s.C(FieldTelegramID), v...))
-	},
-	)
+	})
 }
 
 // TelegramIDGT applies the GT predicate on the "telegram_id" field.
 func TelegramIDGT(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldTelegramID), v))
-	},
-	)
+	})
 }
 
 // TelegramIDGTE applies the GTE predicate on the "telegram_id" field.
 func TelegramIDGTE(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldTelegramID), v))
-	},
-	)
+	})
 }
 
 // TelegramIDLT applies the LT predicate on the "telegram_id" field.
 func TelegramIDLT(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldTelegramID), v))
-	},
-	)
+	})
 }
 
 // TelegramIDLTE applies the LTE predicate on the "telegram_id" field.
 func TelegramIDLTE(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldTelegramID), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameEQ applies the EQ predicate on the "telegram_username" field.
 func TelegramUsernameEQ(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameNEQ applies the NEQ predicate on the "telegram_username" field.
 func TelegramUsernameNEQ(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameIn applies the In predicate on the "telegram_username" field.
@@ -255,8 +230,7 @@ func TelegramUsernameIn(vs ...string) predicate.User {
 			return
 		}
 		s.Where(sql.In(s.C(FieldTelegramUsername), v...))
-	},
-	)
+	})
 }
 
 // TelegramUsernameNotIn applies the NotIn predicate on the "telegram_username" field.
@@ -273,96 +247,84 @@ func TelegramUsernameNotIn(vs ...string) predicate.User {
 			return
 		}
 		s.Where(sql.NotIn(s.C(FieldTelegramUsername), v...))
-	},
-	)
+	})
 }
 
 // TelegramUsernameGT applies the GT predicate on the "telegram_username" field.
 func TelegramUsernameGT(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameGTE applies the GTE predicate on the "telegram_username" field.
 func TelegramUsernameGTE(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameLT applies the LT predicate on the "telegram_username" field.
 func TelegramUsernameLT(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameLTE applies the LTE predicate on the "telegram_username" field.
 func TelegramUsernameLTE(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameContains applies the Contains predicate on the "telegram_username" field.
 func TelegramUsernameContains(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameHasPrefix applies the HasPrefix predicate on the "telegram_username" field.
 func TelegramUsernameHasPrefix(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameHasSuffix applies the HasSuffix predicate on the "telegram_username" field.
 func TelegramUsernameHasSuffix(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameEqualFold applies the EqualFold predicate on the "telegram_username" field.
 func TelegramUsernameEqualFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // TelegramUsernameContainsFold applies the ContainsFold predicate on the "telegram_username" field.
 func TelegramUsernameContainsFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldTelegramUsername), v))
-	},
-	)
+	})
 }
 
 // ComunityIDEQ applies the EQ predicate on the "comunity_id" field.
 func ComunityIDEQ(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // ComunityIDNEQ applies the NEQ predicate on the "comunity_id" field.
 func ComunityIDNEQ(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // ComunityIDIn applies the In predicate on the "comunity_id" field.
@@ -379,8 +341,7 @@ func ComunityIDIn(vs ...string) predicate.User {
 			return
 		}
 		s.Where(sql.In(s.C(FieldComunityID), v...))
-	},
-	)
+	})
 }
 
 // ComunityIDNotIn applies the NotIn predicate on the "comunity_id" field.
@@ -397,96 +358,84 @@ func ComunityIDNotIn(vs ...string) predicate.User {
 			return
 		}
 		s.Where(sql.NotIn(s.C(FieldComunityID), v...))
-	},
-	)
+	})
 }
 
 // ComunityIDGT applies the GT predicate on the "comunity_id" field.
 func ComunityIDGT(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // ComunityIDGTE applies the GTE predicate on the "comunity_id" field.
 func ComunityIDGTE(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // ComunityIDLT applies the LT predicate on the "comunity_id" field.
 func ComunityIDLT(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // ComunityIDLTE applies the LTE predicate on the "comunity_id" field.
 func ComunityIDLTE(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // ComunityIDContains applies the Contains predicate on the "comunity_id" field.
 func ComunityIDContains(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // ComunityIDHasPrefix applies the HasPrefix predicate on the "comunity_id" field.
 func ComunityIDHasPrefix(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // ComunityIDHasSuffix applies the HasSuffix predicate on the "comunity_id" field.
 func ComunityIDHasSuffix(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // ComunityIDEqualFold applies the EqualFold predicate on the "comunity_id" field.
 func ComunityIDEqualFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // ComunityIDContainsFold applies the ContainsFold predicate on the "comunity_id" field.
 func ComunityIDContainsFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldComunityID), v))
-	},
-	)
+	})
 }
 
 // TokenEQ applies the EQ predicate on the "token" field.
 func TokenEQ(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // TokenNEQ applies the NEQ predicate on the "token" field.
 func TokenNEQ(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // TokenIn applies the In predicate on the "token" field.
@@ -503,8 +452,7 @@ func TokenIn(vs ...string) predicate.User {
 			return
 		}
 		s.Where(sql.In(s.C(FieldToken), v...))
-	},
-	)
+	})
 }
 
 // TokenNotIn applies the NotIn predicate on the "token" field.
@@ -521,96 +469,84 @@ func TokenNotIn(vs ...string) predicate.User {
 			return
 		}
 		s.Where(sql.NotIn(s.C(FieldToken), v...))
-	},
-	)
+	})
 }
 
 // TokenGT applies the GT predicate on the "token" field.
 func TokenGT(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // TokenGTE applies the GTE predicate on the "token" field.
 func TokenGTE(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // TokenLT applies the LT predicate on the "token" field.
 func TokenLT(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // TokenLTE applies the LTE predicate on the "token" field.
 func TokenLTE(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // TokenContains applies the Contains predicate on the "token" field.
 func TokenContains(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // TokenHasPrefix applies the HasPrefix predicate on the "token" field.
 func TokenHasPrefix(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // TokenHasSuffix applies the HasSuffix predicate on the "token" field.
 func TokenHasSuffix(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // TokenEqualFold applies the EqualFold predicate on the "token" field.
 func TokenEqualFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // TokenContainsFold applies the ContainsFold predicate on the "token" field.
 func TokenContainsFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldToken), v))
-	},
-	)
+	})
 }
 
 // ChatIDEQ applies the EQ predicate on the "chat_id" field.
 func ChatIDEQ(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldChatID), v))
-	},
-	)
+	})
 }
 
 // ChatIDNEQ applies the NEQ predicate on the "chat_id" field.
 func ChatIDNEQ(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldChatID), v))
-	},
-	)
+	})
 }
 
 // ChatIDIn applies the In predicate on the "chat_id" field.
@@ -627,8 +563,7 @@ func ChatIDIn(vs ...int64) predicate.User {
 			return
 		}
 		s.Where(sql.In(s.C(FieldChatID), v...))
-	},
-	)
+	})
 }
 
 // ChatIDNotIn applies the NotIn predicate on the "chat_id" field.
@@ -645,40 +580,35 @@ func ChatIDNotIn(vs ...int64) predicate.User {
 			return
 		}
 		s.Where(sql.NotIn(s.C(FieldChatID), v...))
-	},
-	)
+	})
 }
 
 // ChatIDGT applies the GT predicate on the "chat_id" field.
 func ChatIDGT(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldChatID), v))
-	},
-	)
+	})
 }
 
 // ChatIDGTE applies the GTE predicate on the "chat_id" field.
 func ChatIDGTE(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldChatID), v))
-	},
-	)
+	})
 }
 
 // ChatIDLT applies the LT predicate on the "chat_id" field.
 func ChatIDLT(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldChatID), v))
-	},
-	)
+	})
 }
 
 // ChatIDLTE applies the LTE predicate on the "chat_id" field.
 func ChatIDLTE(v int64) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldChatID), v))
-	},
-	)
+	})
 }
 
 // HasShopping applies the HasEdge predicate on the "shopping" edge.
@@ -690,8 +620,7 @@ func HasShopping() predicate.User {
 			sqlgraph.Edge(sqlgraph.O2M, false, ShoppingTable, ShoppingColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
-	},
-	)
+	})
 }
 
 // HasShoppingWith applies the HasEdge predicate on the "shopping" edge with a given conditions (other predicates).
@@ -707,44 +636,37 @@ func HasShoppingWith(preds ...predicate.Shopping) predicate.User {
 				p(s)
 			}
 		})
-	},
-	)
+	})
 }
 
 // And groups list of predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
-	return predicate.User(
-		func(s *sql.Selector) {
-			s1 := s.Clone().SetP(nil)
-			for _, p := range predicates {
-				p(s1)
-			}
-			s.Where(s1.P())
-		},
-	)
+	return predicate.User(func(s *sql.Selector) {
+		s1 := s.Clone().SetP(nil)
+		for _, p := range predicates {
+			p(s1)
+		}
+		s.Where(s1.P())
+	})
 }
 
 // Or groups list of predicates with the OR operator between them.
 func Or(predicates ...predicate.User) predicate.User {
-	return predicate.User(
-		func(s *sql.Selector) {
-			s1 := s.Clone().SetP(nil)
-			for i, p := range predicates {
-				if i > 0 {
-					s1.Or()
-				}
-				p(s1)
+	return predicate.User(func(s *sql.Selector) {
+		s1 := s.Clone().SetP(nil)
+		for i, p := range predicates {
+			if i > 0 {
+				s1.Or()
 			}
-			s.Where(s1.P())
-		},
-	)
+			p(s1)
+		}
+		s.Where(s1.P())
+	})
 }
 
 // Not applies the not operator on the given predicate.
 func Not(p predicate.User) predicate.User {
-	return predicate.User(
-		func(s *sql.Selector) {
-			p(s.Not())
-		},
-	)
+	return predicate.User(func(s *sql.Selector) {
+		p(s.Not())
+	})
 }

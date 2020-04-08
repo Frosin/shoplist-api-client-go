@@ -4,7 +4,7 @@ package ent
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Frosin/shoplist-api-client-go/ent/item"
@@ -18,17 +18,13 @@ import (
 // ShoppingCreate is the builder for creating a Shopping entity.
 type ShoppingCreate struct {
 	config
-	date     *time.Time
-	sum      *int
-	complete *bool
-	item     map[int]struct{}
-	shop     map[int]struct{}
-	user     map[int]struct{}
+	mutation *ShoppingMutation
+	hooks    []Hook
 }
 
 // SetDate sets the date field.
 func (sc *ShoppingCreate) SetDate(t time.Time) *ShoppingCreate {
-	sc.date = &t
+	sc.mutation.SetDate(t)
 	return sc
 }
 
@@ -42,7 +38,7 @@ func (sc *ShoppingCreate) SetNillableDate(t *time.Time) *ShoppingCreate {
 
 // SetSum sets the sum field.
 func (sc *ShoppingCreate) SetSum(i int) *ShoppingCreate {
-	sc.sum = &i
+	sc.mutation.SetSum(i)
 	return sc
 }
 
@@ -56,7 +52,7 @@ func (sc *ShoppingCreate) SetNillableSum(i *int) *ShoppingCreate {
 
 // SetComplete sets the complete field.
 func (sc *ShoppingCreate) SetComplete(b bool) *ShoppingCreate {
-	sc.complete = &b
+	sc.mutation.SetComplete(b)
 	return sc
 }
 
@@ -70,12 +66,7 @@ func (sc *ShoppingCreate) SetNillableComplete(b *bool) *ShoppingCreate {
 
 // AddItemIDs adds the item edge to Item by ids.
 func (sc *ShoppingCreate) AddItemIDs(ids ...int) *ShoppingCreate {
-	if sc.item == nil {
-		sc.item = make(map[int]struct{})
-	}
-	for i := range ids {
-		sc.item[ids[i]] = struct{}{}
-	}
+	sc.mutation.AddItemIDs(ids...)
 	return sc
 }
 
@@ -90,10 +81,7 @@ func (sc *ShoppingCreate) AddItem(i ...*Item) *ShoppingCreate {
 
 // SetShopID sets the shop edge to Shop by id.
 func (sc *ShoppingCreate) SetShopID(id int) *ShoppingCreate {
-	if sc.shop == nil {
-		sc.shop = make(map[int]struct{})
-	}
-	sc.shop[id] = struct{}{}
+	sc.mutation.SetShopID(id)
 	return sc
 }
 
@@ -112,10 +100,7 @@ func (sc *ShoppingCreate) SetShop(s *Shop) *ShoppingCreate {
 
 // SetUserID sets the user edge to User by id.
 func (sc *ShoppingCreate) SetUserID(id int) *ShoppingCreate {
-	if sc.user == nil {
-		sc.user = make(map[int]struct{})
-	}
-	sc.user[id] = struct{}{}
+	sc.mutation.SetUserID(id)
 	return sc
 }
 
@@ -134,25 +119,42 @@ func (sc *ShoppingCreate) SetUser(u *User) *ShoppingCreate {
 
 // Save creates the Shopping in the database.
 func (sc *ShoppingCreate) Save(ctx context.Context) (*Shopping, error) {
-	if sc.date == nil {
+	if _, ok := sc.mutation.Date(); !ok {
 		v := shopping.DefaultDate()
-		sc.date = &v
+		sc.mutation.SetDate(v)
 	}
-	if sc.sum == nil {
+	if _, ok := sc.mutation.Sum(); !ok {
 		v := shopping.DefaultSum
-		sc.sum = &v
+		sc.mutation.SetSum(v)
 	}
-	if sc.complete == nil {
+	if _, ok := sc.mutation.Complete(); !ok {
 		v := shopping.DefaultComplete
-		sc.complete = &v
+		sc.mutation.SetComplete(v)
 	}
-	if len(sc.shop) > 1 {
-		return nil, errors.New("ent: multiple assignments on a unique edge \"shop\"")
+	var (
+		err  error
+		node *Shopping
+	)
+	if len(sc.hooks) == 0 {
+		node, err = sc.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*ShoppingMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			sc.mutation = mutation
+			node, err = sc.sqlSave(ctx)
+			return node, err
+		})
+		for i := len(sc.hooks) - 1; i >= 0; i-- {
+			mut = sc.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, sc.mutation); err != nil {
+			return nil, err
+		}
 	}
-	if len(sc.user) > 1 {
-		return nil, errors.New("ent: multiple assignments on a unique edge \"user\"")
-	}
-	return sc.sqlSave(ctx)
+	return node, err
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -175,31 +177,31 @@ func (sc *ShoppingCreate) sqlSave(ctx context.Context) (*Shopping, error) {
 			},
 		}
 	)
-	if value := sc.date; value != nil {
+	if value, ok := sc.mutation.Date(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldDate,
 		})
-		s.Date = *value
+		s.Date = value
 	}
-	if value := sc.sum; value != nil {
+	if value, ok := sc.mutation.Sum(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldSum,
 		})
-		s.Sum = *value
+		s.Sum = value
 	}
-	if value := sc.complete; value != nil {
+	if value, ok := sc.mutation.Complete(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldComplete,
 		})
-		s.Complete = *value
+		s.Complete = value
 	}
-	if nodes := sc.item; len(nodes) > 0 {
+	if nodes := sc.mutation.ItemIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -213,12 +215,12 @@ func (sc *ShoppingCreate) sqlSave(ctx context.Context) (*Shopping, error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := sc.shop; len(nodes) > 0 {
+	if nodes := sc.mutation.ShopIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -232,12 +234,12 @@ func (sc *ShoppingCreate) sqlSave(ctx context.Context) (*Shopping, error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := sc.user; len(nodes) > 0 {
+	if nodes := sc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -251,7 +253,7 @@ func (sc *ShoppingCreate) sqlSave(ctx context.Context) (*Shopping, error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges = append(_spec.Edges, edge)

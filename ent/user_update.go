@@ -17,13 +17,9 @@ import (
 // UserUpdate is the builder for updating User entities.
 type UserUpdate struct {
 	config
-
-	telegram_username *string
-	comunity_id       *string
-
-	shopping        map[int]struct{}
-	removedShopping map[int]struct{}
-	predicates      []predicate.User
+	hooks      []Hook
+	mutation   *UserMutation
+	predicates []predicate.User
 }
 
 // Where adds a new predicate for the builder.
@@ -34,24 +30,19 @@ func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 
 // SetTelegramUsername sets the telegram_username field.
 func (uu *UserUpdate) SetTelegramUsername(s string) *UserUpdate {
-	uu.telegram_username = &s
+	uu.mutation.SetTelegramUsername(s)
 	return uu
 }
 
 // SetComunityID sets the comunity_id field.
 func (uu *UserUpdate) SetComunityID(s string) *UserUpdate {
-	uu.comunity_id = &s
+	uu.mutation.SetComunityID(s)
 	return uu
 }
 
 // AddShoppingIDs adds the shopping edge to Shopping by ids.
 func (uu *UserUpdate) AddShoppingIDs(ids ...int) *UserUpdate {
-	if uu.shopping == nil {
-		uu.shopping = make(map[int]struct{})
-	}
-	for i := range ids {
-		uu.shopping[ids[i]] = struct{}{}
-	}
+	uu.mutation.AddShoppingIDs(ids...)
 	return uu
 }
 
@@ -66,12 +57,7 @@ func (uu *UserUpdate) AddShopping(s ...*Shopping) *UserUpdate {
 
 // RemoveShoppingIDs removes the shopping edge to Shopping by ids.
 func (uu *UserUpdate) RemoveShoppingIDs(ids ...int) *UserUpdate {
-	if uu.removedShopping == nil {
-		uu.removedShopping = make(map[int]struct{})
-	}
-	for i := range ids {
-		uu.removedShopping[ids[i]] = struct{}{}
-	}
+	uu.mutation.RemoveShoppingIDs(ids...)
 	return uu
 }
 
@@ -86,17 +72,36 @@ func (uu *UserUpdate) RemoveShopping(s ...*Shopping) *UserUpdate {
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
 func (uu *UserUpdate) Save(ctx context.Context) (int, error) {
-	if uu.telegram_username != nil {
-		if err := user.TelegramUsernameValidator(*uu.telegram_username); err != nil {
-			return 0, fmt.Errorf("ent: validator failed for field \"telegram_username\": %v", err)
-		}
-	}
-	if uu.comunity_id != nil {
-		if err := user.ComunityIDValidator(*uu.comunity_id); err != nil {
+	if v, ok := uu.mutation.ComunityID(); ok {
+		if err := user.ComunityIDValidator(v); err != nil {
 			return 0, fmt.Errorf("ent: validator failed for field \"comunity_id\": %v", err)
 		}
 	}
-	return uu.sqlSave(ctx)
+
+	var (
+		err      error
+		affected int
+	)
+	if len(uu.hooks) == 0 {
+		affected, err = uu.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*UserMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			uu.mutation = mutation
+			affected, err = uu.sqlSave(ctx)
+			return affected, err
+		})
+		for i := len(uu.hooks) - 1; i >= 0; i-- {
+			mut = uu.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, uu.mutation); err != nil {
+			return 0, err
+		}
+	}
+	return affected, err
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -139,21 +144,21 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value := uu.telegram_username; value != nil {
+	if value, ok := uu.mutation.TelegramUsername(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: user.FieldTelegramUsername,
 		})
 	}
-	if value := uu.comunity_id; value != nil {
+	if value, ok := uu.mutation.ComunityID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: user.FieldComunityID,
 		})
 	}
-	if nodes := uu.removedShopping; len(nodes) > 0 {
+	if nodes := uu.mutation.RemovedShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -167,12 +172,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.shopping; len(nodes) > 0 {
+	if nodes := uu.mutation.ShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -186,13 +191,15 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
+		if _, ok := err.(*sqlgraph.NotFoundError); ok {
+			err = &NotFoundError{user.Label}
+		} else if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
 		return 0, err
@@ -203,35 +210,25 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // UserUpdateOne is the builder for updating a single User entity.
 type UserUpdateOne struct {
 	config
-	id int
-
-	telegram_username *string
-	comunity_id       *string
-
-	shopping        map[int]struct{}
-	removedShopping map[int]struct{}
+	hooks    []Hook
+	mutation *UserMutation
 }
 
 // SetTelegramUsername sets the telegram_username field.
 func (uuo *UserUpdateOne) SetTelegramUsername(s string) *UserUpdateOne {
-	uuo.telegram_username = &s
+	uuo.mutation.SetTelegramUsername(s)
 	return uuo
 }
 
 // SetComunityID sets the comunity_id field.
 func (uuo *UserUpdateOne) SetComunityID(s string) *UserUpdateOne {
-	uuo.comunity_id = &s
+	uuo.mutation.SetComunityID(s)
 	return uuo
 }
 
 // AddShoppingIDs adds the shopping edge to Shopping by ids.
 func (uuo *UserUpdateOne) AddShoppingIDs(ids ...int) *UserUpdateOne {
-	if uuo.shopping == nil {
-		uuo.shopping = make(map[int]struct{})
-	}
-	for i := range ids {
-		uuo.shopping[ids[i]] = struct{}{}
-	}
+	uuo.mutation.AddShoppingIDs(ids...)
 	return uuo
 }
 
@@ -246,12 +243,7 @@ func (uuo *UserUpdateOne) AddShopping(s ...*Shopping) *UserUpdateOne {
 
 // RemoveShoppingIDs removes the shopping edge to Shopping by ids.
 func (uuo *UserUpdateOne) RemoveShoppingIDs(ids ...int) *UserUpdateOne {
-	if uuo.removedShopping == nil {
-		uuo.removedShopping = make(map[int]struct{})
-	}
-	for i := range ids {
-		uuo.removedShopping[ids[i]] = struct{}{}
-	}
+	uuo.mutation.RemoveShoppingIDs(ids...)
 	return uuo
 }
 
@@ -266,17 +258,36 @@ func (uuo *UserUpdateOne) RemoveShopping(s ...*Shopping) *UserUpdateOne {
 
 // Save executes the query and returns the updated entity.
 func (uuo *UserUpdateOne) Save(ctx context.Context) (*User, error) {
-	if uuo.telegram_username != nil {
-		if err := user.TelegramUsernameValidator(*uuo.telegram_username); err != nil {
-			return nil, fmt.Errorf("ent: validator failed for field \"telegram_username\": %v", err)
-		}
-	}
-	if uuo.comunity_id != nil {
-		if err := user.ComunityIDValidator(*uuo.comunity_id); err != nil {
+	if v, ok := uuo.mutation.ComunityID(); ok {
+		if err := user.ComunityIDValidator(v); err != nil {
 			return nil, fmt.Errorf("ent: validator failed for field \"comunity_id\": %v", err)
 		}
 	}
-	return uuo.sqlSave(ctx)
+
+	var (
+		err  error
+		node *User
+	)
+	if len(uuo.hooks) == 0 {
+		node, err = uuo.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*UserMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			uuo.mutation = mutation
+			node, err = uuo.sqlSave(ctx)
+			return node, err
+		})
+		for i := len(uuo.hooks) - 1; i >= 0; i-- {
+			mut = uuo.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, uuo.mutation); err != nil {
+			return nil, err
+		}
+	}
+	return node, err
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -307,27 +318,31 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (u *User, err error) {
 			Table:   user.Table,
 			Columns: user.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Value:  uuo.id,
 				Type:   field.TypeInt,
 				Column: user.FieldID,
 			},
 		},
 	}
-	if value := uuo.telegram_username; value != nil {
+	id, ok := uuo.mutation.ID()
+	if !ok {
+		return nil, fmt.Errorf("missing User.ID for update")
+	}
+	_spec.Node.ID.Value = id
+	if value, ok := uuo.mutation.TelegramUsername(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: user.FieldTelegramUsername,
 		})
 	}
-	if value := uuo.comunity_id; value != nil {
+	if value, ok := uuo.mutation.ComunityID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: user.FieldComunityID,
 		})
 	}
-	if nodes := uuo.removedShopping; len(nodes) > 0 {
+	if nodes := uuo.mutation.RemovedShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -341,12 +356,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (u *User, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.shopping; len(nodes) > 0 {
+	if nodes := uuo.mutation.ShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -360,7 +375,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (u *User, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
@@ -369,7 +384,9 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (u *User, err error) {
 	_spec.Assign = u.assignValues
 	_spec.ScanValues = u.scanValues()
 	if err = sqlgraph.UpdateNode(ctx, uuo.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
+		if _, ok := err.(*sqlgraph.NotFoundError); ok {
+			err = &NotFoundError{user.Label}
+		} else if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
 		return nil, err

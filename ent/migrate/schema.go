@@ -3,9 +3,6 @@
 package migrate
 
 import (
-	"github.com/Frosin/shoplist-api-client-go/ent/item"
-	"github.com/Frosin/shoplist-api-client-go/ent/shopping"
-
 	"github.com/facebookincubator/ent/dialect/sql/schema"
 	"github.com/facebookincubator/ent/schema/field"
 )
@@ -15,10 +12,10 @@ var (
 	ItemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "product_name", Type: field.TypeString},
-		{Name: "quantity", Type: field.TypeInt, Default: item.DefaultQuantity},
-		{Name: "category_id", Type: field.TypeInt, Default: item.DefaultCategoryID},
-		{Name: "complete", Type: field.TypeBool, Default: item.DefaultComplete},
-		{Name: "shopping_id", Type: field.TypeInt, Nullable: true},
+		{Name: "quantity", Type: field.TypeInt, Default: 1},
+		{Name: "category_id", Type: field.TypeInt},
+		{Name: "complete", Type: field.TypeBool},
+		{Name: "shopping_item", Type: field.TypeInt, Nullable: true},
 	}
 	// ItemsTable holds the schema information for the "items" table.
 	ItemsTable = &schema.Table{
@@ -51,10 +48,10 @@ var (
 	ShoppingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "date", Type: field.TypeTime},
-		{Name: "sum", Type: field.TypeInt, Default: shopping.DefaultSum},
-		{Name: "complete", Type: field.TypeBool, Default: shopping.DefaultComplete},
-		{Name: "shop_id", Type: field.TypeInt, Nullable: true},
-		{Name: "user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "sum", Type: field.TypeInt},
+		{Name: "complete", Type: field.TypeBool},
+		{Name: "shop_shopping", Type: field.TypeInt, Nullable: true},
+		{Name: "user_shopping", Type: field.TypeInt, Nullable: true},
 	}
 	// ShoppingsTable holds the schema information for the "shoppings" table.
 	ShoppingsTable = &schema.Table{

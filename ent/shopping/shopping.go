@@ -4,21 +4,23 @@ package shopping
 
 import (
 	"time"
-
-	"github.com/Frosin/shoplist-api-client-go/ent/schema"
 )
 
 const (
 	// Label holds the string label denoting the shopping type in the database.
 	Label = "shopping"
 	// FieldID holds the string denoting the id field in the database.
-	FieldID = "id"
-	// FieldDate holds the string denoting the date vertex property in the database.
-	FieldDate = "date"
-	// FieldSum holds the string denoting the sum vertex property in the database.
-	FieldSum = "sum"
-	// FieldComplete holds the string denoting the complete vertex property in the database.
+	FieldID       = "id"   // FieldDate holds the string denoting the date vertex property in the database.
+	FieldDate     = "date" // FieldSum holds the string denoting the sum vertex property in the database.
+	FieldSum      = "sum"  // FieldComplete holds the string denoting the complete vertex property in the database.
 	FieldComplete = "complete"
+
+	// EdgeItem holds the string denoting the item edge name in mutations.
+	EdgeItem = "item"
+	// EdgeShop holds the string denoting the shop edge name in mutations.
+	EdgeShop = "shop"
+	// EdgeUser holds the string denoting the user edge name in mutations.
+	EdgeUser = "user"
 
 	// Table holds the table name of the shopping in the database.
 	Table = "shoppings"
@@ -28,21 +30,21 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "item" package.
 	ItemInverseTable = "items"
 	// ItemColumn is the table column denoting the item relation/edge.
-	ItemColumn = "shopping_id"
+	ItemColumn = "shopping_item"
 	// ShopTable is the table the holds the shop relation/edge.
 	ShopTable = "shoppings"
 	// ShopInverseTable is the table name for the Shop entity.
 	// It exists in this package in order to avoid circular dependency with the "shop" package.
 	ShopInverseTable = "shops"
 	// ShopColumn is the table column denoting the shop relation/edge.
-	ShopColumn = "shop_id"
+	ShopColumn = "shop_shopping"
 	// UserTable is the table the holds the user relation/edge.
 	UserTable = "shoppings"
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_id"
+	UserColumn = "user_shopping"
 )
 
 // Columns holds all SQL columns for shopping fields.
@@ -55,25 +57,15 @@ var Columns = []string{
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Shopping type.
 var ForeignKeys = []string{
-	"shop_id",
-	"user_id",
+	"shop_shopping",
+	"user_shopping",
 }
 
 var (
-	fields = schema.Shopping{}.Fields()
-
-	// descDate is the schema descriptor for date field.
-	descDate = fields[0].Descriptor()
 	// DefaultDate holds the default value on creation for the date field.
-	DefaultDate = descDate.Default.(func() time.Time)
-
-	// descSum is the schema descriptor for sum field.
-	descSum = fields[1].Descriptor()
+	DefaultDate func() time.Time
 	// DefaultSum holds the default value on creation for the sum field.
-	DefaultSum = descSum.Default.(int)
-
-	// descComplete is the schema descriptor for complete field.
-	descComplete = fields[2].Descriptor()
+	DefaultSum int
 	// DefaultComplete holds the default value on creation for the complete field.
-	DefaultComplete = descComplete.Default.(bool)
+	DefaultComplete bool
 )

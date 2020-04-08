@@ -26,9 +26,9 @@ type Shopping struct {
 	Complete bool `json:"complete,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ShoppingQuery when eager-loading is set.
-	Edges   ShoppingEdges `json:"edges"`
-	shop_id *int
-	user_id *int
+	Edges         ShoppingEdges `json:"edges"`
+	shop_shopping *int
+	user_shopping *int
 }
 
 // ShoppingEdges holds the relations/edges for other nodes in the graph.
@@ -94,8 +94,8 @@ func (*Shopping) scanValues() []interface{} {
 // fkValues returns the types for scanning foreign-keys values from sql.Rows.
 func (*Shopping) fkValues() []interface{} {
 	return []interface{}{
-		&sql.NullInt64{}, // shop_id
-		&sql.NullInt64{}, // user_id
+		&sql.NullInt64{}, // shop_shopping
+		&sql.NullInt64{}, // user_shopping
 	}
 }
 
@@ -129,16 +129,16 @@ func (s *Shopping) assignValues(values ...interface{}) error {
 	values = values[3:]
 	if len(values) == len(shopping.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
-			return fmt.Errorf("unexpected type %T for edge-field shop_id", value)
+			return fmt.Errorf("unexpected type %T for edge-field shop_shopping", value)
 		} else if value.Valid {
-			s.shop_id = new(int)
-			*s.shop_id = int(value.Int64)
+			s.shop_shopping = new(int)
+			*s.shop_shopping = int(value.Int64)
 		}
 		if value, ok := values[1].(*sql.NullInt64); !ok {
-			return fmt.Errorf("unexpected type %T for edge-field user_id", value)
+			return fmt.Errorf("unexpected type %T for edge-field user_shopping", value)
 		} else if value.Valid {
-			s.user_id = new(int)
-			*s.user_id = int(value.Int64)
+			s.user_shopping = new(int)
+			*s.user_shopping = int(value.Int64)
 		}
 	}
 	return nil
@@ -146,24 +146,24 @@ func (s *Shopping) assignValues(values ...interface{}) error {
 
 // QueryItem queries the item edge of the Shopping.
 func (s *Shopping) QueryItem() *ItemQuery {
-	return (&ShoppingClient{s.config}).QueryItem(s)
+	return (&ShoppingClient{config: s.config}).QueryItem(s)
 }
 
 // QueryShop queries the shop edge of the Shopping.
 func (s *Shopping) QueryShop() *ShopQuery {
-	return (&ShoppingClient{s.config}).QueryShop(s)
+	return (&ShoppingClient{config: s.config}).QueryShop(s)
 }
 
 // QueryUser queries the user edge of the Shopping.
 func (s *Shopping) QueryUser() *UserQuery {
-	return (&ShoppingClient{s.config}).QueryUser(s)
+	return (&ShoppingClient{config: s.config}).QueryUser(s)
 }
 
 // Update returns a builder for updating this Shopping.
 // Note that, you need to call Shopping.Unwrap() before calling this method, if this Shopping
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (s *Shopping) Update() *ShoppingUpdateOne {
-	return (&ShoppingClient{s.config}).UpdateOne(s)
+	return (&ShoppingClient{config: s.config}).UpdateOne(s)
 }
 
 // Unwrap unwraps the entity that was returned from a transaction after it was closed,

@@ -4,7 +4,7 @@ package ent
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Frosin/shoplist-api-client-go/ent/item"
@@ -20,17 +20,9 @@ import (
 // ShoppingUpdate is the builder for updating Shopping entities.
 type ShoppingUpdate struct {
 	config
-	date        *time.Time
-	sum         *int
-	addsum      *int
-	complete    *bool
-	item        map[int]struct{}
-	shop        map[int]struct{}
-	user        map[int]struct{}
-	removedItem map[int]struct{}
-	clearedShop bool
-	clearedUser bool
-	predicates  []predicate.Shopping
+	hooks      []Hook
+	mutation   *ShoppingMutation
+	predicates []predicate.Shopping
 }
 
 // Where adds a new predicate for the builder.
@@ -41,7 +33,7 @@ func (su *ShoppingUpdate) Where(ps ...predicate.Shopping) *ShoppingUpdate {
 
 // SetDate sets the date field.
 func (su *ShoppingUpdate) SetDate(t time.Time) *ShoppingUpdate {
-	su.date = &t
+	su.mutation.SetDate(t)
 	return su
 }
 
@@ -55,8 +47,8 @@ func (su *ShoppingUpdate) SetNillableDate(t *time.Time) *ShoppingUpdate {
 
 // SetSum sets the sum field.
 func (su *ShoppingUpdate) SetSum(i int) *ShoppingUpdate {
-	su.sum = &i
-	su.addsum = nil
+	su.mutation.ResetSum()
+	su.mutation.SetSum(i)
 	return su
 }
 
@@ -70,17 +62,13 @@ func (su *ShoppingUpdate) SetNillableSum(i *int) *ShoppingUpdate {
 
 // AddSum adds i to sum.
 func (su *ShoppingUpdate) AddSum(i int) *ShoppingUpdate {
-	if su.addsum == nil {
-		su.addsum = &i
-	} else {
-		*su.addsum += i
-	}
+	su.mutation.AddSum(i)
 	return su
 }
 
 // SetComplete sets the complete field.
 func (su *ShoppingUpdate) SetComplete(b bool) *ShoppingUpdate {
-	su.complete = &b
+	su.mutation.SetComplete(b)
 	return su
 }
 
@@ -94,12 +82,7 @@ func (su *ShoppingUpdate) SetNillableComplete(b *bool) *ShoppingUpdate {
 
 // AddItemIDs adds the item edge to Item by ids.
 func (su *ShoppingUpdate) AddItemIDs(ids ...int) *ShoppingUpdate {
-	if su.item == nil {
-		su.item = make(map[int]struct{})
-	}
-	for i := range ids {
-		su.item[ids[i]] = struct{}{}
-	}
+	su.mutation.AddItemIDs(ids...)
 	return su
 }
 
@@ -114,10 +97,7 @@ func (su *ShoppingUpdate) AddItem(i ...*Item) *ShoppingUpdate {
 
 // SetShopID sets the shop edge to Shop by id.
 func (su *ShoppingUpdate) SetShopID(id int) *ShoppingUpdate {
-	if su.shop == nil {
-		su.shop = make(map[int]struct{})
-	}
-	su.shop[id] = struct{}{}
+	su.mutation.SetShopID(id)
 	return su
 }
 
@@ -136,10 +116,7 @@ func (su *ShoppingUpdate) SetShop(s *Shop) *ShoppingUpdate {
 
 // SetUserID sets the user edge to User by id.
 func (su *ShoppingUpdate) SetUserID(id int) *ShoppingUpdate {
-	if su.user == nil {
-		su.user = make(map[int]struct{})
-	}
-	su.user[id] = struct{}{}
+	su.mutation.SetUserID(id)
 	return su
 }
 
@@ -158,12 +135,7 @@ func (su *ShoppingUpdate) SetUser(u *User) *ShoppingUpdate {
 
 // RemoveItemIDs removes the item edge to Item by ids.
 func (su *ShoppingUpdate) RemoveItemIDs(ids ...int) *ShoppingUpdate {
-	if su.removedItem == nil {
-		su.removedItem = make(map[int]struct{})
-	}
-	for i := range ids {
-		su.removedItem[ids[i]] = struct{}{}
-	}
+	su.mutation.RemoveItemIDs(ids...)
 	return su
 }
 
@@ -178,25 +150,43 @@ func (su *ShoppingUpdate) RemoveItem(i ...*Item) *ShoppingUpdate {
 
 // ClearShop clears the shop edge to Shop.
 func (su *ShoppingUpdate) ClearShop() *ShoppingUpdate {
-	su.clearedShop = true
+	su.mutation.ClearShop()
 	return su
 }
 
 // ClearUser clears the user edge to User.
 func (su *ShoppingUpdate) ClearUser() *ShoppingUpdate {
-	su.clearedUser = true
+	su.mutation.ClearUser()
 	return su
 }
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
 func (su *ShoppingUpdate) Save(ctx context.Context) (int, error) {
-	if len(su.shop) > 1 {
-		return 0, errors.New("ent: multiple assignments on a unique edge \"shop\"")
+
+	var (
+		err      error
+		affected int
+	)
+	if len(su.hooks) == 0 {
+		affected, err = su.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*ShoppingMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			su.mutation = mutation
+			affected, err = su.sqlSave(ctx)
+			return affected, err
+		})
+		for i := len(su.hooks) - 1; i >= 0; i-- {
+			mut = su.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, su.mutation); err != nil {
+			return 0, err
+		}
 	}
-	if len(su.user) > 1 {
-		return 0, errors.New("ent: multiple assignments on a unique edge \"user\"")
-	}
-	return su.sqlSave(ctx)
+	return affected, err
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -239,35 +229,35 @@ func (su *ShoppingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value := su.date; value != nil {
+	if value, ok := su.mutation.Date(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldDate,
 		})
 	}
-	if value := su.sum; value != nil {
+	if value, ok := su.mutation.Sum(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldSum,
 		})
 	}
-	if value := su.addsum; value != nil {
+	if value, ok := su.mutation.AddedSum(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldSum,
 		})
 	}
-	if value := su.complete; value != nil {
+	if value, ok := su.mutation.Complete(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldComplete,
 		})
 	}
-	if nodes := su.removedItem; len(nodes) > 0 {
+	if nodes := su.mutation.RemovedItemIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -281,12 +271,12 @@ func (su *ShoppingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := su.item; len(nodes) > 0 {
+	if nodes := su.mutation.ItemIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -300,12 +290,12 @@ func (su *ShoppingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if su.clearedShop {
+	if su.mutation.ShopCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -321,7 +311,7 @@ func (su *ShoppingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := su.shop; len(nodes) > 0 {
+	if nodes := su.mutation.ShopIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -335,12 +325,12 @@ func (su *ShoppingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if su.clearedUser {
+	if su.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -356,7 +346,7 @@ func (su *ShoppingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := su.user; len(nodes) > 0 {
+	if nodes := su.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -370,13 +360,15 @@ func (su *ShoppingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
+		if _, ok := err.(*sqlgraph.NotFoundError); ok {
+			err = &NotFoundError{shopping.Label}
+		} else if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
 		return 0, err
@@ -387,22 +379,13 @@ func (su *ShoppingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // ShoppingUpdateOne is the builder for updating a single Shopping entity.
 type ShoppingUpdateOne struct {
 	config
-	id          int
-	date        *time.Time
-	sum         *int
-	addsum      *int
-	complete    *bool
-	item        map[int]struct{}
-	shop        map[int]struct{}
-	user        map[int]struct{}
-	removedItem map[int]struct{}
-	clearedShop bool
-	clearedUser bool
+	hooks    []Hook
+	mutation *ShoppingMutation
 }
 
 // SetDate sets the date field.
 func (suo *ShoppingUpdateOne) SetDate(t time.Time) *ShoppingUpdateOne {
-	suo.date = &t
+	suo.mutation.SetDate(t)
 	return suo
 }
 
@@ -416,8 +399,8 @@ func (suo *ShoppingUpdateOne) SetNillableDate(t *time.Time) *ShoppingUpdateOne {
 
 // SetSum sets the sum field.
 func (suo *ShoppingUpdateOne) SetSum(i int) *ShoppingUpdateOne {
-	suo.sum = &i
-	suo.addsum = nil
+	suo.mutation.ResetSum()
+	suo.mutation.SetSum(i)
 	return suo
 }
 
@@ -431,17 +414,13 @@ func (suo *ShoppingUpdateOne) SetNillableSum(i *int) *ShoppingUpdateOne {
 
 // AddSum adds i to sum.
 func (suo *ShoppingUpdateOne) AddSum(i int) *ShoppingUpdateOne {
-	if suo.addsum == nil {
-		suo.addsum = &i
-	} else {
-		*suo.addsum += i
-	}
+	suo.mutation.AddSum(i)
 	return suo
 }
 
 // SetComplete sets the complete field.
 func (suo *ShoppingUpdateOne) SetComplete(b bool) *ShoppingUpdateOne {
-	suo.complete = &b
+	suo.mutation.SetComplete(b)
 	return suo
 }
 
@@ -455,12 +434,7 @@ func (suo *ShoppingUpdateOne) SetNillableComplete(b *bool) *ShoppingUpdateOne {
 
 // AddItemIDs adds the item edge to Item by ids.
 func (suo *ShoppingUpdateOne) AddItemIDs(ids ...int) *ShoppingUpdateOne {
-	if suo.item == nil {
-		suo.item = make(map[int]struct{})
-	}
-	for i := range ids {
-		suo.item[ids[i]] = struct{}{}
-	}
+	suo.mutation.AddItemIDs(ids...)
 	return suo
 }
 
@@ -475,10 +449,7 @@ func (suo *ShoppingUpdateOne) AddItem(i ...*Item) *ShoppingUpdateOne {
 
 // SetShopID sets the shop edge to Shop by id.
 func (suo *ShoppingUpdateOne) SetShopID(id int) *ShoppingUpdateOne {
-	if suo.shop == nil {
-		suo.shop = make(map[int]struct{})
-	}
-	suo.shop[id] = struct{}{}
+	suo.mutation.SetShopID(id)
 	return suo
 }
 
@@ -497,10 +468,7 @@ func (suo *ShoppingUpdateOne) SetShop(s *Shop) *ShoppingUpdateOne {
 
 // SetUserID sets the user edge to User by id.
 func (suo *ShoppingUpdateOne) SetUserID(id int) *ShoppingUpdateOne {
-	if suo.user == nil {
-		suo.user = make(map[int]struct{})
-	}
-	suo.user[id] = struct{}{}
+	suo.mutation.SetUserID(id)
 	return suo
 }
 
@@ -519,12 +487,7 @@ func (suo *ShoppingUpdateOne) SetUser(u *User) *ShoppingUpdateOne {
 
 // RemoveItemIDs removes the item edge to Item by ids.
 func (suo *ShoppingUpdateOne) RemoveItemIDs(ids ...int) *ShoppingUpdateOne {
-	if suo.removedItem == nil {
-		suo.removedItem = make(map[int]struct{})
-	}
-	for i := range ids {
-		suo.removedItem[ids[i]] = struct{}{}
-	}
+	suo.mutation.RemoveItemIDs(ids...)
 	return suo
 }
 
@@ -539,25 +502,43 @@ func (suo *ShoppingUpdateOne) RemoveItem(i ...*Item) *ShoppingUpdateOne {
 
 // ClearShop clears the shop edge to Shop.
 func (suo *ShoppingUpdateOne) ClearShop() *ShoppingUpdateOne {
-	suo.clearedShop = true
+	suo.mutation.ClearShop()
 	return suo
 }
 
 // ClearUser clears the user edge to User.
 func (suo *ShoppingUpdateOne) ClearUser() *ShoppingUpdateOne {
-	suo.clearedUser = true
+	suo.mutation.ClearUser()
 	return suo
 }
 
 // Save executes the query and returns the updated entity.
 func (suo *ShoppingUpdateOne) Save(ctx context.Context) (*Shopping, error) {
-	if len(suo.shop) > 1 {
-		return nil, errors.New("ent: multiple assignments on a unique edge \"shop\"")
+
+	var (
+		err  error
+		node *Shopping
+	)
+	if len(suo.hooks) == 0 {
+		node, err = suo.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*ShoppingMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			suo.mutation = mutation
+			node, err = suo.sqlSave(ctx)
+			return node, err
+		})
+		for i := len(suo.hooks) - 1; i >= 0; i-- {
+			mut = suo.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, suo.mutation); err != nil {
+			return nil, err
+		}
 	}
-	if len(suo.user) > 1 {
-		return nil, errors.New("ent: multiple assignments on a unique edge \"user\"")
-	}
-	return suo.sqlSave(ctx)
+	return node, err
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -588,41 +569,45 @@ func (suo *ShoppingUpdateOne) sqlSave(ctx context.Context) (s *Shopping, err err
 			Table:   shopping.Table,
 			Columns: shopping.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Value:  suo.id,
 				Type:   field.TypeInt,
 				Column: shopping.FieldID,
 			},
 		},
 	}
-	if value := suo.date; value != nil {
+	id, ok := suo.mutation.ID()
+	if !ok {
+		return nil, fmt.Errorf("missing Shopping.ID for update")
+	}
+	_spec.Node.ID.Value = id
+	if value, ok := suo.mutation.Date(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldDate,
 		})
 	}
-	if value := suo.sum; value != nil {
+	if value, ok := suo.mutation.Sum(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldSum,
 		})
 	}
-	if value := suo.addsum; value != nil {
+	if value, ok := suo.mutation.AddedSum(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldSum,
 		})
 	}
-	if value := suo.complete; value != nil {
+	if value, ok := suo.mutation.Complete(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
-			Value:  *value,
+			Value:  value,
 			Column: shopping.FieldComplete,
 		})
 	}
-	if nodes := suo.removedItem; len(nodes) > 0 {
+	if nodes := suo.mutation.RemovedItemIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -636,12 +621,12 @@ func (suo *ShoppingUpdateOne) sqlSave(ctx context.Context) (s *Shopping, err err
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := suo.item; len(nodes) > 0 {
+	if nodes := suo.mutation.ItemIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -655,12 +640,12 @@ func (suo *ShoppingUpdateOne) sqlSave(ctx context.Context) (s *Shopping, err err
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if suo.clearedShop {
+	if suo.mutation.ShopCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -676,7 +661,7 @@ func (suo *ShoppingUpdateOne) sqlSave(ctx context.Context) (s *Shopping, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := suo.shop; len(nodes) > 0 {
+	if nodes := suo.mutation.ShopIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -690,12 +675,12 @@ func (suo *ShoppingUpdateOne) sqlSave(ctx context.Context) (s *Shopping, err err
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if suo.clearedUser {
+	if suo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -711,7 +696,7 @@ func (suo *ShoppingUpdateOne) sqlSave(ctx context.Context) (s *Shopping, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := suo.user; len(nodes) > 0 {
+	if nodes := suo.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -725,7 +710,7 @@ func (suo *ShoppingUpdateOne) sqlSave(ctx context.Context) (s *Shopping, err err
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
@@ -734,7 +719,9 @@ func (suo *ShoppingUpdateOne) sqlSave(ctx context.Context) (s *Shopping, err err
 	_spec.Assign = s.assignValues
 	_spec.ScanValues = s.scanValues()
 	if err = sqlgraph.UpdateNode(ctx, suo.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
+		if _, ok := err.(*sqlgraph.NotFoundError); ok {
+			err = &NotFoundError{shopping.Label}
+		} else if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
 		return nil, err

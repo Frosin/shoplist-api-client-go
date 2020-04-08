@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/Frosin/shoplist-api-client-go/ent/item"
@@ -18,15 +17,9 @@ import (
 // ItemUpdate is the builder for updating Item entities.
 type ItemUpdate struct {
 	config
-	product_name    *string
-	quantity        *int
-	addquantity     *int
-	category_id     *int
-	addcategory_id  *int
-	complete        *bool
-	shopping        map[int]struct{}
-	clearedShopping bool
-	predicates      []predicate.Item
+	hooks      []Hook
+	mutation   *ItemMutation
+	predicates []predicate.Item
 }
 
 // Where adds a new predicate for the builder.
@@ -37,14 +30,14 @@ func (iu *ItemUpdate) Where(ps ...predicate.Item) *ItemUpdate {
 
 // SetProductName sets the product_name field.
 func (iu *ItemUpdate) SetProductName(s string) *ItemUpdate {
-	iu.product_name = &s
+	iu.mutation.SetProductName(s)
 	return iu
 }
 
 // SetQuantity sets the quantity field.
 func (iu *ItemUpdate) SetQuantity(i int) *ItemUpdate {
-	iu.quantity = &i
-	iu.addquantity = nil
+	iu.mutation.ResetQuantity()
+	iu.mutation.SetQuantity(i)
 	return iu
 }
 
@@ -58,18 +51,14 @@ func (iu *ItemUpdate) SetNillableQuantity(i *int) *ItemUpdate {
 
 // AddQuantity adds i to quantity.
 func (iu *ItemUpdate) AddQuantity(i int) *ItemUpdate {
-	if iu.addquantity == nil {
-		iu.addquantity = &i
-	} else {
-		*iu.addquantity += i
-	}
+	iu.mutation.AddQuantity(i)
 	return iu
 }
 
 // SetCategoryID sets the category_id field.
 func (iu *ItemUpdate) SetCategoryID(i int) *ItemUpdate {
-	iu.category_id = &i
-	iu.addcategory_id = nil
+	iu.mutation.ResetCategoryID()
+	iu.mutation.SetCategoryID(i)
 	return iu
 }
 
@@ -83,17 +72,13 @@ func (iu *ItemUpdate) SetNillableCategoryID(i *int) *ItemUpdate {
 
 // AddCategoryID adds i to category_id.
 func (iu *ItemUpdate) AddCategoryID(i int) *ItemUpdate {
-	if iu.addcategory_id == nil {
-		iu.addcategory_id = &i
-	} else {
-		*iu.addcategory_id += i
-	}
+	iu.mutation.AddCategoryID(i)
 	return iu
 }
 
 // SetComplete sets the complete field.
 func (iu *ItemUpdate) SetComplete(b bool) *ItemUpdate {
-	iu.complete = &b
+	iu.mutation.SetComplete(b)
 	return iu
 }
 
@@ -107,10 +92,7 @@ func (iu *ItemUpdate) SetNillableComplete(b *bool) *ItemUpdate {
 
 // SetShoppingID sets the shopping edge to Shopping by id.
 func (iu *ItemUpdate) SetShoppingID(id int) *ItemUpdate {
-	if iu.shopping == nil {
-		iu.shopping = make(map[int]struct{})
-	}
-	iu.shopping[id] = struct{}{}
+	iu.mutation.SetShoppingID(id)
 	return iu
 }
 
@@ -129,21 +111,42 @@ func (iu *ItemUpdate) SetShopping(s *Shopping) *ItemUpdate {
 
 // ClearShopping clears the shopping edge to Shopping.
 func (iu *ItemUpdate) ClearShopping() *ItemUpdate {
-	iu.clearedShopping = true
+	iu.mutation.ClearShopping()
 	return iu
 }
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
 func (iu *ItemUpdate) Save(ctx context.Context) (int, error) {
-	if iu.product_name != nil {
-		if err := item.ProductNameValidator(*iu.product_name); err != nil {
+	if v, ok := iu.mutation.ProductName(); ok {
+		if err := item.ProductNameValidator(v); err != nil {
 			return 0, fmt.Errorf("ent: validator failed for field \"product_name\": %v", err)
 		}
 	}
-	if len(iu.shopping) > 1 {
-		return 0, errors.New("ent: multiple assignments on a unique edge \"shopping\"")
+
+	var (
+		err      error
+		affected int
+	)
+	if len(iu.hooks) == 0 {
+		affected, err = iu.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*ItemMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			iu.mutation = mutation
+			affected, err = iu.sqlSave(ctx)
+			return affected, err
+		})
+		for i := len(iu.hooks) - 1; i >= 0; i-- {
+			mut = iu.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, iu.mutation); err != nil {
+			return 0, err
+		}
 	}
-	return iu.sqlSave(ctx)
+	return affected, err
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -186,49 +189,49 @@ func (iu *ItemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value := iu.product_name; value != nil {
+	if value, ok := iu.mutation.ProductName(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldProductName,
 		})
 	}
-	if value := iu.quantity; value != nil {
+	if value, ok := iu.mutation.Quantity(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldQuantity,
 		})
 	}
-	if value := iu.addquantity; value != nil {
+	if value, ok := iu.mutation.AddedQuantity(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldQuantity,
 		})
 	}
-	if value := iu.category_id; value != nil {
+	if value, ok := iu.mutation.CategoryID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldCategoryID,
 		})
 	}
-	if value := iu.addcategory_id; value != nil {
+	if value, ok := iu.mutation.AddedCategoryID(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldCategoryID,
 		})
 	}
-	if value := iu.complete; value != nil {
+	if value, ok := iu.mutation.Complete(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldComplete,
 		})
 	}
-	if iu.clearedShopping {
+	if iu.mutation.ShoppingCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -244,7 +247,7 @@ func (iu *ItemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.shopping; len(nodes) > 0 {
+	if nodes := iu.mutation.ShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -258,13 +261,15 @@ func (iu *ItemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
+		if _, ok := err.(*sqlgraph.NotFoundError); ok {
+			err = &NotFoundError{item.Label}
+		} else if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
 		return 0, err
@@ -275,27 +280,20 @@ func (iu *ItemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // ItemUpdateOne is the builder for updating a single Item entity.
 type ItemUpdateOne struct {
 	config
-	id              int
-	product_name    *string
-	quantity        *int
-	addquantity     *int
-	category_id     *int
-	addcategory_id  *int
-	complete        *bool
-	shopping        map[int]struct{}
-	clearedShopping bool
+	hooks    []Hook
+	mutation *ItemMutation
 }
 
 // SetProductName sets the product_name field.
 func (iuo *ItemUpdateOne) SetProductName(s string) *ItemUpdateOne {
-	iuo.product_name = &s
+	iuo.mutation.SetProductName(s)
 	return iuo
 }
 
 // SetQuantity sets the quantity field.
 func (iuo *ItemUpdateOne) SetQuantity(i int) *ItemUpdateOne {
-	iuo.quantity = &i
-	iuo.addquantity = nil
+	iuo.mutation.ResetQuantity()
+	iuo.mutation.SetQuantity(i)
 	return iuo
 }
 
@@ -309,18 +307,14 @@ func (iuo *ItemUpdateOne) SetNillableQuantity(i *int) *ItemUpdateOne {
 
 // AddQuantity adds i to quantity.
 func (iuo *ItemUpdateOne) AddQuantity(i int) *ItemUpdateOne {
-	if iuo.addquantity == nil {
-		iuo.addquantity = &i
-	} else {
-		*iuo.addquantity += i
-	}
+	iuo.mutation.AddQuantity(i)
 	return iuo
 }
 
 // SetCategoryID sets the category_id field.
 func (iuo *ItemUpdateOne) SetCategoryID(i int) *ItemUpdateOne {
-	iuo.category_id = &i
-	iuo.addcategory_id = nil
+	iuo.mutation.ResetCategoryID()
+	iuo.mutation.SetCategoryID(i)
 	return iuo
 }
 
@@ -334,17 +328,13 @@ func (iuo *ItemUpdateOne) SetNillableCategoryID(i *int) *ItemUpdateOne {
 
 // AddCategoryID adds i to category_id.
 func (iuo *ItemUpdateOne) AddCategoryID(i int) *ItemUpdateOne {
-	if iuo.addcategory_id == nil {
-		iuo.addcategory_id = &i
-	} else {
-		*iuo.addcategory_id += i
-	}
+	iuo.mutation.AddCategoryID(i)
 	return iuo
 }
 
 // SetComplete sets the complete field.
 func (iuo *ItemUpdateOne) SetComplete(b bool) *ItemUpdateOne {
-	iuo.complete = &b
+	iuo.mutation.SetComplete(b)
 	return iuo
 }
 
@@ -358,10 +348,7 @@ func (iuo *ItemUpdateOne) SetNillableComplete(b *bool) *ItemUpdateOne {
 
 // SetShoppingID sets the shopping edge to Shopping by id.
 func (iuo *ItemUpdateOne) SetShoppingID(id int) *ItemUpdateOne {
-	if iuo.shopping == nil {
-		iuo.shopping = make(map[int]struct{})
-	}
-	iuo.shopping[id] = struct{}{}
+	iuo.mutation.SetShoppingID(id)
 	return iuo
 }
 
@@ -380,21 +367,42 @@ func (iuo *ItemUpdateOne) SetShopping(s *Shopping) *ItemUpdateOne {
 
 // ClearShopping clears the shopping edge to Shopping.
 func (iuo *ItemUpdateOne) ClearShopping() *ItemUpdateOne {
-	iuo.clearedShopping = true
+	iuo.mutation.ClearShopping()
 	return iuo
 }
 
 // Save executes the query and returns the updated entity.
 func (iuo *ItemUpdateOne) Save(ctx context.Context) (*Item, error) {
-	if iuo.product_name != nil {
-		if err := item.ProductNameValidator(*iuo.product_name); err != nil {
+	if v, ok := iuo.mutation.ProductName(); ok {
+		if err := item.ProductNameValidator(v); err != nil {
 			return nil, fmt.Errorf("ent: validator failed for field \"product_name\": %v", err)
 		}
 	}
-	if len(iuo.shopping) > 1 {
-		return nil, errors.New("ent: multiple assignments on a unique edge \"shopping\"")
+
+	var (
+		err  error
+		node *Item
+	)
+	if len(iuo.hooks) == 0 {
+		node, err = iuo.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*ItemMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			iuo.mutation = mutation
+			node, err = iuo.sqlSave(ctx)
+			return node, err
+		})
+		for i := len(iuo.hooks) - 1; i >= 0; i-- {
+			mut = iuo.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, iuo.mutation); err != nil {
+			return nil, err
+		}
 	}
-	return iuo.sqlSave(ctx)
+	return node, err
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -425,55 +433,59 @@ func (iuo *ItemUpdateOne) sqlSave(ctx context.Context) (i *Item, err error) {
 			Table:   item.Table,
 			Columns: item.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Value:  iuo.id,
 				Type:   field.TypeInt,
 				Column: item.FieldID,
 			},
 		},
 	}
-	if value := iuo.product_name; value != nil {
+	id, ok := iuo.mutation.ID()
+	if !ok {
+		return nil, fmt.Errorf("missing Item.ID for update")
+	}
+	_spec.Node.ID.Value = id
+	if value, ok := iuo.mutation.ProductName(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldProductName,
 		})
 	}
-	if value := iuo.quantity; value != nil {
+	if value, ok := iuo.mutation.Quantity(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldQuantity,
 		})
 	}
-	if value := iuo.addquantity; value != nil {
+	if value, ok := iuo.mutation.AddedQuantity(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldQuantity,
 		})
 	}
-	if value := iuo.category_id; value != nil {
+	if value, ok := iuo.mutation.CategoryID(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldCategoryID,
 		})
 	}
-	if value := iuo.addcategory_id; value != nil {
+	if value, ok := iuo.mutation.AddedCategoryID(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldCategoryID,
 		})
 	}
-	if value := iuo.complete; value != nil {
+	if value, ok := iuo.mutation.Complete(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldComplete,
 		})
 	}
-	if iuo.clearedShopping {
+	if iuo.mutation.ShoppingCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -489,7 +501,7 @@ func (iuo *ItemUpdateOne) sqlSave(ctx context.Context) (i *Item, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.shopping; len(nodes) > 0 {
+	if nodes := iuo.mutation.ShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -503,7 +515,7 @@ func (iuo *ItemUpdateOne) sqlSave(ctx context.Context) (i *Item, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
@@ -512,7 +524,9 @@ func (iuo *ItemUpdateOne) sqlSave(ctx context.Context) (i *Item, err error) {
 	_spec.Assign = i.assignValues
 	_spec.ScanValues = i.scanValues()
 	if err = sqlgraph.UpdateNode(ctx, iuo.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
+		if _, ok := err.(*sqlgraph.NotFoundError); ok {
+			err = &NotFoundError{item.Label}
+		} else if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
 		return nil, err

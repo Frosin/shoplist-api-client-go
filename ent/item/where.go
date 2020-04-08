@@ -10,27 +10,23 @@ import (
 
 // ID filters vertices based on their identifier.
 func ID(id int) predicate.Item {
-	return predicate.Item(
-		func(s *sql.Selector) {
-			s.Where(sql.EQ(s.C(FieldID), id))
-		},
-	)
+	return predicate.Item(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldID), id))
+	})
 }
 
 // IDEQ applies the EQ predicate on the ID field.
 func IDEQ(id int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
 func IDNEQ(id int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // IDIn applies the In predicate on the ID field.
@@ -47,8 +43,7 @@ func IDIn(ids ...int) predicate.Item {
 			v[i] = ids[i]
 		}
 		s.Where(sql.In(s.C(FieldID), v...))
-	},
-	)
+	})
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
@@ -65,88 +60,77 @@ func IDNotIn(ids ...int) predicate.Item {
 			v[i] = ids[i]
 		}
 		s.Where(sql.NotIn(s.C(FieldID), v...))
-	},
-	)
+	})
 }
 
 // IDGT applies the GT predicate on the ID field.
 func IDGT(id int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // IDGTE applies the GTE predicate on the ID field.
 func IDGTE(id int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // IDLT applies the LT predicate on the ID field.
 func IDLT(id int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // IDLTE applies the LTE predicate on the ID field.
 func IDLTE(id int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
-	},
-	)
+	})
 }
 
 // ProductName applies equality check predicate on the "product_name" field. It's identical to ProductNameEQ.
 func ProductName(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // Quantity applies equality check predicate on the "quantity" field. It's identical to QuantityEQ.
 func Quantity(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldQuantity), v))
-	},
-	)
+	})
 }
 
 // CategoryID applies equality check predicate on the "category_id" field. It's identical to CategoryIDEQ.
 func CategoryID(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCategoryID), v))
-	},
-	)
+	})
 }
 
 // Complete applies equality check predicate on the "complete" field. It's identical to CompleteEQ.
 func Complete(v bool) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldComplete), v))
-	},
-	)
+	})
 }
 
 // ProductNameEQ applies the EQ predicate on the "product_name" field.
 func ProductNameEQ(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // ProductNameNEQ applies the NEQ predicate on the "product_name" field.
 func ProductNameNEQ(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // ProductNameIn applies the In predicate on the "product_name" field.
@@ -163,8 +147,7 @@ func ProductNameIn(vs ...string) predicate.Item {
 			return
 		}
 		s.Where(sql.In(s.C(FieldProductName), v...))
-	},
-	)
+	})
 }
 
 // ProductNameNotIn applies the NotIn predicate on the "product_name" field.
@@ -181,96 +164,84 @@ func ProductNameNotIn(vs ...string) predicate.Item {
 			return
 		}
 		s.Where(sql.NotIn(s.C(FieldProductName), v...))
-	},
-	)
+	})
 }
 
 // ProductNameGT applies the GT predicate on the "product_name" field.
 func ProductNameGT(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // ProductNameGTE applies the GTE predicate on the "product_name" field.
 func ProductNameGTE(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // ProductNameLT applies the LT predicate on the "product_name" field.
 func ProductNameLT(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // ProductNameLTE applies the LTE predicate on the "product_name" field.
 func ProductNameLTE(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // ProductNameContains applies the Contains predicate on the "product_name" field.
 func ProductNameContains(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.Contains(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // ProductNameHasPrefix applies the HasPrefix predicate on the "product_name" field.
 func ProductNameHasPrefix(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.HasPrefix(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // ProductNameHasSuffix applies the HasSuffix predicate on the "product_name" field.
 func ProductNameHasSuffix(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // ProductNameEqualFold applies the EqualFold predicate on the "product_name" field.
 func ProductNameEqualFold(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.EqualFold(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // ProductNameContainsFold applies the ContainsFold predicate on the "product_name" field.
 func ProductNameContainsFold(v string) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldProductName), v))
-	},
-	)
+	})
 }
 
 // QuantityEQ applies the EQ predicate on the "quantity" field.
 func QuantityEQ(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldQuantity), v))
-	},
-	)
+	})
 }
 
 // QuantityNEQ applies the NEQ predicate on the "quantity" field.
 func QuantityNEQ(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldQuantity), v))
-	},
-	)
+	})
 }
 
 // QuantityIn applies the In predicate on the "quantity" field.
@@ -287,8 +258,7 @@ func QuantityIn(vs ...int) predicate.Item {
 			return
 		}
 		s.Where(sql.In(s.C(FieldQuantity), v...))
-	},
-	)
+	})
 }
 
 // QuantityNotIn applies the NotIn predicate on the "quantity" field.
@@ -305,56 +275,49 @@ func QuantityNotIn(vs ...int) predicate.Item {
 			return
 		}
 		s.Where(sql.NotIn(s.C(FieldQuantity), v...))
-	},
-	)
+	})
 }
 
 // QuantityGT applies the GT predicate on the "quantity" field.
 func QuantityGT(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldQuantity), v))
-	},
-	)
+	})
 }
 
 // QuantityGTE applies the GTE predicate on the "quantity" field.
 func QuantityGTE(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldQuantity), v))
-	},
-	)
+	})
 }
 
 // QuantityLT applies the LT predicate on the "quantity" field.
 func QuantityLT(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldQuantity), v))
-	},
-	)
+	})
 }
 
 // QuantityLTE applies the LTE predicate on the "quantity" field.
 func QuantityLTE(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldQuantity), v))
-	},
-	)
+	})
 }
 
 // CategoryIDEQ applies the EQ predicate on the "category_id" field.
 func CategoryIDEQ(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCategoryID), v))
-	},
-	)
+	})
 }
 
 // CategoryIDNEQ applies the NEQ predicate on the "category_id" field.
 func CategoryIDNEQ(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldCategoryID), v))
-	},
-	)
+	})
 }
 
 // CategoryIDIn applies the In predicate on the "category_id" field.
@@ -371,8 +334,7 @@ func CategoryIDIn(vs ...int) predicate.Item {
 			return
 		}
 		s.Where(sql.In(s.C(FieldCategoryID), v...))
-	},
-	)
+	})
 }
 
 // CategoryIDNotIn applies the NotIn predicate on the "category_id" field.
@@ -389,56 +351,49 @@ func CategoryIDNotIn(vs ...int) predicate.Item {
 			return
 		}
 		s.Where(sql.NotIn(s.C(FieldCategoryID), v...))
-	},
-	)
+	})
 }
 
 // CategoryIDGT applies the GT predicate on the "category_id" field.
 func CategoryIDGT(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldCategoryID), v))
-	},
-	)
+	})
 }
 
 // CategoryIDGTE applies the GTE predicate on the "category_id" field.
 func CategoryIDGTE(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldCategoryID), v))
-	},
-	)
+	})
 }
 
 // CategoryIDLT applies the LT predicate on the "category_id" field.
 func CategoryIDLT(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldCategoryID), v))
-	},
-	)
+	})
 }
 
 // CategoryIDLTE applies the LTE predicate on the "category_id" field.
 func CategoryIDLTE(v int) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldCategoryID), v))
-	},
-	)
+	})
 }
 
 // CompleteEQ applies the EQ predicate on the "complete" field.
 func CompleteEQ(v bool) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldComplete), v))
-	},
-	)
+	})
 }
 
 // CompleteNEQ applies the NEQ predicate on the "complete" field.
 func CompleteNEQ(v bool) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldComplete), v))
-	},
-	)
+	})
 }
 
 // HasShopping applies the HasEdge predicate on the "shopping" edge.
@@ -450,8 +405,7 @@ func HasShopping() predicate.Item {
 			sqlgraph.Edge(sqlgraph.M2O, true, ShoppingTable, ShoppingColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
-	},
-	)
+	})
 }
 
 // HasShoppingWith applies the HasEdge predicate on the "shopping" edge with a given conditions (other predicates).
@@ -467,44 +421,37 @@ func HasShoppingWith(preds ...predicate.Shopping) predicate.Item {
 				p(s)
 			}
 		})
-	},
-	)
+	})
 }
 
 // And groups list of predicates with the AND operator between them.
 func And(predicates ...predicate.Item) predicate.Item {
-	return predicate.Item(
-		func(s *sql.Selector) {
-			s1 := s.Clone().SetP(nil)
-			for _, p := range predicates {
-				p(s1)
-			}
-			s.Where(s1.P())
-		},
-	)
+	return predicate.Item(func(s *sql.Selector) {
+		s1 := s.Clone().SetP(nil)
+		for _, p := range predicates {
+			p(s1)
+		}
+		s.Where(s1.P())
+	})
 }
 
 // Or groups list of predicates with the OR operator between them.
 func Or(predicates ...predicate.Item) predicate.Item {
-	return predicate.Item(
-		func(s *sql.Selector) {
-			s1 := s.Clone().SetP(nil)
-			for i, p := range predicates {
-				if i > 0 {
-					s1.Or()
-				}
-				p(s1)
+	return predicate.Item(func(s *sql.Selector) {
+		s1 := s.Clone().SetP(nil)
+		for i, p := range predicates {
+			if i > 0 {
+				s1.Or()
 			}
-			s.Where(s1.P())
-		},
-	)
+			p(s1)
+		}
+		s.Where(s1.P())
+	})
 }
 
 // Not applies the not operator on the given predicate.
 func Not(p predicate.Item) predicate.Item {
-	return predicate.Item(
-		func(s *sql.Selector) {
-			p(s.Not())
-		},
-	)
+	return predicate.Item(func(s *sql.Selector) {
+		p(s.Not())
+	})
 }

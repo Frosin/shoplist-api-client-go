@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Frosin/shoplist-api-client-go/ent/predicate"
 	"github.com/Frosin/shoplist-api-client-go/ent/shop"
@@ -15,6 +16,8 @@ import (
 // ShopDelete is the builder for deleting a Shop entity.
 type ShopDelete struct {
 	config
+	hooks      []Hook
+	mutation   *ShopMutation
 	predicates []predicate.Shop
 }
 
@@ -26,7 +29,30 @@ func (sd *ShopDelete) Where(ps ...predicate.Shop) *ShopDelete {
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (sd *ShopDelete) Exec(ctx context.Context) (int, error) {
-	return sd.sqlExec(ctx)
+	var (
+		err      error
+		affected int
+	)
+	if len(sd.hooks) == 0 {
+		affected, err = sd.sqlExec(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*ShopMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			sd.mutation = mutation
+			affected, err = sd.sqlExec(ctx)
+			return affected, err
+		})
+		for i := len(sd.hooks) - 1; i >= 0; i-- {
+			mut = sd.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, sd.mutation); err != nil {
+			return 0, err
+		}
+	}
+	return affected, err
 }
 
 // ExecX is like Exec, but panics if an error occurs.

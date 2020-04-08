@@ -331,7 +331,7 @@ func (iq *ItemQuery) sqlAll(ctx context.Context) ([]*Item, error) {
 		ids := make([]int, 0, len(nodes))
 		nodeids := make(map[int][]*Item)
 		for i := range nodes {
-			if fk := nodes[i].shopping_id; fk != nil {
+			if fk := nodes[i].shopping_item; fk != nil {
 				ids = append(ids, *fk)
 				nodeids[*fk] = append(nodeids[*fk], nodes[i])
 			}
@@ -344,7 +344,7 @@ func (iq *ItemQuery) sqlAll(ctx context.Context) ([]*Item, error) {
 		for _, n := range neighbors {
 			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "shopping_id" returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "shopping_item" returned %v`, n.ID)
 			}
 			for i := range nodes {
 				nodes[i].Edges.Shopping = n

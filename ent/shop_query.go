@@ -333,13 +333,13 @@ func (sq *ShopQuery) sqlAll(ctx context.Context) ([]*Shop, error) {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			fk := n.shop_id
+			fk := n.shop_shopping
 			if fk == nil {
-				return nil, fmt.Errorf(`foreign-key "shop_id" is nil for node %v`, n.ID)
+				return nil, fmt.Errorf(`foreign-key "shop_shopping" is nil for node %v`, n.ID)
 			}
 			node, ok := nodeids[*fk]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "shop_id" returned %v for node %v`, *fk, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "shop_shopping" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Shopping = append(node.Edges.Shopping, n)
 		}

@@ -16,52 +16,43 @@ import (
 // UserCreate is the builder for creating a User entity.
 type UserCreate struct {
 	config
-	telegram_id       *int64
-	telegram_username *string
-	comunity_id       *string
-	token             *string
-	chat_id           *int64
-	shopping          map[int]struct{}
+	mutation *UserMutation
+	hooks    []Hook
 }
 
 // SetTelegramID sets the telegram_id field.
 func (uc *UserCreate) SetTelegramID(i int64) *UserCreate {
-	uc.telegram_id = &i
+	uc.mutation.SetTelegramID(i)
 	return uc
 }
 
 // SetTelegramUsername sets the telegram_username field.
 func (uc *UserCreate) SetTelegramUsername(s string) *UserCreate {
-	uc.telegram_username = &s
+	uc.mutation.SetTelegramUsername(s)
 	return uc
 }
 
 // SetComunityID sets the comunity_id field.
 func (uc *UserCreate) SetComunityID(s string) *UserCreate {
-	uc.comunity_id = &s
+	uc.mutation.SetComunityID(s)
 	return uc
 }
 
 // SetToken sets the token field.
 func (uc *UserCreate) SetToken(s string) *UserCreate {
-	uc.token = &s
+	uc.mutation.SetToken(s)
 	return uc
 }
 
 // SetChatID sets the chat_id field.
 func (uc *UserCreate) SetChatID(i int64) *UserCreate {
-	uc.chat_id = &i
+	uc.mutation.SetChatID(i)
 	return uc
 }
 
 // AddShoppingIDs adds the shopping edge to Shopping by ids.
 func (uc *UserCreate) AddShoppingIDs(ids ...int) *UserCreate {
-	if uc.shopping == nil {
-		uc.shopping = make(map[int]struct{})
-	}
-	for i := range ids {
-		uc.shopping[ids[i]] = struct{}{}
-	}
+	uc.mutation.AddShoppingIDs(ids...)
 	return uc
 }
 
@@ -76,31 +67,55 @@ func (uc *UserCreate) AddShopping(s ...*Shopping) *UserCreate {
 
 // Save creates the User in the database.
 func (uc *UserCreate) Save(ctx context.Context) (*User, error) {
-	if uc.telegram_id == nil {
+	if _, ok := uc.mutation.TelegramID(); !ok {
 		return nil, errors.New("ent: missing required field \"telegram_id\"")
 	}
-	if uc.telegram_username == nil {
+	if _, ok := uc.mutation.TelegramUsername(); !ok {
 		return nil, errors.New("ent: missing required field \"telegram_username\"")
 	}
-	if err := user.TelegramUsernameValidator(*uc.telegram_username); err != nil {
-		return nil, fmt.Errorf("ent: validator failed for field \"telegram_username\": %v", err)
-	}
-	if uc.comunity_id == nil {
+	if _, ok := uc.mutation.ComunityID(); !ok {
 		return nil, errors.New("ent: missing required field \"comunity_id\"")
 	}
-	if err := user.ComunityIDValidator(*uc.comunity_id); err != nil {
-		return nil, fmt.Errorf("ent: validator failed for field \"comunity_id\": %v", err)
+	if v, ok := uc.mutation.ComunityID(); ok {
+		if err := user.ComunityIDValidator(v); err != nil {
+			return nil, fmt.Errorf("ent: validator failed for field \"comunity_id\": %v", err)
+		}
 	}
-	if uc.token == nil {
+	if _, ok := uc.mutation.Token(); !ok {
 		return nil, errors.New("ent: missing required field \"token\"")
 	}
-	if err := user.TokenValidator(*uc.token); err != nil {
-		return nil, fmt.Errorf("ent: validator failed for field \"token\": %v", err)
+	if v, ok := uc.mutation.Token(); ok {
+		if err := user.TokenValidator(v); err != nil {
+			return nil, fmt.Errorf("ent: validator failed for field \"token\": %v", err)
+		}
 	}
-	if uc.chat_id == nil {
+	if _, ok := uc.mutation.ChatID(); !ok {
 		return nil, errors.New("ent: missing required field \"chat_id\"")
 	}
-	return uc.sqlSave(ctx)
+	var (
+		err  error
+		node *User
+	)
+	if len(uc.hooks) == 0 {
+		node, err = uc.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*UserMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			uc.mutation = mutation
+			node, err = uc.sqlSave(ctx)
+			return node, err
+		})
+		for i := len(uc.hooks) - 1; i >= 0; i-- {
+			mut = uc.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, uc.mutation); err != nil {
+			return nil, err
+		}
+	}
+	return node, err
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -123,47 +138,47 @@ func (uc *UserCreate) sqlSave(ctx context.Context) (*User, error) {
 			},
 		}
 	)
-	if value := uc.telegram_id; value != nil {
+	if value, ok := uc.mutation.TelegramID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
-			Value:  *value,
+			Value:  value,
 			Column: user.FieldTelegramID,
 		})
-		u.TelegramID = *value
+		u.TelegramID = value
 	}
-	if value := uc.telegram_username; value != nil {
+	if value, ok := uc.mutation.TelegramUsername(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: user.FieldTelegramUsername,
 		})
-		u.TelegramUsername = *value
+		u.TelegramUsername = value
 	}
-	if value := uc.comunity_id; value != nil {
+	if value, ok := uc.mutation.ComunityID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: user.FieldComunityID,
 		})
-		u.ComunityID = *value
+		u.ComunityID = value
 	}
-	if value := uc.token; value != nil {
+	if value, ok := uc.mutation.Token(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: user.FieldToken,
 		})
-		u.Token = *value
+		u.Token = value
 	}
-	if value := uc.chat_id; value != nil {
+	if value, ok := uc.mutation.ChatID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
-			Value:  *value,
+			Value:  value,
 			Column: user.FieldChatID,
 		})
-		u.ChatID = *value
+		u.ChatID = value
 	}
-	if nodes := uc.shopping; len(nodes) > 0 {
+	if nodes := uc.mutation.ShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -177,7 +192,7 @@ func (uc *UserCreate) sqlSave(ctx context.Context) (*User, error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges = append(_spec.Edges, edge)

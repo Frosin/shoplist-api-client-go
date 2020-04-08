@@ -17,10 +17,9 @@ import (
 // ShopUpdate is the builder for updating Shop entities.
 type ShopUpdate struct {
 	config
-	name            *string
-	shopping        map[int]struct{}
-	removedShopping map[int]struct{}
-	predicates      []predicate.Shop
+	hooks      []Hook
+	mutation   *ShopMutation
+	predicates []predicate.Shop
 }
 
 // Where adds a new predicate for the builder.
@@ -31,18 +30,13 @@ func (su *ShopUpdate) Where(ps ...predicate.Shop) *ShopUpdate {
 
 // SetName sets the name field.
 func (su *ShopUpdate) SetName(s string) *ShopUpdate {
-	su.name = &s
+	su.mutation.SetName(s)
 	return su
 }
 
 // AddShoppingIDs adds the shopping edge to Shopping by ids.
 func (su *ShopUpdate) AddShoppingIDs(ids ...int) *ShopUpdate {
-	if su.shopping == nil {
-		su.shopping = make(map[int]struct{})
-	}
-	for i := range ids {
-		su.shopping[ids[i]] = struct{}{}
-	}
+	su.mutation.AddShoppingIDs(ids...)
 	return su
 }
 
@@ -57,12 +51,7 @@ func (su *ShopUpdate) AddShopping(s ...*Shopping) *ShopUpdate {
 
 // RemoveShoppingIDs removes the shopping edge to Shopping by ids.
 func (su *ShopUpdate) RemoveShoppingIDs(ids ...int) *ShopUpdate {
-	if su.removedShopping == nil {
-		su.removedShopping = make(map[int]struct{})
-	}
-	for i := range ids {
-		su.removedShopping[ids[i]] = struct{}{}
-	}
+	su.mutation.RemoveShoppingIDs(ids...)
 	return su
 }
 
@@ -77,12 +66,36 @@ func (su *ShopUpdate) RemoveShopping(s ...*Shopping) *ShopUpdate {
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
 func (su *ShopUpdate) Save(ctx context.Context) (int, error) {
-	if su.name != nil {
-		if err := shop.NameValidator(*su.name); err != nil {
+	if v, ok := su.mutation.Name(); ok {
+		if err := shop.NameValidator(v); err != nil {
 			return 0, fmt.Errorf("ent: validator failed for field \"name\": %v", err)
 		}
 	}
-	return su.sqlSave(ctx)
+
+	var (
+		err      error
+		affected int
+	)
+	if len(su.hooks) == 0 {
+		affected, err = su.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*ShopMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			su.mutation = mutation
+			affected, err = su.sqlSave(ctx)
+			return affected, err
+		})
+		for i := len(su.hooks) - 1; i >= 0; i-- {
+			mut = su.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, su.mutation); err != nil {
+			return 0, err
+		}
+	}
+	return affected, err
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -125,14 +138,14 @@ func (su *ShopUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value := su.name; value != nil {
+	if value, ok := su.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: shop.FieldName,
 		})
 	}
-	if nodes := su.removedShopping; len(nodes) > 0 {
+	if nodes := su.mutation.RemovedShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -146,12 +159,12 @@ func (su *ShopUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := su.shopping; len(nodes) > 0 {
+	if nodes := su.mutation.ShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -165,13 +178,15 @@ func (su *ShopUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
+		if _, ok := err.(*sqlgraph.NotFoundError); ok {
+			err = &NotFoundError{shop.Label}
+		} else if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
 		return 0, err
@@ -182,26 +197,19 @@ func (su *ShopUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // ShopUpdateOne is the builder for updating a single Shop entity.
 type ShopUpdateOne struct {
 	config
-	id              int
-	name            *string
-	shopping        map[int]struct{}
-	removedShopping map[int]struct{}
+	hooks    []Hook
+	mutation *ShopMutation
 }
 
 // SetName sets the name field.
 func (suo *ShopUpdateOne) SetName(s string) *ShopUpdateOne {
-	suo.name = &s
+	suo.mutation.SetName(s)
 	return suo
 }
 
 // AddShoppingIDs adds the shopping edge to Shopping by ids.
 func (suo *ShopUpdateOne) AddShoppingIDs(ids ...int) *ShopUpdateOne {
-	if suo.shopping == nil {
-		suo.shopping = make(map[int]struct{})
-	}
-	for i := range ids {
-		suo.shopping[ids[i]] = struct{}{}
-	}
+	suo.mutation.AddShoppingIDs(ids...)
 	return suo
 }
 
@@ -216,12 +224,7 @@ func (suo *ShopUpdateOne) AddShopping(s ...*Shopping) *ShopUpdateOne {
 
 // RemoveShoppingIDs removes the shopping edge to Shopping by ids.
 func (suo *ShopUpdateOne) RemoveShoppingIDs(ids ...int) *ShopUpdateOne {
-	if suo.removedShopping == nil {
-		suo.removedShopping = make(map[int]struct{})
-	}
-	for i := range ids {
-		suo.removedShopping[ids[i]] = struct{}{}
-	}
+	suo.mutation.RemoveShoppingIDs(ids...)
 	return suo
 }
 
@@ -236,12 +239,36 @@ func (suo *ShopUpdateOne) RemoveShopping(s ...*Shopping) *ShopUpdateOne {
 
 // Save executes the query and returns the updated entity.
 func (suo *ShopUpdateOne) Save(ctx context.Context) (*Shop, error) {
-	if suo.name != nil {
-		if err := shop.NameValidator(*suo.name); err != nil {
+	if v, ok := suo.mutation.Name(); ok {
+		if err := shop.NameValidator(v); err != nil {
 			return nil, fmt.Errorf("ent: validator failed for field \"name\": %v", err)
 		}
 	}
-	return suo.sqlSave(ctx)
+
+	var (
+		err  error
+		node *Shop
+	)
+	if len(suo.hooks) == 0 {
+		node, err = suo.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*ShopMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			suo.mutation = mutation
+			node, err = suo.sqlSave(ctx)
+			return node, err
+		})
+		for i := len(suo.hooks) - 1; i >= 0; i-- {
+			mut = suo.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, suo.mutation); err != nil {
+			return nil, err
+		}
+	}
+	return node, err
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -272,20 +299,24 @@ func (suo *ShopUpdateOne) sqlSave(ctx context.Context) (s *Shop, err error) {
 			Table:   shop.Table,
 			Columns: shop.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Value:  suo.id,
 				Type:   field.TypeInt,
 				Column: shop.FieldID,
 			},
 		},
 	}
-	if value := suo.name; value != nil {
+	id, ok := suo.mutation.ID()
+	if !ok {
+		return nil, fmt.Errorf("missing Shop.ID for update")
+	}
+	_spec.Node.ID.Value = id
+	if value, ok := suo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: shop.FieldName,
 		})
 	}
-	if nodes := suo.removedShopping; len(nodes) > 0 {
+	if nodes := suo.mutation.RemovedShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -299,12 +330,12 @@ func (suo *ShopUpdateOne) sqlSave(ctx context.Context) (s *Shop, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := suo.shopping; len(nodes) > 0 {
+	if nodes := suo.mutation.ShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -318,7 +349,7 @@ func (suo *ShopUpdateOne) sqlSave(ctx context.Context) (s *Shop, err error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
@@ -327,7 +358,9 @@ func (suo *ShopUpdateOne) sqlSave(ctx context.Context) (s *Shop, err error) {
 	_spec.Assign = s.assignValues
 	_spec.ScanValues = s.scanValues()
 	if err = sqlgraph.UpdateNode(ctx, suo.driver, _spec); err != nil {
-		if cerr, ok := isSQLConstraintError(err); ok {
+		if _, ok := err.(*sqlgraph.NotFoundError); ok {
+			err = &NotFoundError{shop.Label}
+		} else if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
 		}
 		return nil, err

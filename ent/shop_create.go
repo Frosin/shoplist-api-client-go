@@ -16,24 +16,19 @@ import (
 // ShopCreate is the builder for creating a Shop entity.
 type ShopCreate struct {
 	config
-	name     *string
-	shopping map[int]struct{}
+	mutation *ShopMutation
+	hooks    []Hook
 }
 
 // SetName sets the name field.
 func (sc *ShopCreate) SetName(s string) *ShopCreate {
-	sc.name = &s
+	sc.mutation.SetName(s)
 	return sc
 }
 
 // AddShoppingIDs adds the shopping edge to Shopping by ids.
 func (sc *ShopCreate) AddShoppingIDs(ids ...int) *ShopCreate {
-	if sc.shopping == nil {
-		sc.shopping = make(map[int]struct{})
-	}
-	for i := range ids {
-		sc.shopping[ids[i]] = struct{}{}
-	}
+	sc.mutation.AddShoppingIDs(ids...)
 	return sc
 }
 
@@ -48,13 +43,38 @@ func (sc *ShopCreate) AddShopping(s ...*Shopping) *ShopCreate {
 
 // Save creates the Shop in the database.
 func (sc *ShopCreate) Save(ctx context.Context) (*Shop, error) {
-	if sc.name == nil {
+	if _, ok := sc.mutation.Name(); !ok {
 		return nil, errors.New("ent: missing required field \"name\"")
 	}
-	if err := shop.NameValidator(*sc.name); err != nil {
-		return nil, fmt.Errorf("ent: validator failed for field \"name\": %v", err)
+	if v, ok := sc.mutation.Name(); ok {
+		if err := shop.NameValidator(v); err != nil {
+			return nil, fmt.Errorf("ent: validator failed for field \"name\": %v", err)
+		}
 	}
-	return sc.sqlSave(ctx)
+	var (
+		err  error
+		node *Shop
+	)
+	if len(sc.hooks) == 0 {
+		node, err = sc.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*ShopMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			sc.mutation = mutation
+			node, err = sc.sqlSave(ctx)
+			return node, err
+		})
+		for i := len(sc.hooks) - 1; i >= 0; i-- {
+			mut = sc.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, sc.mutation); err != nil {
+			return nil, err
+		}
+	}
+	return node, err
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -77,15 +97,15 @@ func (sc *ShopCreate) sqlSave(ctx context.Context) (*Shop, error) {
 			},
 		}
 	)
-	if value := sc.name; value != nil {
+	if value, ok := sc.mutation.Name(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: shop.FieldName,
 		})
-		s.Name = *value
+		s.Name = value
 	}
-	if nodes := sc.shopping; len(nodes) > 0 {
+	if nodes := sc.mutation.ShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -99,7 +119,7 @@ func (sc *ShopCreate) sqlSave(ctx context.Context) (*Shop, error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges = append(_spec.Edges, edge)

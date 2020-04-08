@@ -5,7 +5,6 @@ package ent
 import (
 	"context"
 
-	"github.com/Frosin/shoplist-api-client-go/ent/migrate"
 	"github.com/facebookincubator/ent/dialect"
 )
 
@@ -34,14 +33,16 @@ func (tx *Tx) Rollback() error {
 
 // Client returns a Client that binds to current transaction.
 func (tx *Tx) Client() *Client {
-	return &Client{
-		config:   tx.config,
-		Schema:   migrate.NewSchema(tx.driver),
-		Item:     NewItemClient(tx.config),
-		Shop:     NewShopClient(tx.config),
-		Shopping: NewShoppingClient(tx.config),
-		User:     NewUserClient(tx.config),
-	}
+	client := &Client{config: tx.config}
+	client.init()
+	return client
+}
+
+func (tx *Tx) init() {
+	tx.Item = NewItemClient(tx.config)
+	tx.Shop = NewShopClient(tx.config)
+	tx.Shopping = NewShoppingClient(tx.config)
+	tx.User = NewUserClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

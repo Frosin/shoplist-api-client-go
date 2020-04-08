@@ -70,14 +70,14 @@ func (s *Shop) assignValues(values ...interface{}) error {
 
 // QueryShopping queries the shopping edge of the Shop.
 func (s *Shop) QueryShopping() *ShoppingQuery {
-	return (&ShopClient{s.config}).QueryShopping(s)
+	return (&ShopClient{config: s.config}).QueryShopping(s)
 }
 
 // Update returns a builder for updating this Shop.
 // Note that, you need to call Shop.Unwrap() before calling this method, if this Shop
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (s *Shop) Update() *ShopUpdateOne {
-	return (&ShopClient{s.config}).UpdateOne(s)
+	return (&ShopClient{config: s.config}).UpdateOne(s)
 }
 
 // Unwrap unwraps the entity that was returned from a transaction after it was closed,

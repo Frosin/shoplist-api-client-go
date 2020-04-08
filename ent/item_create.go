@@ -16,22 +16,19 @@ import (
 // ItemCreate is the builder for creating a Item entity.
 type ItemCreate struct {
 	config
-	product_name *string
-	quantity     *int
-	category_id  *int
-	complete     *bool
-	shopping     map[int]struct{}
+	mutation *ItemMutation
+	hooks    []Hook
 }
 
 // SetProductName sets the product_name field.
 func (ic *ItemCreate) SetProductName(s string) *ItemCreate {
-	ic.product_name = &s
+	ic.mutation.SetProductName(s)
 	return ic
 }
 
 // SetQuantity sets the quantity field.
 func (ic *ItemCreate) SetQuantity(i int) *ItemCreate {
-	ic.quantity = &i
+	ic.mutation.SetQuantity(i)
 	return ic
 }
 
@@ -45,7 +42,7 @@ func (ic *ItemCreate) SetNillableQuantity(i *int) *ItemCreate {
 
 // SetCategoryID sets the category_id field.
 func (ic *ItemCreate) SetCategoryID(i int) *ItemCreate {
-	ic.category_id = &i
+	ic.mutation.SetCategoryID(i)
 	return ic
 }
 
@@ -59,7 +56,7 @@ func (ic *ItemCreate) SetNillableCategoryID(i *int) *ItemCreate {
 
 // SetComplete sets the complete field.
 func (ic *ItemCreate) SetComplete(b bool) *ItemCreate {
-	ic.complete = &b
+	ic.mutation.SetComplete(b)
 	return ic
 }
 
@@ -73,10 +70,7 @@ func (ic *ItemCreate) SetNillableComplete(b *bool) *ItemCreate {
 
 // SetShoppingID sets the shopping edge to Shopping by id.
 func (ic *ItemCreate) SetShoppingID(id int) *ItemCreate {
-	if ic.shopping == nil {
-		ic.shopping = make(map[int]struct{})
-	}
-	ic.shopping[id] = struct{}{}
+	ic.mutation.SetShoppingID(id)
 	return ic
 }
 
@@ -95,28 +89,50 @@ func (ic *ItemCreate) SetShopping(s *Shopping) *ItemCreate {
 
 // Save creates the Item in the database.
 func (ic *ItemCreate) Save(ctx context.Context) (*Item, error) {
-	if ic.product_name == nil {
+	if _, ok := ic.mutation.ProductName(); !ok {
 		return nil, errors.New("ent: missing required field \"product_name\"")
 	}
-	if err := item.ProductNameValidator(*ic.product_name); err != nil {
-		return nil, fmt.Errorf("ent: validator failed for field \"product_name\": %v", err)
+	if v, ok := ic.mutation.ProductName(); ok {
+		if err := item.ProductNameValidator(v); err != nil {
+			return nil, fmt.Errorf("ent: validator failed for field \"product_name\": %v", err)
+		}
 	}
-	if ic.quantity == nil {
+	if _, ok := ic.mutation.Quantity(); !ok {
 		v := item.DefaultQuantity
-		ic.quantity = &v
+		ic.mutation.SetQuantity(v)
 	}
-	if ic.category_id == nil {
+	if _, ok := ic.mutation.CategoryID(); !ok {
 		v := item.DefaultCategoryID
-		ic.category_id = &v
+		ic.mutation.SetCategoryID(v)
 	}
-	if ic.complete == nil {
+	if _, ok := ic.mutation.Complete(); !ok {
 		v := item.DefaultComplete
-		ic.complete = &v
+		ic.mutation.SetComplete(v)
 	}
-	if len(ic.shopping) > 1 {
-		return nil, errors.New("ent: multiple assignments on a unique edge \"shopping\"")
+	var (
+		err  error
+		node *Item
+	)
+	if len(ic.hooks) == 0 {
+		node, err = ic.sqlSave(ctx)
+	} else {
+		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+			mutation, ok := m.(*ItemMutation)
+			if !ok {
+				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			ic.mutation = mutation
+			node, err = ic.sqlSave(ctx)
+			return node, err
+		})
+		for i := len(ic.hooks) - 1; i >= 0; i-- {
+			mut = ic.hooks[i](mut)
+		}
+		if _, err := mut.Mutate(ctx, ic.mutation); err != nil {
+			return nil, err
+		}
 	}
-	return ic.sqlSave(ctx)
+	return node, err
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -139,39 +155,39 @@ func (ic *ItemCreate) sqlSave(ctx context.Context) (*Item, error) {
 			},
 		}
 	)
-	if value := ic.product_name; value != nil {
+	if value, ok := ic.mutation.ProductName(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldProductName,
 		})
-		i.ProductName = *value
+		i.ProductName = value
 	}
-	if value := ic.quantity; value != nil {
+	if value, ok := ic.mutation.Quantity(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldQuantity,
 		})
-		i.Quantity = *value
+		i.Quantity = value
 	}
-	if value := ic.category_id; value != nil {
+	if value, ok := ic.mutation.CategoryID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldCategoryID,
 		})
-		i.CategoryID = *value
+		i.CategoryID = value
 	}
-	if value := ic.complete; value != nil {
+	if value, ok := ic.mutation.Complete(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
-			Value:  *value,
+			Value:  value,
 			Column: item.FieldComplete,
 		})
-		i.Complete = *value
+		i.Complete = value
 	}
-	if nodes := ic.shopping; len(nodes) > 0 {
+	if nodes := ic.mutation.ShoppingIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -185,7 +201,7 @@ func (ic *ItemCreate) sqlSave(ctx context.Context) (*Item, error) {
 				},
 			},
 		}
-		for k, _ := range nodes {
+		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges = append(_spec.Edges, edge)

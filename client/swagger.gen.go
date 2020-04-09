@@ -918,7 +918,13 @@ func NewAddItemRequestWithBody(server string, contentType string, body io.Reader
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/addItem"))
+
+	basePath := fmt.Sprintf("/addItem")
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -951,7 +957,13 @@ func NewAddShoppingRequestWithBody(server string, contentType string, body io.Re
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/addShopping"))
+
+	basePath := fmt.Sprintf("/addShopping")
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -984,7 +996,13 @@ func NewDeleteItemsRequestWithBody(server string, contentType string, body io.Re
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/deleteItems"))
+
+	basePath := fmt.Sprintf("/deleteItems")
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1017,7 +1035,13 @@ func NewDeleteShoppingsRequestWithBody(server string, contentType string, body i
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/deleteShoppings"))
+
+	basePath := fmt.Sprintf("/deleteShoppings")
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1046,7 +1070,13 @@ func NewGetComingShoppingsRequest(server string, date Date) (*http.Request, erro
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/getComingShoppings/%s", pathParam0))
+
+	basePath := fmt.Sprintf("/getComingShoppings/%s", pathParam0)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1074,7 +1104,13 @@ func NewGetGoodsRequest(server string, shoppingID ShoppingID) (*http.Request, er
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/getGoods/%s", pathParam0))
+
+	basePath := fmt.Sprintf("/getGoods/%s", pathParam0)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1102,7 +1138,13 @@ func NewGetShoppingRequest(server string, shoppingID ShoppingID) (*http.Request,
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/getShopping/%s", pathParam0))
+
+	basePath := fmt.Sprintf("/getShopping/%s", pathParam0)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1137,7 +1179,13 @@ func NewGetShoppingDaysRequest(server string, year Year, month Month) (*http.Req
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/getShoppingDays/%s/%s", pathParam0, pathParam1))
+
+	basePath := fmt.Sprintf("/getShoppingDays/%s/%s", pathParam0, pathParam1)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1179,7 +1227,13 @@ func NewGetShoppingsByDayRequest(server string, year Year, month Month, day Day)
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/getShoppingsByDay/%s/%s/%s", pathParam0, pathParam1, pathParam2))
+
+	basePath := fmt.Sprintf("/getShoppingsByDay/%s/%s/%s", pathParam0, pathParam1, pathParam2)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1200,7 +1254,13 @@ func NewLastShoppingRequest(server string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/lastShopping"))
+
+	basePath := fmt.Sprintf("/lastShopping")
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1221,7 +1281,13 @@ func NewGetUsersRequest(server string, params *GetUsersParams) (*http.Request, e
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/users"))
+
+	basePath := fmt.Sprintf("/users")
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1289,7 +1355,13 @@ func NewUpdateUserRequestWithBody(server string, params *UpdateUserParams, conte
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/users"))
+
+	basePath := fmt.Sprintf("/users")
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1338,7 +1410,13 @@ func NewCreateUserRequestWithBody(server string, contentType string, body io.Rea
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/users"))
+
+	basePath := fmt.Sprintf("/users")
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -2166,18 +2244,19 @@ func ParseAddItemResponse(rsp *http.Response) (*addItemResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
 			Data *[]ShoppingItemParamsWithId `json:"data,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
 			// Embedded fields due to inline allOf schema
@@ -2195,46 +2274,51 @@ func ParseAddItemResponse(rsp *http.Response) (*addItemResponse, error) {
 					Quantity *string `json:"quantity,omitempty"`
 				} `json:"validation,omitempty"`
 			} `json:"errors,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		response.JSON404 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_404)
 			Error404
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2256,53 +2340,58 @@ func ParseAddShoppingResponse(rsp *http.Response) (*addShoppingResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
 			Data *ShoppingWithId `json:"data,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
 			// Embedded fields due to inline allOf schema
 			Errors *ShoppingProperty `json:"errors,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2324,49 +2413,54 @@ func ParseDeleteItemsResponse(rsp *http.Response) (*deleteItemsResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2388,49 +2482,54 @@ func ParseDeleteShoppingsResponse(rsp *http.Response) (*deleteShoppingsResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2452,64 +2551,70 @@ func ParseGetComingShoppingsResponse(rsp *http.Response) (*getComingShoppingsRes
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
 			Data *[]ShoppingWithId `json:"data,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
 			// Embedded fields due to inline allOf schema
 
 			// Свойства ошибки валидации
 			Errors *ComingShoppingsProperty `json:"errors,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		response.JSON404 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_404)
 			Error404
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2531,18 +2636,19 @@ func ParseGetGoodsResponse(rsp *http.Response) (*getGoodsResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
 			Data []ShoppingItem `json:"data"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
 			// Embedded fields due to inline allOf schema
@@ -2551,46 +2657,51 @@ func ParseGetGoodsResponse(rsp *http.Response) (*getGoodsResponse, error) {
 					ShoppingID *string `json:"shoppingID,omitempty"`
 				} `json:"validation,omitempty"`
 			} `json:"errors,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		response.JSON404 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_404)
 			Error404
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2612,51 +2723,56 @@ func ParseGetShoppingResponse(rsp *http.Response) (*getShoppingResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
 			Data *ShoppingWithId `json:"data,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		response.JSON404 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_404)
 			Error404
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2678,53 +2794,58 @@ func ParseGetShoppingDaysResponse(rsp *http.Response) (*getShoppingDaysResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
 			Data *[]int `json:"data,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
 			// Embedded fields due to inline allOf schema
 			Errors *ShoppingDaysErrors `json:"errors,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2746,53 +2867,58 @@ func ParseGetShoppingsByDayResponse(rsp *http.Response) (*getShoppingsByDayRespo
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
 			Data []ShoppingWithId `json:"data"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
 			// Embedded fields due to inline allOf schema
 			Errors *ShoppingsByDayErrors `json:"errors,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2814,51 +2940,56 @@ func ParseLastShoppingResponse(rsp *http.Response) (*lastShoppingResponse, error
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
 			Data *[]ShoppingWithId `json:"data,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		response.JSON404 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_404)
 			Error404
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2880,60 +3011,66 @@ func ParseGetUsersResponse(rsp *http.Response) (*getUsersResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
 			Data *[]UserWithID `json:"data,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		response.JSON404 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_404)
 			Error404
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -2955,58 +3092,64 @@ func ParseUpdateUserResponse(rsp *http.Response) (*updateUserResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		response.JSON404 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_404)
 			Error404
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON404); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 
@@ -3028,51 +3171,56 @@ func ParseCreateUserResponse(rsp *http.Response) (*createUserResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Success)
 			Success
 			// Embedded fields due to inline allOf schema
 			Data *[]UserWithID `json:"data,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		response.JSON400 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_400)
 			Error400
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON400); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		response.JSON401 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_401)
 			Error401
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON401); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 405:
-		response.JSON405 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_405)
 			Error405
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON405); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON405 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		response.JSON500 = &struct {
+		var dest struct {
 			// Embedded struct due to allOf(#/components/schemas/Error_500)
 			Error500
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON500); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON500 = &dest
 
 	}
 

@@ -268,10 +268,10 @@ paths:
           $ref: "#/components/responses/Base_500"
 components:
   securitySchemes:
-    token:
+    accesstoken:
       type: apiKey
       in: query
-      name: token
+      name: accesstoken
   schemas:
       Base:
         description: Возвращает статус ответа

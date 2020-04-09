@@ -30,14 +30,14 @@ func (s *Server) TokenHandler(next echo.HandlerFunc) echo.HandlerFunc {
 					request.Method == "POST")
 		}
 
-		//if it create or get users api we dont need token
+		//if it create or get users api we don't need token
 		if dontNeedToken(c.Request()) {
 			log.Infof("request: %s, %s", c.Request().RequestURI, "pass token check")
 			return next(c)
 		}
 		log.Infof("request: %s", c.Request().RequestURI)
 
-		token := c.QueryParam("token")
+		token := c.QueryParam("accesstoken")
 		if token == "" {
 			return response401(ErrTokenNotFound)
 		}

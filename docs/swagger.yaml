@@ -124,7 +124,28 @@ paths:
         "405":
           $ref: "#/components/responses/Base_405"
         "500":
-          $ref: "#/components/responses/Base_500"          
+          $ref: "#/components/responses/Base_500"
+  "/getSpecialShopping/{shoppingType}":
+    get:
+      operationId: getSpecialShopping
+      parameters:
+        - $ref: "#/components/parameters/shoppingType"
+      tags:
+        - Shopping
+      summary: Данные специальной покупки (чек-лист, текущий список)
+      responses:
+        "200":
+          $ref: "#/components/responses/Shopping_200"
+        "400":
+          $ref: "#/components/responses/Base_400"
+        "401":
+          $ref: "#/components/responses/Base_401"
+        "404":
+          $ref: "#/components/responses/Base_404"
+        "405":
+          $ref: "#/components/responses/Base_405"
+        "500":
+          $ref: "#/components/responses/Base_500"
   "/addShopping":
     post:
       operationId: "addShopping"
@@ -482,11 +503,6 @@ components:
           - title: Покупка
             type: object
           - $ref: "#/components/schemas/Shopping_params"
-        required:
-          - date
-          - name
-          - time
-          - ownerID
       Shopping_with_id:
         allOf:
           - title: Покупка
@@ -524,11 +540,19 @@ components:
             type: integer
             description: Владелец покупки
             example: 55
+          type:
+            type: integer
+            enum:
+              - 0
+              - 1
+              - 2
+            description: Тип покупки (0-обычная, 1-checkList, 2-currentList)
         required:
           - date
           - name
           - time
           - ownerID
+          - type
       Delete_ids:
         title: Идентификаторы для удаления
         properties:
@@ -581,6 +605,11 @@ components:
             example: "format"
             enum:
               - format
+          type:
+            type: string
+            example: "enum"
+            enum:
+              - enum              
       shoppingDaysErrors:
         type: object
         properties:
@@ -958,4 +987,14 @@ components:
       description: user_id
       required: true
       schema:
-        type: integer      
+        type: integer
+    shoppingType:
+      name: shoppingType
+      in: path
+      description: "тип покупки"
+      required: true
+      schema:
+        type: integer
+        enum:
+          - 1
+          - 2

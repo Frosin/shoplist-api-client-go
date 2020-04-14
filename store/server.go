@@ -26,6 +26,10 @@ import (
 const (
 	dateLayout = "2006-01-02"
 	timeLayout = "15:04:05"
+
+	shoppingTypeDefault     = 0
+	shoppingTypeCheckList   = 1
+	shoppingTypeCurrentList = 2
 )
 
 var (
@@ -43,6 +47,7 @@ var (
 	ErrNilParameters         = errors.New("One or more params are nil")
 	ErrTypeAssertion         = errors.New("type assertion error")
 	ErrUpdateUserConstFields = errors.New("can't update constant user fields")
+	ErrBadShoppingType       = errors.New("bad shopping type. It must be 1 or 2")
 )
 
 // Server - basic route func type
@@ -198,6 +203,16 @@ func (s *Server) AddShopping(ctx echo.Context) error {
 		return response400(err, &validation)
 	}
 
+	// shopping type validation
+	checkMap := map[int]int{0: 0, 1: 1, 2: 2}
+	_, exist := checkMap[shParams.Type]
+	if !exist {
+		validation := api.ShoppingValidation{
+			Type: strPtr("enum"),
+		}
+		return response400(err, &validation)
+	}
+
 	shp := &ent.Shop{}
 	shp, err = s.ent.Shop.
 		Query().
@@ -227,6 +242,7 @@ func (s *Server) AddShopping(ctx echo.Context) error {
 			SetShop(shp).
 			SetDate(date).
 			SetUserID(userID).
+			SetType(shParams.Type).
 			Save(contx)
 		if err != nil {
 			return err
@@ -353,6 +369,7 @@ func (s *Server) GetComingShoppings(ctx echo.Context, date api.Date) error {
 		WithShop().
 		WithUser().
 		Where(
+			shopping.TypeEQ(shoppingTypeDefault),
 			shopping.DateGTE(dTime),
 			shopping.HasUserWith(user.IDIn(userIDs...)),
 		).
@@ -429,6 +446,7 @@ func (s *Server) GetShoppingDays(ctx echo.Context, year api.Year, month api.Mont
 			shopping.HasUserWith(
 				user.IDIn(userIDs...),
 			),
+			shopping.TypeEQ(shoppingTypeDefault),
 			predicate.Shopping(func(s *entSql.Selector) {
 				s.Where(entSql.Like(s.C(shopping.FieldDate), queryParam))
 			})).
@@ -520,6 +538,7 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 			shopping.HasUserWith(
 				user.IDIn(userIDs...),
 			),
+			shopping.TypeEQ(shoppingTypeDefault),
 			predicate.Shopping(func(s *entSql.Selector) {
 				s.Where(entSql.Like(s.C(shopping.FieldDate), queryParam))
 			})).
@@ -535,6 +554,7 @@ func (s *Server) GetShoppingsByDay(ctx echo.Context, year api.Year, month api.Mo
 	return response200(entToShoppings(shoppings))
 }
 
+// get default shopping
 func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID) error {
 	response200 := func(shopping api.ShoppingWithId) error {
 		var response api.Shopping200
@@ -567,6 +587,59 @@ func (s *Server) GetShopping(ctx echo.Context, shoppingID api.ShoppingID) error 
 				user.IDIn(userIDs...),
 			)).
 		Only(contx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return response404()
+		}
+		return response500(err)
+	}
+
+	return response200(entToShopping(shopping))
+}
+
+// Данные специальной покупки (чек-лист, текущий список) текущего юзера
+// (GET /getSpecialShopping/{shoppingType})
+func (s *Server) GetSpecialShopping(ctx echo.Context, shoppingType api.ShoppingType) error {
+	response200 := func(shopping api.ShoppingWithId) error {
+		var response api.Shopping200
+		response.Version = &s.version
+		response.Message = SuccessMessage
+		response.Data = &shopping
+		return ctx.JSON(http.StatusOK, response)
+	}
+	response400 := func(err error) error {
+		return s.error(ctx, http.StatusBadRequest, err, nil)
+	}
+	response404 := func() error {
+		return s.error(ctx, http.StatusNotFound, nil, nil)
+	}
+	response500 := func(err error) error {
+		return s.error(ctx, http.StatusInternalServerError, err, nil)
+	}
+
+	if shoppingType != 1 && shoppingType != 2 {
+		return response400(ErrBadShoppingType)
+	}
+
+	ownerID, ok := ctx.Get("ownerID").(int)
+	if !ok {
+		return response500(ErrTypeAssertion)
+	}
+	contx, cancel := context.WithTimeout(context.Background(), ReadTimeout)
+	defer cancel()
+
+	shopping, err := s.ent.Shopping.
+		Query().
+		WithShop().
+		WithUser().
+		Where(
+			shopping.TypeEQ(int(shoppingType)),
+			shopping.HasUserWith(
+				user.IDEQ(ownerID),
+			),
+		).
+		Only(contx)
+
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return response404()

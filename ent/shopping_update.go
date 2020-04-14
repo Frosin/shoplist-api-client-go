@@ -80,6 +80,27 @@ func (su *ShoppingUpdate) SetNillableComplete(b *bool) *ShoppingUpdate {
 	return su
 }
 
+// SetType sets the type field.
+func (su *ShoppingUpdate) SetType(i int) *ShoppingUpdate {
+	su.mutation.ResetType()
+	su.mutation.SetType(i)
+	return su
+}
+
+// SetNillableType sets the type field if the given value is not nil.
+func (su *ShoppingUpdate) SetNillableType(i *int) *ShoppingUpdate {
+	if i != nil {
+		su.SetType(*i)
+	}
+	return su
+}
+
+// AddType adds i to type.
+func (su *ShoppingUpdate) AddType(i int) *ShoppingUpdate {
+	su.mutation.AddType(i)
+	return su
+}
+
 // AddItemIDs adds the item edge to Item by ids.
 func (su *ShoppingUpdate) AddItemIDs(ids ...int) *ShoppingUpdate {
 	su.mutation.AddItemIDs(ids...)
@@ -257,6 +278,20 @@ func (su *ShoppingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: shopping.FieldComplete,
 		})
 	}
+	if value, ok := su.mutation.GetType(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: shopping.FieldType,
+		})
+	}
+	if value, ok := su.mutation.AddedType(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: shopping.FieldType,
+		})
+	}
 	if nodes := su.mutation.RemovedItemIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -429,6 +464,27 @@ func (suo *ShoppingUpdateOne) SetNillableComplete(b *bool) *ShoppingUpdateOne {
 	if b != nil {
 		suo.SetComplete(*b)
 	}
+	return suo
+}
+
+// SetType sets the type field.
+func (suo *ShoppingUpdateOne) SetType(i int) *ShoppingUpdateOne {
+	suo.mutation.ResetType()
+	suo.mutation.SetType(i)
+	return suo
+}
+
+// SetNillableType sets the type field if the given value is not nil.
+func (suo *ShoppingUpdateOne) SetNillableType(i *int) *ShoppingUpdateOne {
+	if i != nil {
+		suo.SetType(*i)
+	}
+	return suo
+}
+
+// AddType adds i to type.
+func (suo *ShoppingUpdateOne) AddType(i int) *ShoppingUpdateOne {
+	suo.mutation.AddType(i)
 	return suo
 }
 
@@ -605,6 +661,20 @@ func (suo *ShoppingUpdateOne) sqlSave(ctx context.Context) (s *Shopping, err err
 			Type:   field.TypeBool,
 			Value:  value,
 			Column: shopping.FieldComplete,
+		})
+	}
+	if value, ok := suo.mutation.GetType(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: shopping.FieldType,
+		})
+	}
+	if value, ok := suo.mutation.AddedType(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: shopping.FieldType,
 		})
 	}
 	if nodes := suo.mutation.RemovedItemIDs(); len(nodes) > 0 {

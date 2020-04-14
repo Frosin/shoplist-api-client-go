@@ -64,6 +64,20 @@ func (sc *ShoppingCreate) SetNillableComplete(b *bool) *ShoppingCreate {
 	return sc
 }
 
+// SetType sets the type field.
+func (sc *ShoppingCreate) SetType(i int) *ShoppingCreate {
+	sc.mutation.SetType(i)
+	return sc
+}
+
+// SetNillableType sets the type field if the given value is not nil.
+func (sc *ShoppingCreate) SetNillableType(i *int) *ShoppingCreate {
+	if i != nil {
+		sc.SetType(*i)
+	}
+	return sc
+}
+
 // AddItemIDs adds the item edge to Item by ids.
 func (sc *ShoppingCreate) AddItemIDs(ids ...int) *ShoppingCreate {
 	sc.mutation.AddItemIDs(ids...)
@@ -130,6 +144,10 @@ func (sc *ShoppingCreate) Save(ctx context.Context) (*Shopping, error) {
 	if _, ok := sc.mutation.Complete(); !ok {
 		v := shopping.DefaultComplete
 		sc.mutation.SetComplete(v)
+	}
+	if _, ok := sc.mutation.GetType(); !ok {
+		v := shopping.DefaultType
+		sc.mutation.SetType(v)
 	}
 	var (
 		err  error
@@ -200,6 +218,14 @@ func (sc *ShoppingCreate) sqlSave(ctx context.Context) (*Shopping, error) {
 			Column: shopping.FieldComplete,
 		})
 		s.Complete = value
+	}
+	if value, ok := sc.mutation.GetType(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: shopping.FieldType,
+		})
+		s.Type = value
 	}
 	if nodes := sc.mutation.ItemIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

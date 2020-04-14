@@ -54,6 +54,10 @@ func init() {
 	shoppingDescComplete := shoppingFields[2].Descriptor()
 	// shopping.DefaultComplete holds the default value on creation for the complete field.
 	shopping.DefaultComplete = shoppingDescComplete.Default.(bool)
+	// shoppingDescType is the schema descriptor for type field.
+	shoppingDescType := shoppingFields[3].Descriptor()
+	// shopping.DefaultType holds the default value on creation for the type field.
+	shopping.DefaultType = shoppingDescType.Default.(int)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescComunityID is the schema descriptor for comunity_id field.

@@ -19,6 +19,7 @@ func (Shopping) Fields() []ent.Field {
 		field.Time("date").Default(time.Now),
 		field.Int("sum").Default(0),
 		field.Bool("complete").Default(false),
+		field.Int("type").Default(0),
 	}
 }
 

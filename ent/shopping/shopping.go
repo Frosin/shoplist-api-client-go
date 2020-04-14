@@ -10,10 +10,11 @@ const (
 	// Label holds the string label denoting the shopping type in the database.
 	Label = "shopping"
 	// FieldID holds the string denoting the id field in the database.
-	FieldID       = "id"   // FieldDate holds the string denoting the date vertex property in the database.
-	FieldDate     = "date" // FieldSum holds the string denoting the sum vertex property in the database.
-	FieldSum      = "sum"  // FieldComplete holds the string denoting the complete vertex property in the database.
-	FieldComplete = "complete"
+	FieldID       = "id"       // FieldDate holds the string denoting the date vertex property in the database.
+	FieldDate     = "date"     // FieldSum holds the string denoting the sum vertex property in the database.
+	FieldSum      = "sum"      // FieldComplete holds the string denoting the complete vertex property in the database.
+	FieldComplete = "complete" // FieldType holds the string denoting the type vertex property in the database.
+	FieldType     = "type"
 
 	// EdgeItem holds the string denoting the item edge name in mutations.
 	EdgeItem = "item"
@@ -53,6 +54,7 @@ var Columns = []string{
 	FieldDate,
 	FieldSum,
 	FieldComplete,
+	FieldType,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Shopping type.
@@ -68,4 +70,6 @@ var (
 	DefaultSum int
 	// DefaultComplete holds the default value on creation for the complete field.
 	DefaultComplete bool
+	// DefaultType holds the default value on creation for the type field.
+	DefaultType int
 )

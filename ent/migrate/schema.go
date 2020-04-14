@@ -50,6 +50,7 @@ var (
 		{Name: "date", Type: field.TypeTime},
 		{Name: "sum", Type: field.TypeInt},
 		{Name: "complete", Type: field.TypeBool},
+		{Name: "type", Type: field.TypeInt},
 		{Name: "shop_shopping", Type: field.TypeInt, Nullable: true},
 		{Name: "user_shopping", Type: field.TypeInt, Nullable: true},
 	}
@@ -61,14 +62,14 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:  "shoppings_shops_shopping",
-				Columns: []*schema.Column{ShoppingsColumns[4]},
+				Columns: []*schema.Column{ShoppingsColumns[5]},
 
 				RefColumns: []*schema.Column{ShopsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:  "shoppings_users_shopping",
-				Columns: []*schema.Column{ShoppingsColumns[5]},
+				Columns: []*schema.Column{ShoppingsColumns[6]},
 
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,

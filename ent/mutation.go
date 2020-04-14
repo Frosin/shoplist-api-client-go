@@ -804,6 +804,8 @@ type ShoppingMutation struct {
 	sum           *int
 	addsum        *int
 	complete      *bool
+	_type         *int
+	add_type      *int
 	clearedFields map[string]struct{}
 	item          map[int]struct{}
 	removeditem   map[int]struct{}
@@ -928,6 +930,45 @@ func (m *ShoppingMutation) Complete() (r bool, exists bool) {
 // ResetComplete reset all changes of the complete field.
 func (m *ShoppingMutation) ResetComplete() {
 	m.complete = nil
+}
+
+// SetType sets the type field.
+func (m *ShoppingMutation) SetType(i int) {
+	m._type = &i
+	m.add_type = nil
+}
+
+// GetType returns the type value in the mutation.
+func (m *ShoppingMutation) GetType() (r int, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// AddType adds i to type.
+func (m *ShoppingMutation) AddType(i int) {
+	if m.add_type != nil {
+		*m.add_type += i
+	} else {
+		m.add_type = &i
+	}
+}
+
+// AddedType returns the value that was added to the type field in this mutation.
+func (m *ShoppingMutation) AddedType() (r int, exists bool) {
+	v := m.add_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetType reset all changes of the type field.
+func (m *ShoppingMutation) ResetType() {
+	m._type = nil
+	m.add_type = nil
 }
 
 // AddItemIDs adds the item edge to Item by ids.
@@ -1064,7 +1105,7 @@ func (m *ShoppingMutation) Type() string {
 // this mutation. Note that, in order to get all numeric
 // fields that were in/decremented, call AddedFields().
 func (m *ShoppingMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.date != nil {
 		fields = append(fields, shopping.FieldDate)
 	}
@@ -1073,6 +1114,9 @@ func (m *ShoppingMutation) Fields() []string {
 	}
 	if m.complete != nil {
 		fields = append(fields, shopping.FieldComplete)
+	}
+	if m._type != nil {
+		fields = append(fields, shopping.FieldType)
 	}
 	return fields
 }
@@ -1088,6 +1132,8 @@ func (m *ShoppingMutation) Field(name string) (ent.Value, bool) {
 		return m.Sum()
 	case shopping.FieldComplete:
 		return m.Complete()
+	case shopping.FieldType:
+		return m.GetType()
 	}
 	return nil, false
 }
@@ -1118,6 +1164,13 @@ func (m *ShoppingMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetComplete(v)
 		return nil
+	case shopping.FieldType:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Shopping field %s", name)
 }
@@ -1129,6 +1182,9 @@ func (m *ShoppingMutation) AddedFields() []string {
 	if m.addsum != nil {
 		fields = append(fields, shopping.FieldSum)
 	}
+	if m.add_type != nil {
+		fields = append(fields, shopping.FieldType)
+	}
 	return fields
 }
 
@@ -1139,6 +1195,8 @@ func (m *ShoppingMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case shopping.FieldSum:
 		return m.AddedSum()
+	case shopping.FieldType:
+		return m.AddedType()
 	}
 	return nil, false
 }
@@ -1154,6 +1212,13 @@ func (m *ShoppingMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddSum(v)
+		return nil
+	case shopping.FieldType:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddType(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Shopping numeric field %s", name)
@@ -1191,6 +1256,9 @@ func (m *ShoppingMutation) ResetField(name string) error {
 		return nil
 	case shopping.FieldComplete:
 		m.ResetComplete()
+		return nil
+	case shopping.FieldType:
+		m.ResetType()
 		return nil
 	}
 	return fmt.Errorf("unknown Shopping field %s", name)

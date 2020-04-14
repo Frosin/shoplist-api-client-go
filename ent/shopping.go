@@ -24,6 +24,8 @@ type Shopping struct {
 	Sum int `json:"sum,omitempty"`
 	// Complete holds the value of the "complete" field.
 	Complete bool `json:"complete,omitempty"`
+	// Type holds the value of the "type" field.
+	Type int `json:"type,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ShoppingQuery when eager-loading is set.
 	Edges         ShoppingEdges `json:"edges"`
@@ -88,6 +90,7 @@ func (*Shopping) scanValues() []interface{} {
 		&sql.NullTime{},  // date
 		&sql.NullInt64{}, // sum
 		&sql.NullBool{},  // complete
+		&sql.NullInt64{}, // type
 	}
 }
 
@@ -126,7 +129,12 @@ func (s *Shopping) assignValues(values ...interface{}) error {
 	} else if value.Valid {
 		s.Complete = value.Bool
 	}
-	values = values[3:]
+	if value, ok := values[3].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field type", values[3])
+	} else if value.Valid {
+		s.Type = int(value.Int64)
+	}
+	values = values[4:]
 	if len(values) == len(shopping.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
 			return fmt.Errorf("unexpected type %T for edge-field shop_shopping", value)
@@ -188,6 +196,8 @@ func (s *Shopping) String() string {
 	builder.WriteString(fmt.Sprintf("%v", s.Sum))
 	builder.WriteString(", complete=")
 	builder.WriteString(fmt.Sprintf("%v", s.Complete))
+	builder.WriteString(", type=")
+	builder.WriteString(fmt.Sprintf("%v", s.Type))
 	builder.WriteByte(')')
 	return builder.String()
 }

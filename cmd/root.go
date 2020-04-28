@@ -46,7 +46,13 @@ func initConfig() {
 
 	viper.AutomaticEnv()
 
-	if err := viper.ReadInConfig(); err != nil {
-		panic(err)
+	// if environments in file
+	dbfilename := viper.GetString("SHOPLIST_DB_FILE_NAME")
+	fmt.Println("dbfilename=", dbfilename)
+	if dbfilename == "" {
+		if err := viper.ReadInConfig(); err != nil {
+			panic(err)
+		}
 	}
+
 }

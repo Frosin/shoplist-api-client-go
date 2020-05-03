@@ -36,7 +36,7 @@ var serveCmd = &cobra.Command{
 			log.Info("Error = ", err)
 		}
 
-		dbFullFileName := "store/db/" + viper.GetString("SHOPLIST_DB_FILE_NAME")
+		dbFullFileName := viper.GetString("SHOPLIST_DB_PATH") + "/" + viper.GetString("SHOPLIST_DB_FILE_NAME")
 		db, err := sql.Open("sqlite3", dbFullFileName+"?_fk=1")
 		if err != nil {
 			log.Fatal(err)

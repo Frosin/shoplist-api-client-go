@@ -39,7 +39,7 @@ var serveCmd = &cobra.Command{
 		dbPath := viper.GetString("SHOPLIST_DB_PATH")
 		// create db path if not exist
 		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-			os.Mkdir(dbPath, os.ModeDir)
+			os.Mkdir(dbPath, 0777)
 		}
 
 		dbFullFileName := dbPath + "/" + viper.GetString("SHOPLIST_DB_FILE_NAME")

@@ -39,7 +39,7 @@ var serveCmd = &cobra.Command{
 		dbPath := viper.GetString("SHOPLIST_DB_PATH")
 		// create db path if not exist
 		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-			err := os.Mkdir(dbPath, 0777)
+			err := os.Mkdir(dbPath, 1777)
 			if err != nil {
 				log.Info(err)
 			}
@@ -57,7 +57,7 @@ var serveCmd = &cobra.Command{
 		if _, err := os.Stat(dbFullFileName); os.IsNotExist(err) {
 			runMigration(entClient)
 			// change file permissions
-			err := os.Chmod(dbFullFileName, 0777)
+			err := os.Chmod(dbFullFileName, 1777)
 			if err != nil {
 				log.Info(err)
 			}

@@ -57,7 +57,7 @@ var serveCmd = &cobra.Command{
 		if _, err := os.Stat(dbFullFileName); os.IsNotExist(err) {
 			runMigration(entClient)
 			// change file permissions
-			err := os.Chmod(dbFullFileName, 1777)
+			err := os.Chmod(dbFullFileName, 0777)
 			if err != nil {
 				log.Info(err)
 			}

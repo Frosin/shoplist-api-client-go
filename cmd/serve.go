@@ -53,6 +53,8 @@ var serveCmd = &cobra.Command{
 		//run migration
 		if _, err := os.Stat(dbFullFileName); os.IsNotExist(err) {
 			runMigration(entClient)
+			// change file permissions
+			os.Chmod(dbFullFileName, 0777)
 		}
 
 		server := store.NewServer(version, entClient, db)
